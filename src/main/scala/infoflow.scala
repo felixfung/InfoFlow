@@ -128,10 +128,19 @@ object InfoFlow
     labelEdge( labelEdge1 )
   }
 
-  def calDeltaL( qi_sum: Double,
-    q1: Double, q2: Double, q12: Double, p1: Double, p2: Double ) = {
-      val(deltaL1,deltaL2) = Partition.calDeltaL(qi_sum,q1,q2,q12,p1,p2)
-      Partition.calDeltaL(deltaL2,qi_sum,deltaL1)
+  def calDeltaL(
+    nodeNumber: Int,
+    n1: Int, n2: Int, p1: Double, p2: Double,
+    tele: Double, w12: Double,
+    qi_sum: Double, q1: Double, q2: Double
+  ) = {
+    val(_,deltaL) = Partition.calDeltaL(
+      nodeNumber,
+      n1, n2, p1, p2,
+      tele, w12,
+      qi_sum, q1, q2
+    )
+    deltaL
   }
 }
 
@@ -176,10 +185,16 @@ class InfoFlow( outputDir: String ) extends MergeAlgo(outputDir)
         => (m2,(m1,n1,p1,w1,q1,w12))
     }
     .join(partition.modules).map {
-      case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2))) => {
-        val q12 = Partition.calQ( nodeNumber, n1+n2, p1+p2, tele, w1+w2-w12 )
-        ( (m1,m2), InfoFlow.calDeltaL(qi_sum,q1,q2,q12,p1,p2) )
-      }
+      case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2))) =>
+      (
+        (m1,m2),
+        InfoFlow.calDeltaL(
+          nodeNumber,
+          n1, n2, p1, p2,
+          tele, w1+w2-w12,
+          qi_sum, q1, q2
+        )
+      )
     }
 
   /***************************************************************************
@@ -422,13 +437,16 @@ class InfoFlow( outputDir: String ) extends MergeAlgo(outputDir)
           case (m1,((m2,w12),(n1,p1,w1,q1))) => (m2,(m1,n1,p1,w1,q1,w12))
         }
         .join(newModules).map {
-          case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2)))
-          => {
-            val q12 = Partition.calQ(
-              nodeNumber, n1+n2, p1+p2, tele, w1+w2-w12
+          case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2))) =>
+          (
+            (m1,m2),
+            InfoFlow.calDeltaL(
+              nodeNumber,
+              n1, n2, p1, p2,
+              tele, w1+w2-w12,
+              qi_sum, q1, q2
             )
-            ( (m1,m2), InfoFlow.calDeltaL(qi_sum,q1,q2,q12,p1,p2) )
-          }
+          )
         }
 
   /***************************************************************************
