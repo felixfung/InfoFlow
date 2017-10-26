@@ -3,18 +3,11 @@
  ***************************************************************************/
 
 import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
 
 import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.SparkConf
-import org.apache.spark.rdd.RDD
 
-import scala.io.Source
-
-case class MergeAlgoTest(
-  val sc: SparkContext, val merge: MergeAlgo
-)
+case class MergeAlgoTest
+( val sc: SparkContext, val merge: MergeAlgo)
 extends FunSuite
 {
   /***************************************************************************
@@ -23,20 +16,24 @@ extends FunSuite
    * and checks the final partitioning scheme
    * so that each test-specific regex pattern matches to a partitioning module
    ***************************************************************************/
-  def apply( pjFile: String,
+  def apply(
+    pjFile: String, outputDir: String,
     nMerges: Int,
     codeLengthHi: Double, codeLengthLo: Double,
     partitioningRegex: Array[String]
   ) = {
 
+    // create log file
+    val logFile = new LogFile(outputDir,false)
+
     // invoke the algorithm
     val pj = new PajekFile( sc, pjFile )
     val nodes = new Nodes( pj, 0.85, 1e-3 )
     val initPartition = Partition.init(nodes)
-    val finalPartition = merge(initPartition)
+    val finalPartition = merge(initPartition,logFile)
 
     // checking the log file
-    val logFile = Source.fromFile( merge.outputDir +"/log.txt" )
+    /*val logFile = Source.fromFile( merge.logFile.outputDir +"/log.txt" )
     val regexL = """State ([0-9]*): code length ([0-9.]*)""".r
     val nanL = """State ([0-9]*): code length NaN""".r
     val regexFinal = """Merging terminates after ([0-9]*) merges""".r
@@ -88,7 +85,7 @@ extends FunSuite
       case regex => {
         // read partition file and matches regex
         val partFile = Source.fromFile(
-          merge.outputDir +"/partition_" +nMerges.toString +"/part-00000"
+          merge.logFile.outputDir +"/partition_" +nMerges.toString +"/part-00000"
         )
         val matches = regex.r.findAllIn(partFile.getLines.mkString)
         partFile.close
@@ -104,6 +101,6 @@ extends FunSuite
               }
         }
       }
-    }
+    }*/
   }
 }

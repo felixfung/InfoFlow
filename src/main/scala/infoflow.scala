@@ -4,8 +4,6 @@ import org.apache.spark.rdd.RDD
 
 import org.apache.commons.math.util.MathUtils
 
-import java.io._
-
 object InfoFlow
 {
   def labelEdges( edge2label: RDD[(Int,Int)] ) = {
@@ -144,17 +142,13 @@ object InfoFlow
   }
 }
 
-class InfoFlow( outputDir: String ) extends MergeAlgo(outputDir)
+class InfoFlow extends MergeAlgo
 {
   /***************************************************************************
    * logging system
    ***************************************************************************/
-  // create output directory
-  new File(outputDir).mkdirs
-  // create file to store the loop of code lengths
-  val logFile = new PrintWriter( new File(outputDir+"/log.txt") )
 
-  def apply( partition: Partition ): Partition = {
+  def apply( partition: Partition, logFile: LogFile ): Partition = {
 
     val nodeNumber = partition.nodeNumber
     val tele = partition.tele
@@ -202,9 +196,10 @@ class InfoFlow( outputDir: String ) extends MergeAlgo(outputDir)
    ***************************************************************************/
     // log code length
     logFile.write( "State 0: code length "
-      +partition.codeLength.toString +"\n" )
+      +partition.codeLength.toString +"\n", false )
     // log partitioning
-    partition.partitioning.saveAsTextFile( outputDir+"/partition_0" )
+    logFile.save( partition.partitioning, "partition_0", true )
+    //partition.partitioning.saveAsTextFile( outputDir+"/partition_0" )
 
   /***************************************************************************
    * this is the multimerging algorithm
@@ -260,7 +255,7 @@ class InfoFlow( outputDir: String ) extends MergeAlgo(outputDir)
       // if m2Merge is empty, then no modules seek to merge
       // terminate loop
       if( m2Merge.take(1).length == 0 ) {
-        logFile.write( "Merging terminates after " +(loop-1).toString +" merges" )
+        logFile.write( "Merging terminates after " +(loop-1).toString +" merges", false )
         logFile.close
         return partition
       }
@@ -392,7 +387,7 @@ class InfoFlow( outputDir: String ) extends MergeAlgo(outputDir)
         // if code length is not reduced, terminate
         if( newCodeLength >= partition.codeLength ) {
           logFile.write( "Merging terminates after "
-            +(loop-1).toString +" merges" )
+            +(loop-1).toString +" merges", false )
           logFile.close
           return partition
         }
@@ -402,17 +397,20 @@ class InfoFlow( outputDir: String ) extends MergeAlgo(outputDir)
    ***************************************************************************/
 
         // log partitioning
-        newPartitioning.saveAsTextFile( outputDir+"/partition_"+loop.toString )
+        //newPartitioning.saveAsTextFile( outputDir+"/partition_"+loop.toString )
 
         // log the merge detail
         logFile.write( "Merge " +loop.toString
           +": merging " +partition.modules.count.toString
-          +" modules into " +newModules.count.toString +" modules\n"
+          +" modules into " +newModules.count.toString +" modules\n",
+          false
         )
 
         // log new code length
         logFile.write( "State " +loop.toString
-          +": code length " +newCodeLength.toString +"\n" )
+          +": code length " +newCodeLength.toString +"\n",
+          false
+        )
 
   /***************************************************************************
    * connection properties calculations

@@ -1,3 +1,3 @@
-abstract class MergeAlgo( val outputDir: String ) {
-  def apply( partition: Partition ): Partition
+abstract class MergeAlgo {
+  def apply( partition: Partition, logFile: LogFile ): Partition
 }

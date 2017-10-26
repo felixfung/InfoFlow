@@ -18,10 +18,10 @@ object TwoLevelLocal {
       return
     }
     val pajekFile: String = args(0)
-    val outputDir = args(2)
+    val logFile = new LogFile( args(2), false )
     val mergeAlgo: MergeAlgo =
-      if( args(1) == "InfoMap" ) new InfoMap(outputDir)
-      else if( args(1) == "InfoFlow" ) new InfoFlow(outputDir)
+      if( args(1) == "InfoMap" ) new InfoMap
+      else if( args(1) == "InfoFlow" ) new InfoFlow
       else throw new Exception("Merge algorithm must be InfoMap or InfoFlow")
     val dampingFactor: Double = args(3).toDouble
 
@@ -39,7 +39,12 @@ object TwoLevelLocal {
     val pajek = new PajekFile(sc,pajekFile)
     val nodes = new Nodes(pajek,dampingFactor,1e-3)
     val initPartition = Partition.init(nodes)
-    val finalPartition = mergeAlgo(initPartition)
+    val finalPartition = mergeAlgo(initPartition,logFile)
+
+  /***************************************************************************
+   * Stop Spark Context
+   ***************************************************************************/
+  logFile.save( finalPartition.partitioning, "partition", false )
 
   /***************************************************************************
    * Stop Spark Context

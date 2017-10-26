@@ -42,16 +42,8 @@ object InfoMap
   }
 }
 
-class InfoMap( outputDir: String ) extends MergeAlgo(outputDir)
+class InfoMap extends MergeAlgo
 {
-  /***************************************************************************
-   * logging system
-   ***************************************************************************/
-  // create output directory
-  new File(outputDir).mkdirs
-  // create file to store the loop of code lengths
-  val logFile = new PrintWriter( new File(outputDir+"/log.txt") )
-
   /***************************************************************************
    * ORIGINAL INFOMAP ALGORITHM
    * the function to partition of nodes into modules based on
@@ -59,7 +51,7 @@ class InfoMap( outputDir: String ) extends MergeAlgo(outputDir)
    * the greatest code length reduction
    * until code length is minimized
    ***************************************************************************/
-  def apply( partition: Partition ): Partition = {
+  def apply( partition: Partition, logFile: LogFile ): Partition = {
 
   /***************************************************************************
    * initial condition
@@ -124,19 +116,22 @@ class InfoMap( outputDir: String ) extends MergeAlgo(outputDir)
   /***************************************************************************
    * output code length and partitioning to files
    ***************************************************************************/
-      partitioning.saveAsTextFile( outputDir+"/partition_"+(loop-1).toString )
-      logFile.write( "State " +(loop-1).toString
-        +": code length " +codeLength.toString +"\n" )
+      logFile.save( partitioning, "/partition_"+(loop-1).toString, true )
+      logFile.write(
+        "State " +(loop-1).toString
+        +": code length " +codeLength.toString +"\n",
+        false
+      )
 
   /***************************************************************************
    * loop termination routine
    ***************************************************************************/
-      def terminate( logFile: PrintWriter, nodeNumber: Int, tele: Double,
+      def terminate( nodeNumber: Int, tele: Double,
       partitioning: RDD[(String,Int)],
       table: RDD[((Int,Int),(Int,Int,
       Double,Double,Double,Double,Double,Double,Double,Double))],
       codeLength: Double ) = {
-        logFile.write( "Merging terminates after " +(loop-1).toString +" merges" )
+        logFile.write( "Merging terminates after " +(loop-1).toString +" merges", false )
         logFile.close
         val iWj = table.map {
           case ((from,to),(_,_,_,_,_,_,w12,_,_,_))
@@ -162,7 +157,7 @@ class InfoMap( outputDir: String ) extends MergeAlgo(outputDir)
    ***************************************************************************/
       if( table.count == 0 )
       {
-        terminate( logFile, nodeNumber, tele,
+        terminate( nodeNumber, tele,
           partitioning, table, codeLength )
       }
   /***************************************************************************
@@ -230,27 +225,27 @@ class InfoMap( outputDir: String ) extends MergeAlgo(outputDir)
         if( deltaL == 0 )
         {
           if( codeLength < -ergodicFreqSum )
-            terminate( logFile, nodeNumber, tele,
+            terminate( nodeNumber, tele,
               partitioning, table, codeLength )
           else {
             val newPartitioning = partition.partitioning.map {
               case (node,module) => (node,1)
             }
-            terminate( logFile, nodeNumber, tele,
+            terminate( nodeNumber, tele,
               newPartitioning, table, -ergodicFreqSum )
           }
         }
         // if code length cannot be decreased then terminate recursive algorithm
         else if( deltaL > 0 )
         {
-          terminate( logFile, nodeNumber, tele,
+          terminate( nodeNumber, tele,
             partitioning, table, codeLength )
         }
         else {
           // log merging details
           logFile.write( "Merge " +loop.toString +": merging modules "
             +merge1.toString +" and " +merge2.toString
-            +" with code length reduction " +deltaL.toString +"\n" )
+            +" with code length reduction " +deltaL.toString +"\n", false )
           // register partition to lower merge index
           val newPartitioning = partitioning.map {
             case (node,module) =>

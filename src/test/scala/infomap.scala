@@ -6,13 +6,7 @@ import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 
 import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
-import org.apache.spark.rdd.RDD
-
-import scala.io.Source
-
-//import org.scalactic.TolerantNumerics
 
 class InfoMapTest extends FunSuite with BeforeAndAfter
 {
@@ -34,8 +28,9 @@ class InfoMapTest extends FunSuite with BeforeAndAfter
    * Test Cases
    ***************************************************************************/
 
-  test("Test trivial network") {
-    val infoMap = MergeAlgoTest( sc, new InfoMap("Trivial Output InfoMap") )
+  /*test("Test trivial network") {
+    val logFile = new LogFile("Trivial Output InfoMap")
+    val infoMap = MergeAlgoTest( sc, new InfoMap(logFile) )
     infoMap(
       "Nets/trivial.net",
       0, 1.46, 1.45,
@@ -47,7 +42,8 @@ class InfoMapTest extends FunSuite with BeforeAndAfter
   }
 
   test("Test small network") {
-    val infoMap = MergeAlgoTest( sc, new InfoMap("Small Output InfoMap") )
+    val logFile = new LogFile("Small Output InfoMap")
+    val infoMap = MergeAlgoTest( sc, new InfoMap(logFile) )
     infoMap(
       "Nets/small.net",
       2, 4.00, 1.58,
@@ -118,7 +114,7 @@ class InfoMapTest extends FunSuite with BeforeAndAfter
       Array(
       )
     )
-  }
+  }*/
 
   /***************************************************************************
    * Stop Spark Context
