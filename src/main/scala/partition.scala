@@ -1,8 +1,6 @@
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-import org.apache.commons.math.util.MathUtils
+import java.lang.Math
 
 case class Partition
 (
@@ -146,6 +144,6 @@ object Partition {
   /***************************************************************************
    * math function of plogp(x) for calculation of code length
    ***************************************************************************/
-  def log( double: Double ) = MathUtils.log(2.0, double)
+  def log( double: Double ) = Math.log(double)/Math.log(2.0)
   def plogp( double: Double ) = double*log(double)
 }

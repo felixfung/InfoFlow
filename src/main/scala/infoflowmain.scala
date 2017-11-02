@@ -2,7 +2,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 
-object TwoLevelLocal {
+object InfoFlowMain {
   def main( args: Array[String] ): Unit = {
 
   /***************************************************************************
@@ -13,8 +13,8 @@ object TwoLevelLocal {
    * read in from args
    ***************************************************************************/
     if( args.size < 4 ) {
-      println("InfoMap: requires 4 arguments. Usage:")
-      println("./InfoMap pajek.net merge.algorithm output.dir dampingFactor")
+      println("InfoFlow: requires 4 arguments:")
+      println("[pajek.net] [merge.algorithm] [output.dir] [dampingFactor]")
       return
     }
     val pajekFile: String = args(0)
@@ -30,7 +30,7 @@ object TwoLevelLocal {
    ***************************************************************************/
     val conf = new SparkConf()
       .setAppName("InfoMap TwoLevel Test")
-      .setMaster("local[*]")
+      //.setMaster("local[*]")
     val sc = new SparkContext(conf)
 
   /***************************************************************************
