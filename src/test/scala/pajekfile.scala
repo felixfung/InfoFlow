@@ -41,8 +41,41 @@ class PajekFileTest extends FunSuite with BeforeAndAfter
   test("Read trivial networks") {
     val pajek = new PajekFile(sc,"Nets/trivial.net")
     assert( pajek.n === 2 )
-    assert( pajek.names.collect() === Array((1,"m01"),(2,"m02")) )
-    assert( pajek.sparseMat.collect() === Array( (1,(2,2)) ) )
+    assert( pajek.names.collect === Array((1,"m01"),(2,"m02")) )
+    assert( pajek.sparseMat.collect === Array( (1,(2,2)) ) )
+  }
+
+  test("Read simple network") {
+    val pajek = new PajekFile(sc,"Nets/simple.net")
+    assert( pajek.n === 6 )
+    assert( pajek.names.collect.sorted ===
+      Array(
+        (1,"1"),
+        (2,"2"),
+        (3,"3"),
+        (4,"4"),
+        (5,"5"),
+        (6,"6")
+      )
+    )
+    assert( pajek.sparseMat.collect.sorted ===
+      Array(
+        (1,(2,1.0)),
+        (1,(3,1.0)),
+        (2,(1,1.0)),
+        (2,(3,1.0)),
+        (3,(1,1.0)),
+        (3,(2,1.0)),
+        (3,(4,0.5)),
+        (4,(3,0.5)),
+        (4,(5,1.0)),
+        (4,(6,1.0)),
+        (5,(4,1.0)),
+        (5,(6,1.0)),
+        (6,(4,1.0)),
+        (6,(5,1.0))
+      )
+    )
   }
 
   /***************************************************************************
