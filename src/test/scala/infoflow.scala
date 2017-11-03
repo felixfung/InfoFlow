@@ -40,10 +40,10 @@ class InfoFlowTest extends FunSuite with BeforeAndAfter
     )
   }
 
-  /*test("Test small network") {
-    val infoFlow = MergeAlgoTest( sc, new InfoFlow("Small Output InfoFlow") )
+  test("Test small network") {
+    val infoFlow = MergeAlgoTest( sc, new InfoFlow )
     infoFlow(
-      "Nets/small.net",
+      "Nets/small.net", "Small Output InfoFlow",
       1, 4.00, 1.58,
       Array(
         """\(([12]),([0-9])\)""",
@@ -53,9 +53,9 @@ class InfoFlowTest extends FunSuite with BeforeAndAfter
   }
 
   test("Test small asymmetric network") {
-    val infoFlow = MergeAlgoTest( sc, new InfoFlow("Small Asym Output InfoFlow") )
+    val infoFlow = MergeAlgoTest( sc, new InfoFlow )
     infoFlow(
-      "Nets/small-asym.net",
+      "Nets/small-asym.net", "Small Asym Output InfoFlow",
       1, 2.92, 1.38,
       Array(
         """\(([12]),([0-9])\)""",
@@ -65,9 +65,9 @@ class InfoFlowTest extends FunSuite with BeforeAndAfter
   }
 
   test("Read simple test network") {
-    val infoFlow = MergeAlgoTest( sc, new InfoFlow("Simple Output InfoFlow") )
+    val infoFlow = MergeAlgoTest( sc, new InfoFlow )
     infoFlow(
-      "Nets/simple.net",
+      "Nets/simple.net", "Simple Output InfoFlow",
       1, 4.58, 2.38,
       Array(
         """\(([123]),([0-9])\)""",
@@ -77,9 +77,9 @@ class InfoFlowTest extends FunSuite with BeforeAndAfter
   }
 
   test("Reproduce Rosvall and Bergstrom 2008 result") {
-    val infoFlow = MergeAlgoTest( sc, new InfoFlow("Rosvall Output InfoFlow") )
+    val infoFlow = MergeAlgoTest( sc, new InfoFlow )
     infoFlow(
-      "Nets/rosvall.net",
+      "Nets/rosvall.net", "Rosvall Output InfoFlow",
       2, 6.55, 3.51,
       Array(
         """\(red([01]+),([0-9]+)\)""",
@@ -91,9 +91,9 @@ class InfoFlowTest extends FunSuite with BeforeAndAfter
   }
 
   test("InfoFlow vs modularity test 1") {
-    val infoFlow = MergeAlgoTest( sc, new InfoFlow("VS1 Output InfoFlow") )
+    val infoFlow = MergeAlgoTest( sc, new InfoFlow )
     infoFlow(
-      "Nets/infoflow-vs-modularity1.net",
+      "Nets/infoflow-vs-modularity1.net", "VS1 Output InfoFlow",
       2, 5.99, 3.43,
       Array(
         """\(red([0-9]*),([0-9]*)\)""",
@@ -105,14 +105,14 @@ class InfoFlowTest extends FunSuite with BeforeAndAfter
   }
 
   test("InfoFlow vs modularity test 2") {
-    val infoFlow = MergeAlgoTest( sc, new InfoFlow("VS2 Output InfoFlow") )
+    val infoFlow = MergeAlgoTest( sc, new InfoFlow )
     infoFlow(
-      "Nets/infoflow-vs-modularity2.net",
+      "Nets/infoflow-vs-modularity2.net", "VS2 Output InfoFlow",
       0, 2.69, 2.68,
       Array(
       )
     )
-  }*/
+  }
 
   /***************************************************************************
    * Stop Spark Context

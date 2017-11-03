@@ -24,7 +24,7 @@ extends FunSuite
   ) = {
 
     // create log file
-    val logFile = new LogFile(outputDir,false)
+    val logFile = new LogFile(outputDir,true)
 
     // invoke the algorithm
     val pj = new PajekFile( sc, pjFile )
