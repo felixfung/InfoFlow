@@ -36,7 +36,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
    ***************************************************************************/
 
     val (n,vertexLine) = {
-      val verticesRegex = """\*Vertices[ \t]+([0-9]+)""".r
+      val verticesRegex = """(?i)\*Vertices[ \t]+([0-9]+)""".r
 
       val vertexSpec = linedFile.filter {
         case (line,index) => line match {
@@ -99,9 +99,9 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
 
       // regex patterns for specifications of edges
       val edgeRegex1 =
-        """[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]*""".r
+        """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]*""".r
       val edgeRegex2 =
-        """[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]+([0-9.]+)[ \t]*""".r
+        """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]+([0-9.]+)[ \t]*""".r
 
       // given the edge specifications (with or without weights)
       // construct a connection matrix
