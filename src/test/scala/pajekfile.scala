@@ -25,6 +25,7 @@ class PajekFileTest extends FunSuite with BeforeAndAfter
       .setMaster("local[*]")
       .set("spark.default.parallelism", "1")
     sc = new SparkContext(conf)
+    sc.setLogLevel("OFF")
   }
 
   /***************************************************************************
@@ -40,35 +41,41 @@ class PajekFileTest extends FunSuite with BeforeAndAfter
   test("Read trivial networks") {
     val pajek = new PajekFile(sc,"Nets/trivial.net")
     assert( pajek.n === 2 )
-    assert( pajek.names.collect() === Array((1,"m01"),(2,"m02")) )
-    assert( pajek.weights.collect() === Array( (1,2),(2,1)) )
-    assert( pajek.sparseMat.collect() === Array( (1,(2,2)) ) )
+    assert( pajek.names.collect === Array((1,"m01"),(2,"m02")) )
+    assert( pajek.sparseMat.collect === Array( (1,(2,2)) ) )
   }
 
-  test("Read Nets/kin.net") {
-    val pajek = new PajekFile(sc,"Nets/kin.net")
-    assert( pajek.n === 20 )
-    assert( pajek.names.collect()(7) === (8,"f08") )
-    assert( pajek.weights.collect()(16) === (17,0.5) )
-    val correctEntries =
+  test("Read simple network") {
+    val pajek = new PajekFile(sc,"Nets/simple.net")
+    assert( pajek.n === 6 )
+    assert( pajek.names.collect.sorted ===
       Array(
-        (6,(3,1)),
-        (6,(7,1)),
-        (6,(8,1)),
-        (6,(9,1)),
-        (9,(1,1)),
-        (9,(16,1)),
-        (11,(1,1)),
-        (11,(12,1)),
-        (13,(2,1)),
-        (13,(14,1)),
-        (13,(15,1)),
-        (16,(1,1)),
-        (16,(17,1)),
-        (19,(1,1)),
-        (19,(20,1))
+        (1,"1"),
+        (2,"2"),
+        (3,"3"),
+        (4,"4"),
+        (5,"5"),
+        (6,"6")
       )
-    assert( pajek.sparseMat.collect.sorted === correctEntries )
+    )
+    assert( pajek.sparseMat.collect.sorted ===
+      Array(
+        (1,(2,1.0)),
+        (1,(3,1.0)),
+        (2,(1,1.0)),
+        (2,(3,1.0)),
+        (3,(1,1.0)),
+        (3,(2,1.0)),
+        (3,(4,0.5)),
+        (4,(3,0.5)),
+        (4,(5,1.0)),
+        (4,(6,1.0)),
+        (5,(4,1.0)),
+        (5,(6,1.0)),
+        (6,(4,1.0)),
+        (6,(5,1.0))
+      )
+    )
   }
 
   /***************************************************************************

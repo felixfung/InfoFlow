@@ -30,6 +30,7 @@ class PageRankTest extends FunSuite with BeforeAndAfter
       .setMaster("local[*]")
       .set("spark.default.parallelism", "1")
     sc = new SparkContext(conf)
+    sc.setLogLevel("OFF")
   }
 
   /***************************************************************************
@@ -94,13 +95,6 @@ class PageRankTest extends FunSuite with BeforeAndAfter
 
   test("Read Nets/small-asym.net") {
     val pj = new PajekFile(sc,"Nets/small-asym.net")
-    val pr = new Nodes( pj, 0.85, 1e-0 )
-    val freq = pr.ergodicFreq.collect.sorted.map{case(idx,x)=>x}
-    assert( freq.sum === 1.0 )
-  }
-
-  test("Read Nets/kin.net") {
-    val pj = new PajekFile(sc,"Nets/kin.net")
     val pr = new Nodes( pj, 0.85, 1e-0 )
     val freq = pr.ergodicFreq.collect.sorted.map{case(idx,x)=>x}
     assert( freq.sum === 1.0 )

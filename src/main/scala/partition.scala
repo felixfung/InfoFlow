@@ -20,7 +20,7 @@ object Partition {
    ***************************************************************************/
 
     // total number of nodes
-    val nodeNumber = nodes.names.count
+    val nodeNumber = nodes.n
     // conversion between constant convention
     val tele = 1 -nodes.damping
 

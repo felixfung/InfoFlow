@@ -25,6 +25,7 @@ class MatrixTest extends FunSuite with BeforeAndAfter
       .setMaster("local[*]")
       .set("spark.default.parallelism", "1")
     sc = new SparkContext(conf)
+    sc.setLogLevel("OFF")
   }
 
   /***************************************************************************
