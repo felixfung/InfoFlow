@@ -1,8 +1,4 @@
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-
-import org.apache.commons.math.util.MathUtils
 
 object InfoFlow
 {
