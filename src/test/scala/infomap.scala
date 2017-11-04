@@ -55,7 +55,7 @@ class InfoMapTest extends FunSuite with BeforeAndAfter
   test("Test small asymmetric network") {
     val infoMap = MergeAlgoTest( sc, new InfoMap )
     infoMap(
-      "Nets/small-asym.net", "Small Output InfoMap",
+      "Nets/small-asym.net", "Small Asym Output InfoMap",
       1, 2.92, 1.38,
       Array(
         """\(([12]),([0-9])\)""",
