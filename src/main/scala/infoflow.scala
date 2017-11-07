@@ -195,7 +195,6 @@ class InfoFlow extends MergeAlgo
       +partition.codeLength.toString +"\n", false )
     // log partitioning
     logFile.save( partition.partitioning, "partition_0", true )
-    //partition.partitioning.saveAsTextFile( outputDir+"/partition_0" )
 
   /***************************************************************************
    * this is the multimerging algorithm
@@ -393,7 +392,8 @@ class InfoFlow extends MergeAlgo
    ***************************************************************************/
 
         // log partitioning
-        //newPartitioning.saveAsTextFile( outputDir+"/partition_"+loop.toString )
+        logFile.save( newPartitioning, "partition_"+loop.toString,
+          false )
 
         // log the merge detail
         logFile.write( "Merge " +loop.toString

@@ -6,6 +6,8 @@ import org.scalatest.FunSuite
 
 import org.apache.spark.SparkContext
 
+import scala.io.Source
+
 case class MergeAlgoTest
 ( val sc: SparkContext, val merge: MergeAlgo)
 extends FunSuite
@@ -23,17 +25,16 @@ extends FunSuite
     partitioningRegex: Array[String]
   ) = {
 
-    // create log file
-    val logFile = new LogFile(outputDir,true)
-
     // invoke the algorithm
     val pj = new PajekFile( sc, pjFile )
     val nodes = new Nodes( pj, 0.85, 1e-3 )
     val initPartition = Partition.init(nodes)
-    val finalPartition = merge(initPartition,logFile)
+    val finalPartition = merge(
+      initPartition, new LogFile(outputDir,true)
+    )
 
     // checking the log file
-    /*val logFile = Source.fromFile( merge.logFile.outputDir +"/log.txt" )
+    val logFile = Source.fromFile( outputDir +"/log.txt" )
     val regexL = """State ([0-9]*): code length ([0-9.]*)""".r
     val nanL = """State ([0-9]*): code length NaN""".r
     val regexFinal = """Merging terminates after ([0-9]*) merges""".r
@@ -85,7 +86,7 @@ extends FunSuite
       case regex => {
         // read partition file and matches regex
         val partFile = Source.fromFile(
-          merge.logFile.outputDir +"/partition_" +nMerges.toString +"/part-00000"
+          outputDir +"/partition_" +nMerges.toString +"/part-00000"
         )
         val matches = regex.r.findAllIn(partFile.getLines.mkString)
         partFile.close
@@ -101,6 +102,6 @@ extends FunSuite
               }
         }
       }
-    }*/
+    }
   }
 }

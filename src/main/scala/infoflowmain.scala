@@ -32,6 +32,7 @@ object InfoFlowMain {
       .setAppName("InfoMap TwoLevel Test")
       //.setMaster("local[*]")
     val sc = new SparkContext(conf)
+    sc.setLogLevel("OFF")
 
   /***************************************************************************
    * read pajek file and solve

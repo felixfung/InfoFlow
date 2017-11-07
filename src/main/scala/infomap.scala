@@ -128,7 +128,8 @@ class InfoMap extends MergeAlgo
       table: RDD[((Int,Int),(Int,Int,
       Double,Double,Double,Double,Double,Double,Double,Double))],
       codeLength: Double ) = {
-        logFile.write( "Merging terminates after " +(loop-1).toString +" merges", false )
+        logFile.write( "Merging terminates after "
+          +(loop-1).toString +" merges", false )
         logFile.close
         val iWj = table.map {
           case ((from,to),(_,_,_,_,_,_,w12,_,_,_))
