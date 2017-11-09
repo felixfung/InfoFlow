@@ -388,27 +388,6 @@ class InfoFlow extends MergeAlgo
         }
 
   /***************************************************************************
-   * logging
-   ***************************************************************************/
-
-        // log partitioning
-        logFile.save( newPartitioning, "partition_"+loop.toString,
-          false )
-
-        // log the merge detail
-        logFile.write( "Merge " +loop.toString
-          +": merging " +partition.modules.count.toString
-          +" modules into " +newModules.count.toString +" modules\n",
-          false
-        )
-
-        // log new code length
-        logFile.write( "State " +loop.toString
-          +": code length " +newCodeLength.toString +"\n",
-          false
-        )
-
-  /***************************************************************************
    * connection properties calculations
    ***************************************************************************/
 
@@ -442,6 +421,31 @@ class InfoFlow extends MergeAlgo
             )
           )
         }
+
+  /***************************************************************************
+   * logging
+   ***************************************************************************/
+
+        // log partitioning
+        logFile.save( newPartitioning, "partition_"+loop.toString,
+          true )
+
+        // log partitioning
+        logFile.save( newiWj, "connection_"+loop.toString,
+          true )
+
+        // log the merge detail
+        logFile.write( "Merge " +loop.toString
+          +": merging " +partition.modules.count.toString
+          +" modules into " +newModules.count.toString +" modules\n",
+          false
+        )
+
+        // log new code length
+        logFile.write( "State " +loop.toString
+          +": code length " +newCodeLength.toString +"\n",
+          false
+        )
 
   /***************************************************************************
    * recursive function call

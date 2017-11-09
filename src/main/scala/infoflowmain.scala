@@ -46,7 +46,7 @@ object InfoFlowMain {
    * Stop Spark Context
    ***************************************************************************/
   logFile.save( finalPartition.partitioning, "partition", false )
-
+  logFile.save( finalPartition.iWj, "connection", false )
   /***************************************************************************
    * Stop Spark Context
    ***************************************************************************/

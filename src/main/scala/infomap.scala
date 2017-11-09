@@ -113,6 +113,11 @@ class InfoMap extends MergeAlgo
   /***************************************************************************
    * output code length and partitioning to files
    ***************************************************************************/
+      val iWj = table.map {
+        case ((from,to),(_,_,_,_,_,_,w12,_,_,_))
+        => ((from,to),w12)
+      }
+      logFile.save( iWj, "/connection_"+(loop-1).toString, true )
       logFile.save( partitioning, "/partition_"+(loop-1).toString, true )
       logFile.write(
         "State " +(loop-1).toString
