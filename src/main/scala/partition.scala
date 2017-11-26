@@ -1,16 +1,91 @@
 import org.apache.spark.rdd.RDD
 
 import java.lang.Math
+import java.io._
 
 case class Partition
 (
   val nodeNumber: Int,
   val tele: Double,
+  val edges: RDD[((String,String),Double)], // only for saving to json
   val partitioning: RDD[(String,Int)],
   val iWj: RDD[((Int,Int),Double)],
   val modules: RDD[(Int,(Int,Double,Double,Double))],
   val codeLength: Double
 )
+{
+  /***************************************************************************
+   * functions to save graph into json file
+   ***************************************************************************/
+
+  // function prints all nodes, with the partition labeling
+  def saveJSon( fileName: String ): Unit =
+    saveJSon( fileName, partitioning, edges )
+  // function prints each partitioning as a node
+  def saveReduceJSon( fileName: String ): Unit = {
+    val reduceNodes = partitioning.map {
+      case (node,module) => (module.toString,module)
+    }
+    .distinct
+    saveJSon( fileName, reduceNodes, /*iWj*/edges )
+    // this implementation is incorrect
+  }
+
+  /***************************************************************************
+   * inner function to save graph into json file
+   ***************************************************************************/
+  def saveJSon(
+    fileName: String,
+    nodes: RDD[(String,Int)],
+    edges: RDD[((String,String),Double)]
+  ): Unit = {
+
+    // open file
+    val file = new PrintWriter( new File(fileName) )
+
+    // write node data
+    file.write( "{\n\t\"nodes\": [\n" )
+    val nodeCount = nodes.count
+    nodes.collect.zipWithIndex.foreach {
+      case ((node,module),idx) => {
+        file.write(
+          "\t\t{\"id\": \"" +node
+          +"\", \"group\": " +module.toString
+          +"}"
+        )
+        if( idx < nodeCount-1 )
+          file.write(",")
+        file.write("\n")
+      }
+    }
+    file.write( "\t],\n" )
+
+    // write edge data
+    file.write( "\t\"links\": [\n" )
+    val nodeName = nodes.map {
+      case (name,idx) => (idx,name)
+    }
+    val edgeCount = edges.count
+    edges.collect.zipWithIndex.foreach {
+      case (((from,to),weight),idx) =>
+        file.write(
+          "\t\t{\"source\": \"" +from
+          +"\", \"target\": \"" +to
+          +"\", \"value\": "+weight.toString
+          +"}"
+        )
+        if( idx < edgeCount-1 )
+          file.write(",")
+        file.write("\n")
+    }
+    file.write("\t]")
+
+    // close file
+    file.write( "\n}" )
+    file.close
+  }
+
+}
 
 object Partition {
   def init( nodes: Nodes ): Partition = {
@@ -48,6 +123,19 @@ object Partition {
                ((to,from),ergodicFreq*transition)
       }
       .reduceByKey(_+_)
+    }
+
+    // the graph edges with named vertex, for graph printing purpose
+    val edges = iWj.map {
+      case ((from,to),weight) => (from,(to,weight))
+    }
+    .join(nodes.names)
+    .map {
+      case (_,((to,weight),fromName)) => (to,(fromName,weight))
+    }
+    .join(nodes.names)
+    .map {
+      case (_,((fromName,weight),toName)) => ((fromName,toName),weight)
     }
 
     // probability of exiting a module without teleporting
@@ -94,7 +182,7 @@ object Partition {
     }
 
     // construct partition
-    Partition( nodeNumber.toInt, tele, partitioning,
+    Partition( nodeNumber.toInt, tele, edges, partitioning,
       iWj, modules, codeLength )
   }
 

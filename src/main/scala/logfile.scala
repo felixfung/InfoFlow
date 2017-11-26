@@ -12,31 +12,45 @@ import java.io._
    ***************************************************************************/
 
 class LogFile( val outputDir: String, val debugging: Boolean ) {
-    /** *************************************************************************
-      * Constructor: create directory and log file within
-      * **************************************************************************/
+  /***************************************************************************
+   * Constructor: create directory and log file within
+   ***************************************************************************/
 
-    // create output directory
-    new File(outputDir).mkdirs
-    // create file to store the loop of code lengths
-    val logFile = new PrintWriter(new File(outputDir + "/log.txt"))
+  // create output directory
+  new File(outputDir).mkdirs
+  // create file to store the loop of code lengths
+  val logFile = new PrintWriter(new File(outputDir + "/log.txt"))
 
-    /** *************************************************************************
-      * write message to log file
-      * **************************************************************************/
-    def write(msg: String, dbgMsg: Boolean) =
-      if (!dbgMsg || debugging)
-        logFile.write(msg)
+  /* *************************************************************************
+   * write message to log file
+   ***************************************************************************/
+  def write( msg: String, dbgMsg: Boolean ) =
+    if( !dbgMsg || debugging )
+      logFile.write(msg)
 
-    /** *************************************************************************
-      * save an RDD object to a text file
-      * **************************************************************************/
-    def save[T](rdd: RDD[T], id: String, dbgMsg: Boolean) =
-      if (!dbgMsg || debugging)
-        rdd.saveAsTextFile(outputDir + "/" + id)
+  /***************************************************************************
+   * save an RDD object to a text file
+   ***************************************************************************/
+  def saveText[T]( rdd: RDD[T], id: String, dbgMsg: Boolean ) =
+    if( !dbgMsg || debugging )
+      rdd.saveAsTextFile( outputDir +"/" +id )
 
-    /** *************************************************************************
-      * close log file
-      * **************************************************************************/
-    def close = logFile.close
+  /***************************************************************************
+   * save a partition object to a JSON file
+   ***************************************************************************/
+  def saveJSon( partition: Partition, id: String, dbgMsg: Boolean ) =
+    if( !dbgMsg || debugging )
+      partition.saveJSon( outputDir +"/" +id )
+
+  /***************************************************************************
+   * save a partition object to a JSON file
+   ***************************************************************************/
+  def saveReduceJSon( partition: Partition, id: String, dbgMsg: Boolean ) =
+    if( !dbgMsg || debugging )
+      partition.saveReduceJSon( outputDir +"/" +id )
+
+  /***************************************************************************
+   * close log file
+   ***************************************************************************/
+  def close = logFile.close
 }

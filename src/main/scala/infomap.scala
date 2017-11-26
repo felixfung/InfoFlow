@@ -103,55 +103,33 @@ class InfoMap extends MergeAlgo
     @scala.annotation.tailrec
     def recursiveMerge(
       loop: Int,
-      codeLength: Double,
       qi_sum: Double,
-      partitioning: RDD[(String,Int)],
+      partition: Partition,
       table: RDD[((Int,Int),(Int,Int,
         Double,Double,Double,Double,Double,Double,Double,Double))]
     ): Partition = {
 
   /***************************************************************************
-   * output code length and partitioning to files
+   * logging
    ***************************************************************************/
-      val iWj = table.map {
-        case ((from,to),(_,_,_,_,_,_,w12,_,_,_))
-        => ((from,to),w12)
-      }
-      logFile.save( iWj, "/connection_"+(loop-1).toString, true )
-      logFile.save( partitioning, "/partition_"+(loop-1).toString, true )
+      logFile.saveText( partition.iWj, "/connection_"+(loop-1).toString, true )
+      logFile.saveText( partition.partitioning, "/partition_"+(loop-1).toString,
+        true )
       logFile.write(
         "State " +(loop-1).toString
-        +": code length " +codeLength.toString +"\n",
+        +": code length " +partition.codeLength.toString +"\n",
         false
       )
+      logFile.saveJSon( partition, "graph_"+(loop-1).toString+".json", true )
 
   /***************************************************************************
    * loop termination routine
    ***************************************************************************/
-      def terminate( nodeNumber: Int, tele: Double,
-      partitioning: RDD[(String,Int)],
-      table: RDD[((Int,Int),(Int,Int,
-      Double,Double,Double,Double,Double,Double,Double,Double))],
-      codeLength: Double ) = {
+      def terminate = {
         logFile.write( "Merging terminates after "
           +(loop-1).toString +" merges", false )
         logFile.close
-        val iWj = table.map {
-          case ((from,to),(_,_,_,_,_,_,w12,_,_,_))
-          => ((from,to),w12)
-        }
-        // the modular properties cannot be fully recovered from the table
-        // since table only stores modular properties
-        // when they are associated with an edge
-        // so, we return an empty modules RDD
-        val modules = table.map {
-          case _ => (0,(0,0.0,0.0,0.0))
-        }
-        .filter {
-          case _ => false
-        }
-        Partition( nodeNumber, tele, partitioning,
-          iWj, modules, codeLength )
+        partition
       }
 
   /***************************************************************************
@@ -160,8 +138,7 @@ class InfoMap extends MergeAlgo
    ***************************************************************************/
       if( table.isEmpty )
       {
-        terminate( nodeNumber, tele,
-          partitioning, table, codeLength )
+        terminate
       }
   /***************************************************************************
    * find pair to merge according to greatest reduction in code length
@@ -215,7 +192,7 @@ class InfoMap extends MergeAlgo
 
         // calculate new code length
         val deltaL = InfoMap.calDeltaL( deltaLi12, qi_sum, q1, q2, q12)
-        val newCodeLength = codeLength +deltaL
+        val newCodeLength = partition.codeLength +deltaL
 
   /***************************************************************************
    * if the code length cannot be decreased, then terminate
@@ -227,22 +204,19 @@ class InfoMap extends MergeAlgo
         // then we terminate
         if( deltaL == 0 )
         {
-          if( codeLength < -ergodicFreqSum )
-            terminate( nodeNumber, tele,
-              partitioning, table, codeLength )
+          if( partition.codeLength < -ergodicFreqSum )
+            terminate
           else {
             val newPartitioning = partition.partitioning.map {
               case (node,module) => (node,1)
             }
-            terminate( nodeNumber, tele,
-              newPartitioning, table, -ergodicFreqSum )
+            terminate
           }
         }
         // if code length cannot be decreased then terminate recursive algorithm
         else if( deltaL > 0 )
         {
-          terminate( nodeNumber, tele,
-            partitioning, table, codeLength )
+          terminate
         }
         else {
           // log merging details
@@ -250,7 +224,7 @@ class InfoMap extends MergeAlgo
             +merge1.toString +" and " +merge2.toString
             +" with code length reduction " +deltaL.toString +"\n", false )
           // register partition to lower merge index
-          val newPartitioning = partitioning.map {
+          val newPartitioning = partition.partitioning.map {
             case (node,module) =>
               if( module==merge2 ) (node,merge1) else (node,module)
           }
@@ -313,12 +287,24 @@ class InfoMap extends MergeAlgo
                 )
           }
 
+          val newiWj = newTable.map {
+            case ((from,to),(_,_,_,_,_,_,w12,_,_,_))
+            => ((from,to),w12)
+          }
+
   /***************************************************************************
    * recursive call
    ***************************************************************************/
 
-          recursiveMerge( loop+1, newCodeLength, new_qi_sum,
-            newPartitioning, newTable )
+          val newPartition = Partition(
+            nodeNumber, tele, partition.edges,
+            newPartitioning, newiWj,
+            partition.modules,
+            newCodeLength
+          )
+
+          recursiveMerge( loop+1, new_qi_sum,
+            newPartition, newTable )
         }
       }
     }
@@ -326,11 +312,26 @@ class InfoMap extends MergeAlgo
   /***************************************************************************
    * main function invokes recursive function
    ***************************************************************************/
+
+    // the modular properties cannot be fully recovered from the table
+    // since table only stores modular properties
+    // when they are associated with an edge
+    // so, we return an empty modules RDD
+    val modules = table.map {
+      case _ => (0,(0,0.0,0.0,0.0))
+    }
+    .distinct
+    .filter {
+      case _ => false
+    }
+
+    val inputPartition = Partition( nodeNumber, tele, partition.edges,
+      partition.partitioning, partition.iWj, modules, partition.codeLength )
+
     val newPartition =
       recursiveMerge( 1,
-        partition.codeLength,
         qi_sum,
-        partition.partitioning,
+        inputPartition,
         table
       )
 

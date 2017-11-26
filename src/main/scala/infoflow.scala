@@ -194,7 +194,8 @@ class InfoFlow extends MergeAlgo
     logFile.write( "State 0: code length "
       +partition.codeLength.toString +"\n", false )
     // log partitioning
-    logFile.save( partition.partitioning, "partition_0", true )
+    logFile.saveText( partition.iWj, "/connection_0", true )
+    logFile.saveText( partition.partitioning, "/partition_0", true )
 
   /***************************************************************************
    * this is the multimerging algorithm
@@ -427,12 +428,8 @@ class InfoFlow extends MergeAlgo
    ***************************************************************************/
 
         // log partitioning
-        logFile.save( newPartitioning, "partition_"+loop.toString,
-          true )
-
-        // log partitioning
-        logFile.save( newiWj, "connection_"+loop.toString,
-          true )
+        logFile.saveText( newPartitioning, "partition_"+loop.toString, true )
+        logFile.saveText( newiWj, "connection_"+loop.toString, true )
 
         // log the merge detail
         logFile.write( "Merge " +loop.toString
@@ -447,21 +444,23 @@ class InfoFlow extends MergeAlgo
           false
         )
 
+        val newPartition = Partition(
+          nodeNumber,
+          tele,
+          partition.edges,
+          newPartitioning,
+          newiWj,
+          newModules,
+          newCodeLength
+        )
+
+        // save graph in JSON
+        logFile.saveJSon( newPartition, "graph_"+loop.toString+".json", true )
+
   /***************************************************************************
    * recursive function call
    ***************************************************************************/
-        recursiveMerge(
-          loop+1,
-          Partition(
-            nodeNumber,
-            tele,
-            newPartitioning,
-            newiWj,
-            newModules,
-            newCodeLength
-          ),
-          newDeltaL
-        )
+        recursiveMerge( loop+1, newPartition, newDeltaL )
       }
 
     }

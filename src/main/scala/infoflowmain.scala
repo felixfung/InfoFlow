@@ -43,10 +43,11 @@ object InfoFlowMain {
     val finalPartition = mergeAlgo(initPartition,logFile)
 
   /***************************************************************************
-   * Stop Spark Context
+   * Output
    ***************************************************************************/
-  logFile.save( finalPartition.partitioning, "partition", false )
-  logFile.save( finalPartition.iWj, "connection", false )
+    logFile.saveJSon( initPartition, "graph0.json", false )
+    logFile.saveJSon( finalPartition, "graph1.json", false )
+
   /***************************************************************************
    * Stop Spark Context
    ***************************************************************************/
