@@ -21,20 +21,31 @@ case class Partition
   // function prints all nodes, with the partition labeling
   def saveJSon( fileName: String ): Unit =
     saveJSon( fileName, partitioning, edges )
+
   // function prints each partitioning as a node
   def saveReduceJSon( fileName: String ): Unit = {
     val reduceNodes = partitioning.map {
       case (node,module) => (module.toString,module)
     }
     .distinct
-    saveJSon( fileName, reduceNodes, /*iWj*/edges )
-    // this implementation is incorrect
+    val reducedEdges = edges.map {
+      case ((from,to),weight) => (from,(to,weight))
+    }
+    .join(partitioning)
+    .map {
+      case (from,((to,weight),fromIdx)) => (to,(fromIdx,weight))
+    }
+    .join(partitioning)
+    .map {
+      case (to,((fromIdx,weight),toIdx)) => ((fromIdx.toString,toIdx.toString),weight)
+    }
+    saveJSon( fileName, reduceNodes, reducedEdges )
   }
 
   /***************************************************************************
    * inner function to save graph into json file
    ***************************************************************************/
-  def saveJSon(
+  private def saveJSon(
     fileName: String,
     nodes: RDD[(String,Int)],
     edges: RDD[((String,String),Double)]
