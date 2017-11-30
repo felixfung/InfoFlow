@@ -3,27 +3,36 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 
 object InfoFlowMain {
-  def main( args: Array[String] ): Unit = {
-
   /***************************************************************************
    * Main function
    ***************************************************************************/
+  def main( args: Array[String] ): Unit = {
 
   /***************************************************************************
-   * read in from args
+   * read in config file
    ***************************************************************************/
-    if( args.size < 4 ) {
-      println("InfoFlow: requires 4 arguments:")
-      println("[pajek.net] [merge.algorithm] [output.dir] [dampingFactor]")
+
+    // check argument size
+    if( args.size > 1 ) {
+      println("InfoFlow: requires 0-1 arguments:")
+      println("./InfoFlow [alternative config file]")
       return
     }
-    val pajekFile: String = args(0)
-    val logFile = new LogFile( args(2), false )
+
+    // use default or alternative config file name
+    val configFileName =
+      if( args.size == 0 ) "config.json"
+      else /*args.size==1*/ args(0)
+    val config = new Config(configFileName)
+
+    // initialize parameters from config file
+    val pajekFile = config.pajekFile
+    val logFile = new LogFile( config.outputDir, false )
+    val dampingFactor = config.dampingFactor
     val mergeAlgo: MergeAlgo =
-      if( args(1) == "InfoMap" ) new InfoMap
-      else if( args(1) == "InfoFlow" ) new InfoFlow
+      if( config.mergeAlgo == "InfoMap" ) new InfoMap
+      else if( config.mergeAlgo == "InfoFlow" ) new InfoFlow
       else throw new Exception("Merge algorithm must be InfoMap or InfoFlow")
-    val dampingFactor: Double = args(3).toDouble
 
   /***************************************************************************
    * Initialize Spark Context

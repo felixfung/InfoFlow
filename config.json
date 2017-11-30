@@ -1,0 +1,6 @@
+{
+  "pajek": "football.net",
+  "Output": "Football",
+  "Algo": "InfoFlow",
+  "damping": "0.85"
+}
