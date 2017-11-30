@@ -72,7 +72,7 @@ case class Partition
     // write node data
     file.write( "{\n\t\"nodes\": [\n" )
     val nodeCount = nodes.count
-    nodes.collect.zipWithIndex.foreach {
+    nodes.collect.sorted.zipWithIndex.foreach {
       case ((node,module),idx) => {
         file.write(
           "\t\t{\"id\": \"" +node
@@ -92,7 +92,7 @@ case class Partition
       case (name,idx) => (idx,name)
     }
     val edgeCount = edges.count
-    edges.collect.zipWithIndex.foreach {
+    edges.collect.sorted.zipWithIndex.foreach {
       case (((from,to),weight),idx) =>
         file.write(
           "\t\t{\"source\": \"" +from
