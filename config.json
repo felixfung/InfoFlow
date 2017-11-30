@@ -1,6 +1,10 @@
 {
-  "pajek": "football.net",
-  "Output": "Football",
+  "Pajek": "Nets/rosvall.net",
   "Algo": "InfoFlow",
-  "damping": "0.85"
+  "damping": "0.85",
+  "logDir": "Rosvall",
+  "logWriteLog": "true",
+  "logRddText": "false",
+  "logRddJSon": "1",
+  "logSteps": "false"
 }

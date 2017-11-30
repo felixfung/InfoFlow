@@ -117,8 +117,7 @@ class InfoMap extends MergeAlgo
         true )
       logFile.write(
         "State " +(loop-1).toString
-        +": code length " +partition.codeLength.toString +"\n",
-        false
+        +": code length " +partition.codeLength.toString +"\n"
       )
       logFile.saveJSon( partition, "graph_"+(loop-1).toString+".json", true )
 
@@ -127,7 +126,7 @@ class InfoMap extends MergeAlgo
    ***************************************************************************/
       def terminate = {
         logFile.write( "Merging terminates after "
-          +(loop-1).toString +" merges", false )
+          +(loop-1).toString +" merges" )
         logFile.close
         partition
       }
@@ -222,7 +221,7 @@ class InfoMap extends MergeAlgo
           // log merging details
           logFile.write( "Merge " +loop.toString +": merging modules "
             +merge1.toString +" and " +merge2.toString
-            +" with code length reduction " +deltaL.toString +"\n", false )
+            +" with code length reduction " +deltaL.toString +"\n" )
           // register partition to lower merge index
           val newPartitioning = partition.partitioning.map {
             case (node,module) =>

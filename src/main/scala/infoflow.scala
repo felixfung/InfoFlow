@@ -192,7 +192,7 @@ class InfoFlow extends MergeAlgo
    ***************************************************************************/
     // log code length
     logFile.write( "State 0: code length "
-      +partition.codeLength.toString +"\n", false )
+      +partition.codeLength.toString +"\n" )
     // log partitioning
     logFile.saveText( partition.iWj, "/connection_0", true )
     logFile.saveText( partition.partitioning, "/partition_0", true )
@@ -253,7 +253,8 @@ class InfoFlow extends MergeAlgo
       // if m2Merge is empty, then no modules seek to merge
       // terminate loop
       if( m2Merge.take(1).length == 0 ) {
-        logFile.write( "Merging terminates after " +(loop-1).toString +" merges", false )
+        logFile.write( "Merging terminates after "
+          +(loop-1).toString +" merges" )
         logFile.close
         return partition
       }
@@ -385,7 +386,7 @@ class InfoFlow extends MergeAlgo
         // if code length is not reduced, terminate
         if( newCodeLength >= partition.codeLength ) {
           logFile.write( "Merging terminates after "
-            +(loop-1).toString +" merges", false )
+            +(loop-1).toString +" merges" )
           logFile.close
           return partition
         }
@@ -436,14 +437,12 @@ class InfoFlow extends MergeAlgo
         // log the merge detail
         logFile.write( "Merge " +loop.toString
           +": merging " +partition.modules.count.toString
-          +" modules into " +newModules.count.toString +" modules\n",
-          false
+          +" modules into " +newModules.count.toString +" modules\n"
         )
 
         // log new code length
         logFile.write( "State " +loop.toString
-          +": code length " +newCodeLength.toString +"\n",
-          false
+          +": code length " +newCodeLength.toString +"\n"
         )
 
         val newPartition = Partition(

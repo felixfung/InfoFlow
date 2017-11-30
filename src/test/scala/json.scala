@@ -80,7 +80,7 @@ class JSonTest extends FunSuite with BeforeAndAfter
       val nodes = new Nodes( pj, 0.85, 1e-3 )
       val initPartition = Partition.init(nodes)
       val infoFlow = new InfoFlow
-      val logFile = new LogFile( "unittestlog", false )
+      val logFile = new LogFile("unittestlog",false,false,0,false)
       val finalPartition = infoFlow( initPartition, logFile )
       finalPartition.saveReduceJSon("unittestfile.json")
 

@@ -11,7 +11,13 @@ import java.io._
    *   (2) the log file object is for debugging
    ***************************************************************************/
 
-class LogFile( val outputDir: String, val debugging: Boolean ) {
+class LogFile(
+  val outputDir: String,
+  val writeLog: Boolean,
+  val rddText: Boolean,
+  val rddJSon: Int, // 0->no output; 1->output full graph; 2->reduced graph
+  val logSteps: Boolean
+) {
   /***************************************************************************
    * Constructor: create directory and log file within
    ***************************************************************************/
@@ -24,30 +30,27 @@ class LogFile( val outputDir: String, val debugging: Boolean ) {
   /* *************************************************************************
    * write message to log file
    ***************************************************************************/
-  def write( msg: String, dbgMsg: Boolean ) =
-    if( !dbgMsg || debugging )
+  def write( msg: String ) =
+    if( writeLog )
       logFile.write(msg)
 
   /***************************************************************************
    * save an RDD object to a text file
    ***************************************************************************/
-  def saveText[T]( rdd: RDD[T], id: String, dbgMsg: Boolean ) =
-    if( !dbgMsg || debugging )
+  def saveText[T]( rdd: RDD[T], id: String, stepping: Boolean ) =
+    if( rddText && ( !stepping || logSteps ) )
       rdd.saveAsTextFile( outputDir +"/" +id )
 
   /***************************************************************************
    * save a partition object to a JSON file
    ***************************************************************************/
-  def saveJSon( partition: Partition, id: String, dbgMsg: Boolean ) =
-    if( !dbgMsg || debugging )
-      partition.saveJSon( outputDir +"/" +id )
-
-  /***************************************************************************
-   * save a partition object to a JSON file
-   ***************************************************************************/
-  def saveReduceJSon( partition: Partition, id: String, dbgMsg: Boolean ) =
-    if( !dbgMsg || debugging )
-      partition.saveReduceJSon( outputDir +"/" +id )
+  def saveJSon( partition: Partition, id: String, stepping: Boolean ) =
+    if( rddJSon>0 && ( !stepping || logSteps ) ) {
+      if( rddJSon == 1 )
+        partition.saveJSon( outputDir +"/" +id )
+      else if( rddJSon == 2 )
+        partition.saveReduceJSon( outputDir +"/" +id )
+    }
 
   /***************************************************************************
    * close log file

@@ -6,7 +6,10 @@ class Config( fileName: String ) {
    * Object to read config file
    ***************************************************************************/
 
-  val( pajekFile, outputDir, mergeAlgo, dampingFactor ) = {
+  val(
+    pajekFile, mergeAlgo, dampingFactor,
+    logDir, logWriteLog, rddText, rddJSon, logSteps
+  ): (String,String,Double,String,Boolean,Boolean,Int,Boolean) = {
 
   /***************************************************************************
    * read and parse JSon file content
@@ -29,34 +32,23 @@ class Config( fileName: String ) {
 
     // parse JSon content
     val json = scala.util.parsing.json.JSON.parseFull(jsonContent)
+    .asInstanceOf[Option[Map[String,String]]]
 
   /***************************************************************************
    * grab data
    ***************************************************************************/
-    val pajekFile: String = json match {
-      case Some(m: Map[String, Any]) => m("pajek") match {
-        case s: String => s
-      }
-    }
+    val pajekFile = json.map(_("Pajek")).getOrElse("pajek.net")
+    val mergeAlgo = json.map(_("Algo")).getOrElse("InfoFlow")
+    val dampingFactor = json.map(_("damping")).getOrElse("0.85").toDouble
+    val logDir = json.map(_("logDir")).getOrElse(".")
+    val logWriteLog = json.map(_("logWriteLog")).getOrElse("false").toBoolean
+    val rddText = json.map(_("logRddText")).getOrElse("false").toBoolean
+    val rddJSon = json.map(_("logRddJSon")).getOrElse("false").toInt
+    val logSteps = json.map(_("logSteps")).getOrElse("false").toBoolean
 
-    val outputDir: String = json match {
-      case Some(m: Map[String, Any]) => m("Output") match {
-        case s: String => s
-      }
-    }
-
-    val mergeAlgo: String = json match {
-      case Some(m: Map[String, Any]) => m("Algo") match {
-        case s: String => s
-      }
-    }
-
-    val dampingFactor: Double = json match {
-      case Some(m: Map[String, Any]) => m("damping") match {
-        case s: String => s.toDouble
-      }
-    }
-
-    ( pajekFile, outputDir, mergeAlgo, dampingFactor )
+    (
+      pajekFile, mergeAlgo, dampingFactor,
+      logDir, logWriteLog, rddText, rddJSon, logSteps
+    )
   }
 }

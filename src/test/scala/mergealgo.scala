@@ -29,9 +29,11 @@ extends FunSuite
     val pj = new PajekFile( sc, pjFile )
     val nodes = new Nodes( pj, 0.85, 1e-3 )
     val initPartition = Partition.init(nodes)
+    val logger = new LogFile(outputDir,true,true,0,false)
     val finalPartition = merge(
-      initPartition, new LogFile(outputDir,true)
+      initPartition, logging
     )
+    logger.saveText( finalPartition.partitioning, "partition", false )
 
     // checking the log file
     val logFile = Source.fromFile( outputDir +"/log.txt" )
@@ -86,7 +88,7 @@ extends FunSuite
       case regex => {
         // read partition file and matches regex
         val partFile = Source.fromFile(
-          outputDir +"/partition_" +nMerges.toString +"/part-00000"
+          outputDir +"/partition/part-00000"
         )
         val matches = regex.r.findAllIn(partFile.getLines.mkString)
         partFile.close

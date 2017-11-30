@@ -27,12 +27,16 @@ object InfoFlowMain {
 
     // initialize parameters from config file
     val pajekFile = config.pajekFile
-    val logFile = new LogFile( config.outputDir, false )
     val dampingFactor = config.dampingFactor
     val mergeAlgo: MergeAlgo =
       if( config.mergeAlgo == "InfoMap" ) new InfoMap
       else if( config.mergeAlgo == "InfoFlow" ) new InfoFlow
       else throw new Exception("Merge algorithm must be InfoMap or InfoFlow")
+    val logFile = new LogFile(
+      config.logDir,
+      config.logWriteLog, config.rddText,
+      config.rddJSon, config.logSteps
+    )
 
   /***************************************************************************
    * Initialize Spark Context
@@ -54,8 +58,8 @@ object InfoFlowMain {
   /***************************************************************************
    * Output
    ***************************************************************************/
-    logFile.saveReduceJSon( initPartition, "graph_0.json", false )
-    logFile.saveReduceJSon( finalPartition, "graph_1.json", false )
+    if( !logFile.logSteps )
+      logFile.saveJSon( finalPartition, "graph.json", false )
 
   /***************************************************************************
    * Stop Spark Context
