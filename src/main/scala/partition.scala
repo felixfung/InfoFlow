@@ -7,6 +7,7 @@ case class Partition
 (
   val nodeNumber: Int,
   val tele: Double,
+  val names: RDD[(Int,String)], // only for saving to json
   val edges: RDD[((String,String),Double)], // only for saving to json
   val partitioning: RDD[(String,Int)],
   val iWj: RDD[((Int,Int),Double)],
@@ -28,17 +29,31 @@ case class Partition
       case (node,module) => (module.toString,module)
     }
     .distinct
-    val reducedEdges = edges.map {
-      case ((from,to),weight) => (from,(to,weight))
+
+    val reducedEdges = {
+      iWj.map {
+        case ((from,to),weight) => (from,(to,weight))
+      }
+      .join(names)
+      .map {
+        case (from,((to,weight),fromName)) => (fromName,(to,weight))
+      }
+      .join(partitioning)
+      .map {
+        case (from,((to,weight),fromIdx))
+        => (to,(fromIdx,weight))
+      }
+      .join(names)
+      .map {
+        case (to,((fromIdx,weight),toName)) => (toName,(fromIdx,weight))
+      }
+      .join(partitioning)
+      .map {
+        case (to,((fromIdx,weight),toIdx))
+        => ((fromIdx.toString,toIdx.toString),weight)
+      }
     }
-    .join(partitioning)
-    .map {
-      case (from,((to,weight),fromIdx)) => (to,(fromIdx,weight))
-    }
-    .join(partitioning)
-    .map {
-      case (to,((fromIdx,weight),toIdx)) => ((fromIdx.toString,toIdx.toString),weight)
-    }
+
     saveJSon( fileName, reduceNodes, reducedEdges )
   }
 
@@ -82,7 +97,7 @@ case class Partition
         file.write(
           "\t\t{\"source\": \"" +from
           +"\", \"target\": \"" +to
-          +"\", \"value\": "+weight.toString
+          +"\", \"value\": "+(100*weight).toString
           +"}"
         )
         if( idx < edgeCount-1 )
@@ -193,7 +208,7 @@ object Partition {
     }
 
     // construct partition
-    Partition( nodeNumber.toInt, tele, edges, partitioning,
+    Partition( nodeNumber.toInt, tele, nodes.names, edges, partitioning,
       iWj, modules, codeLength )
   }
 

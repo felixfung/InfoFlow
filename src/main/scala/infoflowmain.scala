@@ -45,8 +45,8 @@ object InfoFlowMain {
   /***************************************************************************
    * Output
    ***************************************************************************/
-    logFile.saveJSon( initPartition, "graph0.json", false )
-    logFile.saveJSon( finalPartition, "graph1.json", false )
+    logFile.saveReduceJSon( initPartition, "graph_0.json", false )
+    logFile.saveReduceJSon( finalPartition, "graph_1.json", false )
 
   /***************************************************************************
    * Stop Spark Context

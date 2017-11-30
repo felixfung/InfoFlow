@@ -196,6 +196,8 @@ class InfoFlow extends MergeAlgo
     // log partitioning
     logFile.saveText( partition.iWj, "/connection_0", true )
     logFile.saveText( partition.partitioning, "/partition_0", true )
+    // save json file
+    logFile.saveJSon( partition, "/graph_0.json", true )
 
   /***************************************************************************
    * this is the multimerging algorithm
@@ -447,6 +449,7 @@ class InfoFlow extends MergeAlgo
         val newPartition = Partition(
           nodeNumber,
           tele,
+          partition.names,
           partition.edges,
           newPartitioning,
           newiWj,
