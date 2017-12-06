@@ -81,7 +81,13 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
     .sorted
 
     // compare the two iterables
-    if( components1.length != components2.length ) false
+    if( components1.length != components2.length ) {
+      println("COMPONENT1")
+      components1.foreach(println)
+      println("COMPONENT2")
+      components2.foreach(println)
+      false
+    }
     else {
       var res = true
       for( i <- 0 to components1.length-1 if res ) {
@@ -91,9 +97,8 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
           if( array1.size != array2.size ) false
           else {
             var eq = true
-            for( j <- 0 to components1(i).size-1 if eq ) {
+            for( j <- 0 to components1(i).size-1 if eq )
               eq = array1(j) == array2(j)
-            }
             eq
           }
         }
@@ -153,6 +158,56 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
     assert( vertexLabelUnique(edgesLabeled) )
     val expectedLabel = sc.parallelize(
       Array( ((1,2),1), ((2,3),1), ((3,4),1), ((4,5),1), ((5,6),1), ((6,7),1) )
+    )
+    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
+  }
+
+  test("Label edges 5") {
+    val edges2bLabeled =
+      sc.parallelize(Array(
+        (4,32), (7,33), (2,10), (10,29), (10,31),
+        (4,10), (13,31), (18,34), (20,21), (14,30),
+        (10,18), (24,25), (10,33), (10,17), (14,19),
+        (16,18), (26,30), (11,30), (1,9), (8,18),
+        (10,22), (1,18), (25,35), (25,33), (5,28),
+        (3,25)
+      ))
+    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
+    assert( vertexLabelUnique(edgesLabeled) )
+    val expectedLabel = sc.parallelize(
+      Array(
+        ((4,32),10), ((7,33),10), ((2,10),10), ((10,29),10), ((10,31),10),
+        ((4,10),10), ((13,31),10), ((18,34),10), ((20,21),20), ((14,30),30),
+        ((10,18),10), ((24,25),10), ((10,33),10), ((10,17),10), ((14,19),30),
+        ((16,18),10), ((26,30),30), ((11,30),30), ((1,9),10), ((8,18),10),
+        ((10,22),10), ((1,18),10), ((25,35),10), ((25,33),10), ((5,28),5),
+        ((3,25),10)
+      )
+    )
+    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
+  }
+
+  test("Label edges 6") {
+    val edges2bLabeled =
+      sc.parallelize(Array(
+        (4,32), (7,33), (2,10), (10,29), (10,31),
+        (4,10), (13,31), (18,34),
+        (10,18), (24,25), (10,33), (10,17),
+        (16,18), (1,9), (8,18),
+        (10,22), (1,18), (25,35), (25,33),
+        (3,25)
+      ))
+    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
+    assert( vertexLabelUnique(edgesLabeled) )
+    val expectedLabel = sc.parallelize(
+      Array(
+        ((4,32),1), ((7,33),1), ((2,10),1), ((10,29),1), ((10,31),1),
+        ((4,10),1), ((13,31),1), ((18,34),1),
+        ((10,18),1), ((24,25),1), ((10,33),1), ((10,17),1),
+        ((16,18),1), ((1,9),1), ((8,18),1),
+        ((10,22),1), ((1,18),1), ((25,35),1), ((25,33),1),
+        ((3,25),1)
+      )
     )
     assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
   }

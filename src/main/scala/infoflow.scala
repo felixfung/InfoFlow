@@ -49,6 +49,7 @@ object InfoFlow
    ***************************************************************************/
     def labelEdge( labelEdge1: RDD[((Int,Int),Int)] )
     : RDD[((Int,Int),Int)] = {
+
       // count the edge label occurrences
       // (vertex,count)
       val vertexCount = labelEdge1.flatMap {
@@ -69,12 +70,20 @@ object InfoFlow
 
       val map = vertexCount.join(vertexLabel)
       .map {
-        case (vertex,((label,count),maxLabel)) => (label,maxLabel)
+        case (vertex,((label,count),maxLabel)) => (label,(maxLabel,count))
       }
       .filter {
-        case (from,to) => from!=to
+        case (from,(to,count)) => from!=to
       }
       .distinct
+      .reduceByKey {
+        case ( (to1,count1), (to2,count2) ) =>
+          if( count1 >= count2 ) (to1,count1)
+          else (to2,count2)
+      }
+      .map {
+        case (from,(to,count)) => (from,to)
+      }
 
       // check if mapping is empty
       if( map.take(1).length == 0 ) {
