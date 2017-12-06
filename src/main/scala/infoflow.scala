@@ -51,53 +51,30 @@ object InfoFlow
     : RDD[((Int,Int),Int)] = {
       // count the edge label occurrences
       // (vertex,count)
-      val vertexCount: RDD[(Int,Int)] = labelEdge1.map {
-        case ((from,to),label) => (label,1)
+      val vertexCount = labelEdge1.flatMap {
+        case ((from,to),label) => Seq( ((from,label),1), ((to,label),1) )
       }
       .reduceByKey(_+_)
+      .map {
+        case ((vertex,label),count) => (vertex,(label,count))
+      }
 
-      // for each edge, if both vertices has nonzero vertex count,
-      // produce a mapping so that
-      // the vertex of lower count goes to the vertex of higher count
-      val map: RDD[(Int,Int)] = labelEdge1.map {
-        case ((from,to),label) => (from,to)
-      }
-      .join(vertexCount).map {
-        case (from,(to,fromCount)) => (to,(from,fromCount))
-      }
-      .join(vertexCount).map {
-        case (to,((from,fromCount),toCount)) =>
-          if( fromCount > toCount )
-            (to,(from,fromCount))
-          else if( fromCount < toCount )
-            (from,(to,toCount))
-          else { // fromCount == toCount
-            if( from < to )
-              (to,(from,fromCount))
-            else //if( from > to )
-              (from,(to,toCount))
-          }
-      }
-      .reduceByKey {
-        // when an index is mapped into two other indices,
-        // choose to map into an index with a higher vertex count
-        case (
-               (target1,targetCount1),
-               (target2,targetCount2)
-             )
-        =>
-          if( targetCount1 > targetCount2 )
-            (target1,targetCount1)
-          else if( targetCount1 < targetCount2 )
-            (target2,targetCount2)
-          else if( target1 < target2 )
-            (target1,targetCount1)
-          else
-            (target2,targetCount2)
+      val vertexLabel = vertexCount.reduceByKey {
+        case ( (label1,count1), (label2,count2) )
+        => if( count1 >= count2 ) (label1,count1) else (label2,count2)
       }
       .map {
-        case (idx,(target,count)) => (idx,target)
+        case (vertex,(label,_)) => (vertex,label)
       }
+
+      val map = vertexCount.join(vertexLabel)
+      .map {
+        case (vertex,((label,count),maxLabel)) => (label,maxLabel)
+      }
+      .filter {
+        case (from,to) => from!=to
+      }
+      .distinct
 
       // check if mapping is empty
       if( map.take(1).length == 0 ) {
