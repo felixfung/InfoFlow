@@ -75,7 +75,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
 
       // regex patterns for specifications of vertices
       val vertexRegex =
-        """[ \t]*?([0-9]+)[ \t]+\"([0-9a-zA-Z\-]*).*""".r
+        """[ \t]*?([0-9]+)[ \t]+\"(.*)\".*""".r
 
       vertexLines.map {
         case vertexRegex(index,name) => ( index.toInt, name )
