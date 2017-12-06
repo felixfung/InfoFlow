@@ -31,7 +31,7 @@ extends FunSuite
     val initPartition = Partition.init(nodes)
     val logger = new LogFile(outputDir,true,true,0,false)
     val finalPartition = merge(
-      initPartition, logging
+      initPartition, logger
     )
     logger.saveText( finalPartition.partitioning, "partition", false )
 
