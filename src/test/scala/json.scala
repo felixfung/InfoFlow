@@ -91,14 +91,14 @@ class JSonTest extends FunSuite with BeforeAndAfter
         "\t\"nodes\": [",
         "\t\t{\"id\": \"17\", \"group\": 17},",
         "\t\t{\"id\": \"2\", \"group\": 2},",
-        "\t\t{\"id\": \"23\", \"group\": 23},",
+        "\t\t{\"id\": \"24\", \"group\": 24},",
         "\t\t{\"id\": \"7\", \"group\": 7}",
         "\t],",
         "\t\"links\": [",
-		"\t\t{\"source\": \"17\", \"target\": \"23\", \"value\": 0.8674494124000919},",
+		"\t\t{\"source\": \"17\", \"target\": \"24\", \"value\": 0.8674494124000919},",
 		"\t\t{\"source\": \"2\", \"target\": \"7\", \"value\": 0.22363558809370296},",
 		"\t\t{\"source\": \"7\", \"target\": \"17\", \"value\": 1.89285421768626},",
-		"\t\t{\"source\": \"7\", \"target\": \"23\", \"value\": 0.6803128149374325}",
+		"\t\t{\"source\": \"7\", \"target\": \"24\", \"value\": 0.6803128149374325}",
         "\t]",
         "}"
       )

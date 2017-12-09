@@ -21,7 +21,7 @@ case class Partition
 
   // function prints all nodes, with the partition labeling
   def saveJSon( fileName: String ): Unit =
-    saveJSon( fileName, partitioning, edges )
+    saveJSon( fileName, partitioning.collect.sorted, edges.collect.sorted )
 
   // function prints each partitioning as a node
   def saveReduceJSon( fileName: String ): Unit = {
@@ -54,16 +54,19 @@ case class Partition
       }
     }
 
-    saveJSon( fileName, reduceNodes, reducedEdges )
+    saveJSon( fileName, reduceNodes.collect.sorted, reducedEdges.collect.sorted )
   }
 
   /***************************************************************************
-   * inner function to save graph into json file
+   * inner function to save graph into a json file
+   * NOTE: *one* json file, on a local filesystem
+   * this assumes a local filesystem can handle the graph data
+   * and that a local machine memory can handle the graph data
    ***************************************************************************/
   private def saveJSon(
     fileName: String,
-    nodes: RDD[(String,Int)],
-    edges: RDD[((String,String),Double)]
+    nodes: Array[(String,Int)],
+    edges: Array[((String,String),Double)]
   ): Unit = {
 
     // open file
@@ -71,9 +74,11 @@ case class Partition
 
     // write node data
     file.write( "{\n\t\"nodes\": [\n" )
-    val nodeCount = nodes.count
-    nodes.collect.sorted.zipWithIndex.foreach {
-      case ((node,module),idx) => {
+    val nodeCount = nodes.size
+    //nodes.collect.sorted.zipWithIndex.foreach {
+    for( idx <- 0 to nodeCount-1 ) {
+    nodes(idx) match {
+      case (node,module) => {
         file.write(
           "\t\t{\"id\": \"" +node
           +"\", \"group\": " +module.toString
@@ -84,16 +89,16 @@ case class Partition
         file.write("\n")
       }
     }
+    }
     file.write( "\t],\n" )
 
     // write edge data
     file.write( "\t\"links\": [\n" )
-    val nodeName = nodes.map {
-      case (name,idx) => (idx,name)
-    }
-    val edgeCount = edges.count
-    edges.collect.sorted.zipWithIndex.foreach {
-      case (((from,to),weight),idx) =>
+    val edgeCount = edges.size
+    //edges.collect.sorted.zipWithIndex.foreach {
+    for( idx <- 0 to edgeCount-1 ) {
+    edges(idx) match {
+      case ((from,to),weight) =>
         file.write(
           "\t\t{\"source\": \"" +from
           +"\", \"target\": \"" +to
@@ -103,6 +108,7 @@ case class Partition
         if( idx < edgeCount-1 )
           file.write(",")
         file.write("\n")
+    }
     }
     file.write("\t]")
 
