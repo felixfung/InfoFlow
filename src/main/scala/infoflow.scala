@@ -12,7 +12,7 @@ object InfoFlow
    * it is declared as a static class function to enable unit testing
    ***************************************************************************/
 
-  if( edge2label.take(1).length == 0 )
+  if( edge2label.isEmpty )
     throw new Exception("Empty RDD argument")
 
   /***************************************************************************
@@ -86,7 +86,7 @@ object InfoFlow
       }
 
       // check if mapping is empty
-      if( map.take(1).length == 0 ) {
+      if( map.isEmpty ) {
         // if mapping is empty, ie no label is to be changed, terminate
         labelEdge1
       }
@@ -238,7 +238,7 @@ class InfoFlow extends MergeAlgo
 
       // if m2Merge is empty, then no modules seek to merge
       // terminate loop
-      if( m2Merge.take(1).length == 0 ) {
+      if( m2Merge.isEmpty ) {
         logFile.write( "Merging terminates after "
           +(loop-1).toString +" merges" )
         logFile.close
@@ -425,7 +425,7 @@ class InfoFlow extends MergeAlgo
           +": merging " +partition.modules.count.toString
           +" modules into " +newModules.count.toString +" modules\n"
         )
-
+println(loop.toString)
         // log new code length
         logFile.write( "State " +loop.toString
           +": code length " +newCodeLength.toString +"\n"
