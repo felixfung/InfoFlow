@@ -31,8 +31,10 @@ class LogFile(
    * write message to log file
    ***************************************************************************/
   def write( msg: String ) =
-    if( writeLog )
+    if( writeLog ) {
       logFile.write(msg)
+      logFile.flush
+    }
 
   /***************************************************************************
    * save an RDD object to a text file
