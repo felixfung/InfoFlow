@@ -162,6 +162,10 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       .filter {
         case (from,(to,weight)) => weight>0
       }
+      // filter away edges where the two vertices are identical
+      .filter {
+        case (from,(to,weight)) => from!=to
+      }
 
       sparseMat.map {
         case (from,(to,weight)) => ((from,to),1)
