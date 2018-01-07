@@ -38,6 +38,13 @@ class PajekFileTest extends FunSuite with BeforeAndAfter
     assert( thrown.getMessage === "Cannot open file Nets/dummy" )
   }
 
+  test("Read trivial network with comment") {
+    val pajek = new PajekFile(sc,"Nets/zero.net")
+    assert( pajek.n === 1 )
+    assert( pajek.names.collect === Array((1,"v1")) )
+    assert( pajek.sparseMat.collect === Array() )
+  }
+
   test("Read trivial networks") {
     val pajek = new PajekFile(sc,"Nets/trivial.net")
     assert( pajek.n === 2 )

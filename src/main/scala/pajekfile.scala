@@ -27,6 +27,23 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
     val linedFile = rawFile.zipWithIndex
 
   /***************************************************************************
+   * Delete comments from file
+   ***************************************************************************/
+
+    val commentRegex = """[ \t]*%.*""".r
+    val reducedLinedFile = linedFile.filter {
+      case (line,index) => line match {
+        case commentRegex(_*) => {println;false}
+        case _ => true
+      }
+    }
+    .sortBy( _._2 )
+    .map {
+      case (line,index) => line
+    }
+    .zipWithIndex
+
+  /***************************************************************************
    * Get node number n
    * and the line number of the vertex specification, vertexLine
    * The latter is to partition the file
@@ -37,8 +54,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
 
     val (n,vertexLine) = {
       val verticesRegex = """(?i)\*Vertices[ \t]+([0-9]+)""".r
-
-      val vertexSpec = linedFile.filter {
+      val vertexSpec = reducedLinedFile.filter {
         case (line,index) => line match {
           case verticesRegex(_) => true
           case _ => false
@@ -65,7 +81,9 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
 
     val names = {
       // filter the relevant lines
-      val vertexLines = linedFile.filter {
+    val vertexRegex =
+      """[ \t]*?([0-9]+)[ \t]+\"(.*)\".*""".r
+      val vertexLines = reducedLinedFile.filter {
         case (_,index) => vertexLine<index && index<=vertexLine+n
       }
       // take away line numbers
@@ -73,12 +91,9 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
         case (x,_) => x
       }
 
-      // regex patterns for specifications of vertices
-      val vertexRegex =
-        """[ \t]*?([0-9]+)[ \t]+\"(.*)\".*""".r
-
       vertexLines.map {
         case vertexRegex(index,name) => ( index.toInt, name )
+        case _ => throw new Exception("Error reading vertex")
       }
     }
 
@@ -89,7 +104,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
     val sparseMat = {
 
       // filter the relevant lines
-      val lineEdges = linedFile.filter {
+      val lineEdges = reducedLinedFile.filter {
         case (_,index) => vertexLine > index || index > vertexLine+n+1
       }
       // take away line numbers
@@ -97,16 +112,14 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
         case (x,_) => x
       }
 
-      // regex patterns for specifications of edges
-      val edgeRegex1 =
-        """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]*""".r
-      val edgeRegex2 =
-        """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]+([0-9.]+)[ \t]*""".r
-
       // given the edge specifications (with or without weights)
       // construct a connection matrix
       // if no weight is given, default to weight=1
       // if the same edge is specified more than once, aggregate the weights
+    val edgeRegex1 =
+      """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]*""".r
+    val edgeRegex2 =
+      """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]+([0-9.]+)[ \t]*""".r
       lineEdges.map {
         case edgeRegex1(from,to) => ( (from.toInt,to.toInt), 1.0 )
         case edgeRegex2(from,to,weight) =>
