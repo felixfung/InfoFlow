@@ -91,10 +91,22 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
         case (x,_) => x
       }
 
-      vertexLines.map {
+      val name = vertexLines.map {
         case vertexRegex(index,name) => ( index.toInt, name )
         case _ => throw new Exception("Error reading vertex")
       }
+
+      // check indices are unique
+      name.map {
+        case (index,name) => (index,1)
+      }
+      .reduceByKey(_+_)
+      .foreach {
+        case (index,count) => if( count > 1 )
+          throw new Exception("Vertex index "+index.toString+" is not unique!")
+      }
+
+      name
     }
 
   /***************************************************************************
@@ -116,11 +128,12 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       // construct a connection matrix
       // if no weight is given, default to weight=1
       // if the same edge is specified more than once, aggregate the weights
-    val edgeRegex1 =
-      """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]*""".r
-    val edgeRegex2 =
-      """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]+([0-9.]+)[ \t]*""".r
-      lineEdges.map {
+      val edgeRegex1 =
+        """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]*""".r
+      val edgeRegex2 =
+        """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]+([0-9.]+)[ \t]*""".r
+
+      val sparseMat = lineEdges.map {
         case edgeRegex1(from,to) => ( (from.toInt,to.toInt), 1.0 )
         case edgeRegex2(from,to,weight) =>
           ( (from.toInt,to.toInt), weight.toDouble )
@@ -149,6 +162,18 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       .filter {
         case (from,(to,weight)) => weight>0
       }
+
+      sparseMat.map {
+        case (from,(to,weight)) => ((from,to),1)
+      }
+      .reduceByKey(_+_)
+      .foreach {
+        case ((from,to),count) => if( count > 1 )
+          throw new
+            Exception("Edge ("+from.toString+","+to.toString+" is not unique!")
+      }
+
+      sparseMat
     }
 
     (n,names,sparseMat)
