@@ -1,4 +1,5 @@
 import org.apache.spark.rdd.RDD
+import java.io._
 
 object InfoFlow
 {
@@ -47,9 +48,13 @@ object InfoFlow
   /***************************************************************************
    * recursive function
    ***************************************************************************/
-    def labelEdge( labelEdge1: RDD[((Int,Int),Int)] )
+    def labelEdge( labelEdge1: RDD[((Int,Int),Int)] ,loop:Int)
     : RDD[((Int,Int),Int)] = {
-
+/*val writer=new PrintWriter(new File("edges_"+loop.toString))
+val asdf=labelEdge1.collect.sorted
+for( i <- 0 to asdf.size-1 )
+  writer.write( asdf(i).toString +"\n")
+writer.close*/
       // count the edge label occurrences
       // (vertex,count)
       val vertexCount = labelEdge1.flatMap {
@@ -61,8 +66,15 @@ object InfoFlow
       }
 
       val vertexLabel = vertexCount.reduceByKey {
-        case ( (label1,count1), (label2,count2) )
-        => if( count1 >= count2 ) (label1,count1) else (label2,count2)
+        case ( (label1,count1), (label2,count2) ) =>
+          if( count1 > count2 )
+            (label1,count1)
+          else if( count1 < count2 )
+            (label2,count2)
+          else if( label1 < label2 )
+            (label1,count1)
+          else
+            (label2,count2)
       }
       .map {
         case (vertex,(label,_)) => (vertex,label)
@@ -78,13 +90,23 @@ object InfoFlow
       .distinct
       .reduceByKey {
         case ( (to1,count1), (to2,count2) ) =>
-          if( count1 >= count2 ) (to1,count1)
-          else (to2,count2)
+          if( count1 > count2 )
+            (to1,count1)
+          else if( count1 < count2 )
+            (to2,count2)
+          else if( to1 < to2 )
+            (to1,count1)
+          else
+            (to2,count2)
       }
       .map {
         case (from,(to,count)) => (from,to)
       }
-
+/*val mapper=new PrintWriter(new File("map_"+loop.toString))
+val jkl=map.collect.sorted
+for( i <- 0 to jkl.size-1 )
+  mapper.write( jkl(i).toString +"\n")
+mapper.close*/
       // check if mapping is empty
       if( map.isEmpty ) {
         // if mapping is empty, ie no label is to be changed, terminate
@@ -101,11 +123,11 @@ object InfoFlow
           case (label,((from,to),None)) => ((from,to),label)
         }
         .distinct
-        labelEdge( labelEdge2 )
+        labelEdge( labelEdge2 ,loop+1)
       }
     }
     // invoke recursive function
-    labelEdge( labelEdge1 )
+    labelEdge( labelEdge1 ,0)
   }
 
   def calDeltaL(
@@ -425,7 +447,7 @@ class InfoFlow extends MergeAlgo
           +": merging " +partition.modules.count.toString
           +" modules into " +newModules.count.toString +" modules\n"
         )
-println(loop.toString)
+
         // log new code length
         logFile.write( "State " +loop.toString
           +": code length " +newCodeLength.toString +"\n"
