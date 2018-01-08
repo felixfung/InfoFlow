@@ -33,7 +33,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
     val commentRegex = """[ \t]*%.*""".r
     val reducedLinedFile = linedFile.filter {
       case (line,index) => line match {
-        case commentRegex(_*) => {println;false}
+        case commentRegex(_*) => false
         case _ => true
       }
     }
@@ -161,10 +161,6 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       // weights of zero are legal, but will be filtered out
       .filter {
         case (from,(to,weight)) => weight>0
-      }
-      // filter away edges where the two vertices are identical
-      .filter {
-        case (from,(to,weight)) => from!=to
       }
 
       sparseMat.map {
