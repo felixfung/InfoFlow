@@ -52,6 +52,13 @@ class PajekFileTest extends FunSuite with BeforeAndAfter
     assert( pajek.sparseMat.collect === Array( (1,(2,2)) ) )
   }
 
+  test("Read trivial networks with self loop") {
+    val pajek = new PajekFile(sc,"Nets/trivial-with-self-loop.net")
+    assert( pajek.n === 2 )
+    assert( pajek.names.collect === Array((1,"m01"),(2,"m02")) )
+    assert( pajek.sparseMat.collect.sorted === Array( (1,(2,2)), (2,(2,1)) ) )
+  }
+
   test("Read simple network") {
     val pajek = new PajekFile(sc,"Nets/simple.net")
     assert( pajek.n === 6 )
