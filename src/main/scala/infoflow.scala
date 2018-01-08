@@ -50,11 +50,7 @@ object InfoFlow
    ***************************************************************************/
     def labelEdge( labelEdge1: RDD[((Int,Int),Int)] ,loop:Int)
     : RDD[((Int,Int),Int)] = {
-/*val writer=new PrintWriter(new File("edges_"+loop.toString))
-val asdf=labelEdge1.collect.sorted
-for( i <- 0 to asdf.size-1 )
-  writer.write( asdf(i).toString +"\n")
-writer.close*/
+
       // count the edge label occurrences
       // (vertex,count)
       val vertexCount = labelEdge1.flatMap {
@@ -102,11 +98,7 @@ writer.close*/
       .map {
         case (from,(to,count)) => (from,to)
       }
-/*val mapper=new PrintWriter(new File("map_"+loop.toString))
-val jkl=map.collect.sorted
-for( i <- 0 to jkl.size-1 )
-  mapper.write( jkl(i).toString +"\n")
-mapper.close*/
+
       // check if mapping is empty
       if( map.isEmpty ) {
         // if mapping is empty, ie no label is to be changed, terminate

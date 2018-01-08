@@ -273,7 +273,7 @@ Initiation is similar to the infomap algorithm, so that we have an RDD of modula
 Loop:
 \begin{enumerate}
     \item For each module, seek to merge with another module that would offer the greatest reduction in code length. If no such merge exists, the module does not seek to merge. Then, we have \(O(e)\) edges.
-    \item For each of these edges, label it to the module index to be merged to. This has \(O(k)\) complexity, if \(k\) edges have linked vertices. The precise algorithm is described below.
+    \item For each of these edges, label it to the module index to be merged to, so that each connected component of the graph has the same label. This has \(O(k)\) complexity, \(k\) being the size of the connected component. The precise algorithm is described below.
     \item Recalculate modular and edge property values via aggregations:
         \begin{align*}
             n_i &= \sum_{k\rightarrow i} n_k\\
@@ -295,9 +295,9 @@ Loop:
     %\item For the remaining modules and edges, calculate \(w\), \(q\) and \(\Delta L\).
 \end{enumerate}
 
-\subsubsection*{Labeling the edges with module index}
+\subsubsection*{Labeling connected components}
 
-This algorithm labels all edges such that, all linked edges are labeled with the same module index, the module index being the one that occurs the most frequently within the linked edges.
+This algorithm labels a graph so that all connected components are labeled by the same module index, the module index being the one that occurs the most frequently within the linked edges.
 
 Initiation:
 \begin{enumerate}
@@ -307,9 +307,14 @@ Initiation:
 
 Loop:
 \begin{enumerate}
-    \item Count the edge label occurrences.
-    \item For each edge, if both vertices have nonzero label counts, produce a map from vertex of low count to vertex of high count.
-    \item If we have an empty map, terminate loop. Otherwise, apply the map to the edge labels.
+    \setcounter{enumi}{-1}
+    \item Each edge is associated with a label, so that each vertex is associated with at least one label.
+    \item Count the label occurrences associated with each vertex, so that for each vertex, we have a list of labels and its associated count.
+    \item Re-associate each vertex with its max-count label.
+    \item If no relabeling is needed, terminate.
+    %\item Count the edge label occurrences.
+    %\item For each edge, if both vertices have nonzero label counts, produce a map from vertex of low count to vertex of high count.
+    %\item If we have an empty map, terminate loop. Otherwise, apply the map to the edge labels.
 \end{enumerate}
 
 \subsection{Performance Improvement}
@@ -324,7 +329,9 @@ In the multiple merging scheme, within each loop each module merges with one oth
 \end{align}
 Within each merge, there are \(O(k)\) operations to aggregate the indices appropriately for the merges.
 
-Thus, the overall time complexity is \(O(k~\mathrm{log}~n)\). On one extreme, if \(k=2\), i.e., every pair of modules are merged every step, then we have \(O(2~\mathrm{log}~n)\) complexity, i.e., logarithmic complexity in the number of nodes/edges. On the other extreme, if \(l=1\) and \(k=n/m\), then the overall complexity is \(O(k) = O(n/m)\). This has worst case complexity equal to that of infomap, when \(m=1\), but otherwise the division by \(m\) in the parallel scheme is likely to present performance improvement compared to the subtraction by \(m\) complexity in infomap.
+Thus, the overall time complexity is \(O(k~\mathrm{log}~n)\). For example, if \(k=2\), i.e., every pair of modules are merged every step, then we have \(O(2~\mathrm{log}~n)\) complexity, i.e., logarithmic complexity in the number of nodes/edges.
+
+In the worst cases, we have linear time complexity, if \(l=1, k=n/m\), so that the overall complexity is \(O(k) = O(n/m)\). Another possibility is if InfoFlow degenerates into InfoMap, so that we merge a pair of modules every step, and of course recover linear complexity.
 
 The central reason behind the logarithmic time complexity is the constant average merging of \(k\) modules into one. The constancy of this factor likely depends on the network structure. Given a sparse network, the number of edges is similar to the number of nodes. If we make the assumption that \(k\) is proportional to the number of edges, then after a loop, the number of modules is reduced by a factor of \(k\), and so is the number of edges. Thus, the network sparsity remains unchanged, and \(k\) is unchanged also. Of course, ultimately, actual performance benchmarks are required.
 
