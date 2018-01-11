@@ -58,123 +58,141 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
     edges2: RDD[((Int,Int),Int)]
   ): Boolean = {
 
-    // generate iterables of components from edges1
-    val components1 = edges1.flatMap {
-      case ((from,to),label) => Seq( (label,from), (label,to) )
+    def labeledEdges22DArray( edges: RDD[((Int,Int),Int)] ) = {
+      def tupleComp( t1: Array[(Int,Int)], t2: Array[(Int,Int)] ) =
+        t1(0)._1 <= t2(0)._1
+      edges.map {
+        case ((from,to),label) => (label,(from,to))
+      }
+      .groupByKey
+      .map {
+        case (label,edgesIter) => edgesIter.toArray.sorted
+      }
+      .collect
+      .sortWith( tupleComp )
     }
-    .groupByKey
-    .map {
-      case (label,vertices) => vertices
-    }
-    .collect
-    .sorted
 
-    // generate iterables of components from edges2
-    val components2 = edges2.flatMap {
-      case ((from,to),label) => Seq( (label,from), (label,to) )
-    }
-    .groupByKey
-    .map {
-      case (label,vertices) => vertices
-    }
-    .collect
-    .sorted
+    val components1 = labeledEdges22DArray(edges1)
+    val components2 = labeledEdges22DArray(edges2)
 
-    // compare the two iterables
     if( components1.length != components2.length ) {
-      println("COMPONENT1")
-      components1.foreach(println)
-      println("COMPONENT2")
-      components2.foreach(println)
       false
     }
     else {
       var res = true
       for( i <- 0 to components1.length-1 if res ) {
-        val array1 = components1(i).toArray.sorted
-        val array2 = components2(i).toArray.sorted
-        var res = {
-          if( array1.size != array2.size ) false
-          else {
-            var eq = true
-            for( j <- 0 to components1(i).size-1 if eq )
-              eq = array1(j) == array2(j)
-            eq
-          }
+        if( components1(i).size != components2(i).size )
+          res = false
+        else {
+          for( j <- 0 to components1(i).size-1 if res )
+            res = ( components1(i)(j) == components2(i)(j) )
         }
-        res
       }
       res
     }
+  }
+
+  def testEdgeLabeling( a1: Array[(Int,Int)], a2: Array[((Int,Int),Int)] ) = {
+    val edges2bLabeled = sc.parallelize(a1)
+    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
+    edgesLabeled.collect.foreach(print)
+    println("")
+    assert( vertexLabelUnique(edgesLabeled) )
+    val expectedLabel = sc.parallelize(a2)
+    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
   }
 
   /***************************************************************************
    * Edge Labeling Tests
    ***************************************************************************/
 
-  test("Label edges 0") {
-    val edges2bLabeled =
-      sc.parallelize(Array( (1,2) ))
-    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    assert( vertexLabelUnique(edgesLabeled) )
-    val expectedLabel = sc.parallelize(Array( ((1,2),1) ) )
-    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
-  }
-
-  test("Label edges 1") {
-    val edges2bLabeled =
-      sc.parallelize(Array( (3,7), (1,2), (3,9), (4,5), (2,5) ))
-    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    assert( vertexLabelUnique(edgesLabeled) )
-    val expectedLabel = sc.parallelize(Array( ((1,2),5), ((2,5),5), ((3,7),3), ((3,9),3), ((4,5),5) ) )
-    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
-  }
-
-  test("Label edges 2") {
-    val edges2bLabeled =
-      sc.parallelize(Array( (1,7), (2,3), (3,1), (4,5), (6,3), (7,5) ))
-    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    val expectedLabel = sc.parallelize(
-      Array( ((1,7),1), ((2,3),1), ((3,1),1), ((4,5),1), ((6,3),1), ((7,5),1) )
+  test("Trivial graph") {
+    testEdgeLabeling(
+      Array( (1,2) ),
+      Array( ((1,2),2) )
     )
-    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
   }
 
-  test("Label edges 3") {
-    val edges2bLabeled =
-      sc.parallelize(Array( (1,4), (7,9), (2,3), (3,5) ))
-    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    assert( vertexLabelUnique(edgesLabeled) )
-    val expectedLabel = sc.parallelize(
+  test("Trivial disjoint graph") {
+    testEdgeLabeling(
+      Array( (1,2), (3,4) ),
+      Array( ((1,2),1), ((3,4),3) )
+    )
+  }
+
+  test("Trivial graph with self-connecting edge") {
+    testEdgeLabeling(
+      Array( (1,1) ),
+      Array( ((1,1),1) )
+    )
+  }
+
+  test("Trivial graph with loop") {
+    testEdgeLabeling(
+      Array( (1,2), (2,1) ),
+      Array( ((1,2),1), ((2,1),1) )
+    )
+  }
+
+  test("Loop size-4") {
+    testEdgeLabeling(
+      Array( (1,2), (2,3), (3,4), (4,1) ),
+      Array( ((1,2),1), ((2,3),1), ((3,4),1), ((4,1),1) )
+    )
+  }
+
+  test("T-shaped graph") {
+    testEdgeLabeling(
+      Array( (1,2), (2,3), (2,4) ),
+      Array( ((1,2),1), ((2,3),1), ((2,4),1) )
+    )
+  }
+
+  test("6-shaped graph") {
+    testEdgeLabeling(
+      Array( (1,2), (2,1), (1,3) ),
+      Array( ((1,2),1), ((2,1),1), ((1,3),1) )
+    )
+  }
+
+  test("Small graph 1") {
+    testEdgeLabeling(
+      Array( (1,4), (7,9), (2,3), (3,5) ),
       Array( ((1,4),1), ((2,3),3), ((3,5),3), ((7,9),7) )
     )
-    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
   }
 
-  test("Label edges 4") {
-    val edges2bLabeled =
-      sc.parallelize(Array( (1,2), (2,3), (3,4), (4,5), (5,6), (6,7) ))
-    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    assert( vertexLabelUnique(edgesLabeled) )
-    val expectedLabel = sc.parallelize(
+  test("Small graph 2") {
+    testEdgeLabeling(
+      Array( (3,7), (1,2), (3,9), (4,5), (2,5) ),
+      Array( ((1,2),5), ((2,5),5), ((3,7),3), ((3,9),3), ((4,5),5) )
+    )
+  }
+
+  test("Small all connected graph 1") {
+    testEdgeLabeling(
+      Array( (1,7), (2,3), (3,1), (4,5), (6,3), (7,5) ),
+      Array( ((1,7),1), ((2,3),1), ((3,1),1), ((4,5),1), ((6,3),1), ((7,5),1) )
+    )
+  }
+
+  test("Small all connected graph 2") {
+    testEdgeLabeling(
+      Array( (1,2), (2,3), (3,4), (4,5), (5,6), (6,7) ),
       Array( ((1,2),1), ((2,3),1), ((3,4),1), ((4,5),1), ((5,6),1), ((6,7),1) )
     )
-    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
   }
 
-  test("Label edges 5") {
-    val edges2bLabeled =
-      sc.parallelize(Array(
+  test("Big graph 1") {
+    testEdgeLabeling(
+      Array(
         (4,32), (7,33), (2,10), (10,29), (10,31),
         (4,10), (13,31), (18,34), (20,21), (14,30),
         (10,18), (24,25), (10,33), (10,17), (14,19),
         (16,18), (26,30), (11,30), (1,9), (8,18),
         (10,22), (1,18), (25,35), (25,33), (5,28),
         (3,25)
-      ))
-    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    assert( vertexLabelUnique(edgesLabeled) )
-    val expectedLabel = sc.parallelize(
+      ),
       Array(
         ((4,32),10), ((7,33),10), ((2,10),10), ((10,29),10), ((10,31),10),
         ((4,10),10), ((13,31),10), ((18,34),10), ((20,21),20), ((14,30),30),
@@ -184,22 +202,18 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
         ((3,25),10)
       )
     )
-    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
   }
 
-  test("Label edges 6") {
-    val edges2bLabeled =
-      sc.parallelize(Array(
+  test("Big all connected graph") {
+    testEdgeLabeling(
+      Array(
         (4,32), (7,33), (2,10), (10,29), (10,31),
         (4,10), (13,31), (18,34),
         (10,18), (24,25), (10,33), (10,17),
         (16,18), (1,9), (8,18),
         (10,22), (1,18), (25,35), (25,33),
         (3,25)
-      ))
-    val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    assert( vertexLabelUnique(edgesLabeled) )
-    val expectedLabel = sc.parallelize(
+      ),
       Array(
         ((4,32),1), ((7,33),1), ((2,10),1), ((10,29),1), ((10,31),1),
         ((4,10),1), ((13,31),1), ((18,34),1),
@@ -209,7 +223,6 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
         ((3,25),1)
       )
     )
-    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
   }
 
   /***************************************************************************
