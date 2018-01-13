@@ -37,22 +37,19 @@ object InfoFlow
           ((from,to),from)
         else if( fromCount < toCount )
           ((from,to),to)
-        else {
-          if( from < to )
-            ((from,to),from)
-          else
-            ((from,to),to)
-        }
+        else if( from < to )
+          ((from,to),from)
+        else
+          ((from,to),to)
     }
 
   /***************************************************************************
    * recursive function
    ***************************************************************************/
-    def labelEdge( labelEdge1: RDD[((Int,Int),Int)] ,loop:Int)
+    def labelEdge( labelEdge1: RDD[((Int,Int),Int)] )
     : RDD[((Int,Int),Int)] = {
 
-      // count the edge label occurrences
-      // (vertex,count)
+      // for each vertex, count the label occurrences
       val vertexCount = labelEdge1.flatMap {
         case ((from,to),label) => Seq( ((from,label),1), ((to,label),1) )
       }
@@ -61,6 +58,7 @@ object InfoFlow
         case ((vertex,label),count) => (vertex,(label,count))
       }
 
+      // for each vertex, find the maximal occurring label
       val vertexLabel = vertexCount.reduceByKey {
         case ( (label1,count1), (label2,count2) ) =>
           if( count1 > count2 )
@@ -76,6 +74,7 @@ object InfoFlow
         case (vertex,(label,_)) => (vertex,label)
       }
 
+      // generate label transferal mapping
       val map = vertexCount.join(vertexLabel)
       .map {
         case (vertex,((label,count),maxLabel)) => (label,(maxLabel,count))
@@ -83,7 +82,6 @@ object InfoFlow
       .filter {
         case (from,(to,count)) => from!=to
       }
-      .distinct
       .reduceByKey {
         case ( (to1,count1), (to2,count2) ) =>
           if( count1 > count2 )
@@ -98,8 +96,7 @@ object InfoFlow
       .map {
         case (from,(to,count)) => (from,to)
       }
-
-      // check if mapping is empty
+map.collect.foreach(println)//////
       if( map.isEmpty ) {
         // if mapping is empty, ie no label is to be changed, terminate
         labelEdge1
@@ -114,12 +111,11 @@ object InfoFlow
           case (label,((from,to),Some(newLabel))) => ((from,to),newLabel)
           case (label,((from,to),None)) => ((from,to),label)
         }
-        .distinct
-        labelEdge( labelEdge2 ,loop+1)
+        labelEdge( labelEdge2 )
       }
     }
     // invoke recursive function
-    labelEdge( labelEdge1 ,0)
+    labelEdge( labelEdge1 )
   }
 
   def calDeltaL(

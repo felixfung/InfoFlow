@@ -95,7 +95,7 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
   def testEdgeLabeling( a1: Array[(Int,Int)], a2: Array[((Int,Int),Int)] ) = {
     val edges2bLabeled = sc.parallelize(a1)
     val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    edgesLabeled.collect.foreach(print)
+    edgesLabeled.collect.sorted.foreach(print)
     println("")
     assert( vertexLabelUnique(edgesLabeled) )
     val expectedLabel = sc.parallelize(a2)
@@ -105,6 +105,14 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
   /***************************************************************************
    * Edge Labeling Tests
    ***************************************************************************/
+
+  test("Empty graph") {
+    val thrown = intercept[Exception] {
+      val emptyArray = sc.parallelize( Array[(Int,Int)]() )
+      InfoFlow.labelEdges(emptyArray)
+    }
+    assert( thrown.getMessage === "Empty RDD argument" )
+  }
 
   test("Trivial graph") {
     testEdgeLabeling(
@@ -141,6 +149,38 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
     )
   }
 
+  test("Loop size-4 with duplicated edge") {
+    testEdgeLabeling(
+      Array( (1,2), (2,3), (3,4), (4,1), (4,1) ),
+      Array( ((1,2),1), ((2,3),1), ((3,4),1), ((4,1),1), ((4,1),1) )
+    )
+  }
+
+  test("Wrong sided loop") {
+    testEdgeLabeling(
+      Array(
+        (1,2), (1,3), (2,3)
+      ),
+      Array(
+        ((1,2),1), ((1,3),1), ((2,3),1)
+      )
+    )
+  }
+
+  test("Figure-8 loop") {
+    testEdgeLabeling(
+      Array( (1,2), (2,3), (3,1), (2,4), (4,2) ),
+      Array( ((1,2),1), ((2,3),1), ((3,1),1), ((2,4),1), ((4,2),1) )
+    )
+  }
+
+  test("O-o loop") {
+    testEdgeLabeling(
+      Array( (1,2), (2,3), (3,1), (3,2) ),
+      Array( ((1,2),1), ((2,3),1), ((3,1),1), ((3,2),1) )
+    )
+  }
+
   test("T-shaped graph") {
     testEdgeLabeling(
       Array( (1,2), (2,3), (2,4) ),
@@ -150,8 +190,8 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
 
   test("6-shaped graph") {
     testEdgeLabeling(
-      Array( (1,2), (2,1), (1,3) ),
-      Array( ((1,2),1), ((2,1),1), ((1,3),1) )
+      Array( (1,2), (2,3), (3,1), (2,4) ),
+      Array( ((1,2),1), ((2,3),1), ((3,1),1), ((2,4),1) )
     )
   }
 
@@ -221,6 +261,23 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
         ((16,18),1), ((1,9),1), ((8,18),1),
         ((10,22),1), ((1,18),1), ((25,35),1), ((25,33),1),
         ((3,25),1)
+      )
+    )
+  }
+
+  test("Weird graph") {
+    testEdgeLabeling(
+      Array(
+        (269,2660), (269,59), (2660,59),
+        (2660,6), (9,2660), (17,2660), (2660,35), (2660,3),
+        (2660,5), (2,2660), (2660,40), (1,2660), (2660,68),
+        (85,2660)
+      ),
+      Array(
+        ((269,2660),1), ((269,59),1), ((2660,59),1),
+        ((2660,6),1), ((9,2660),1), ((17,2660),1), ((2660,35),1), ((2660,3),1),
+        ((2660,5),1), ((2,2660),1), ((2660,40),1), ((1,2660),1), ((2660,68),1),
+        ((85,2660),1)
       )
     )
   }
