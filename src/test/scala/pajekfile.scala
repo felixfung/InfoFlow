@@ -92,6 +92,18 @@ class PajekFileTest extends FunSuite with BeforeAndAfter
     )
   }
 
+  test("Read file with *edgeslist format") {
+    val pajek = new PajekFile(sc,"Nets/edge-test.net")
+    assert( pajek.n === 6 )
+    assert( pajek.names.collect === Array(
+      (1,"1"),(2,"2"),(3,"3"),(4,"4"),(5,"5"),(6,"6")
+    ) )
+    assert( pajek.sparseMat.collect.sorted === Array(
+      (1,(2,1)), (1,(3,1)), (1,(4,1)),
+      (2,(1,1)), (2,(2,1)), (2,(6,1))
+    ) )
+  }
+
   /***************************************************************************
    * Stop Spark Context
    ***************************************************************************/

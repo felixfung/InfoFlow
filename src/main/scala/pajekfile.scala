@@ -132,12 +132,20 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
         """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]*""".r
       val edgeRegex2 =
         """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]+([0-9.]+)[ \t]*""".r
+      val edgeList = """[ \t]+([0-9]+).*""".r
 
-      val sparseMat = lineEdges.map {
-        case edgeRegex1(from,to) => ( (from.toInt,to.toInt), 1.0 )
+      lineEdges.flatMap {
+        case edgeRegex1(from,to) => Seq( ((from.toInt,to.toInt),1.0) )
         case edgeRegex2(from,to,weight) =>
-          ( (from.toInt,to.toInt), weight.toDouble )
-        case _ => ((1,1),0.0)
+          Seq( ((from.toInt,to.toInt),weight.toDouble) )
+        case edgeList => {
+          val vertices = edgeList.split("\\s+").filter( x => !x.isEmpty )
+          val verticesSlice = vertices.slice(1,vertices.length)
+          verticesSlice.map {
+            case toVertex => ((vertices(0).toInt,toVertex.toInt),1.0)
+          }
+        }
+        case _ => Seq()
       }
       // aggregate the weights
       .reduceByKey(_+_)
@@ -162,18 +170,6 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       .filter {
         case (from,(to,weight)) => weight>0
       }
-
-      sparseMat.map {
-        case (from,(to,weight)) => ((from,to),1)
-      }
-      .reduceByKey(_+_)
-      .foreach {
-        case ((from,to),count) => if( count > 1 )
-          throw new
-            Exception("Edge ("+from.toString+","+to.toString+" is not unique!")
-      }
-
-      sparseMat
     }
 
     (n,names,sparseMat)
