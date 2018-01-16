@@ -7,9 +7,9 @@ class Config( fileName: String ) {
    ***************************************************************************/
 
   val(
-    pajekFile, mergeAlgo, dampingFactor,
+    master, pajekFile, mergeAlgo, dampingFactor,
     logDir, logWriteLog, rddText, rddJSon, logSteps
-  ): (String,String,Double,String,Boolean,Boolean,Int,Boolean) = {
+  ): (String, String,String,Double,String,Boolean,Boolean,Int,Boolean) = {
 
   /***************************************************************************
    * read and parse JSon file content
@@ -37,6 +37,7 @@ class Config( fileName: String ) {
   /***************************************************************************
    * grab data
    ***************************************************************************/
+    val master = json.map(_("Master")).getOrElse("local[*]")
     val pajekFile = json.map(_("Pajek")).getOrElse("pajek.net")
     val mergeAlgo = json.map(_("Algo")).getOrElse("InfoFlow")
     val dampingFactor = json.map(_("damping")).getOrElse("0.85").toDouble
@@ -47,7 +48,7 @@ class Config( fileName: String ) {
     val logSteps = json.map(_("logSteps")).getOrElse("false").toBoolean
 
     (
-      pajekFile, mergeAlgo, dampingFactor,
+      master, pajekFile, mergeAlgo, dampingFactor,
       logDir, logWriteLog, rddText, rddJSon, logSteps
     )
   }

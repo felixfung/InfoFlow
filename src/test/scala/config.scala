@@ -36,6 +36,7 @@ class ConfigTest extends FunSuite with BeforeAndAfter
       // produce config file
       val writer = new PrintWriter(new File("unittestconfig.json"))
       writer.write("{\n")
+      writer.write("\t\"Master\": \"local[*]\",\n")
       writer.write("\t\"Pajek\": \"Nets/rosvall.net\",\n")
       writer.write("\t\"Algo\": \"InfoFlow\",\n")
       writer.write("\t\"damping\": \"0.85\",\n")
@@ -49,6 +50,7 @@ class ConfigTest extends FunSuite with BeforeAndAfter
 
       // verify parsing
       val config = new Config("unittestconfig.json")
+      assert( config.master === "local[*]" )
       assert( config.pajekFile === "Nets/rosvall.net" )
       assert( config.dampingFactor === 0.85 )
       assert( config.mergeAlgo === "InfoFlow" )

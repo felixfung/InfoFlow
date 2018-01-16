@@ -43,6 +43,7 @@ object InfoFlowMain {
    ***************************************************************************/
     val conf = new SparkConf()
       .setAppName("InfoMap TwoLevel Test")
+      .setMaster( config.master )
     val sc = new SparkContext(conf)
     sc.setLogLevel("OFF")
 
