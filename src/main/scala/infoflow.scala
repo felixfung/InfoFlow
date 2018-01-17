@@ -3,7 +3,7 @@ import java.io._
 
 object InfoFlow
 {
-  def labelEdges( edge2label: RDD[(Int,Int)] ) = {
+  def labelEdges( edge2label: RDD[(Int,Int)] ): RDD[((Int,Int),Int)] = {
   /***************************************************************************
    * given an RDD of edges,
    * partition the edges according to the connected components
@@ -49,72 +49,65 @@ object InfoFlow
     def labelEdge( labelEdge1: RDD[((Int,Int),Int)] )
     : RDD[((Int,Int),Int)] = {
 
-      // for each vertex, count the label occurrences
-      val vertexCount = labelEdge1.flatMap {
+      val labelCount = labelEdge1.map {
+        case ((from,to),label) => (label,1)
+      }
+      .reduceByKey(_+_)
+
+      val vertexLabel = labelEdge1.flatMap {
         case ((from,to),label) => Seq( ((from,label),1), ((to,label),1) )
       }
       .reduceByKey(_+_)
       .map {
-        case ((vertex,label),count) => (vertex,(label,count))
+        case ((vertex,label),count) => (label,(vertex,count))
       }
-
-      // for each vertex, find the maximal occurring label
-      val vertexLabel = vertexCount.reduceByKey {
-        case ( (label1,count1), (label2,count2) ) =>
-          if( count1 > count2 )
-            (label1,count1)
-          else if( count1 < count2 )
-            (label2,count2)
-          else if( label1 < label2 )
-            (label1,count1)
-          else
-            (label2,count2)
-      }
+      .join(labelCount)
       .map {
-        case (vertex,(label,_)) => (vertex,label)
-      }
-
-      // generate label transferal mapping
-      val map = vertexCount.join(vertexLabel)
-      .map {
-        case (vertex,((label,count),maxLabel)) => (label,(maxLabel,count))
-      }
-      .filter {
-        case (from,(to,count)) => from!=to
+        case (label,((vertex,count),labelCount)) =>
+          (vertex,(label,labelCount))
       }
       .reduceByKey {
-        case ( (to1,count1), (to2,count2) ) =>
-          if( count1 > count2 )
-            (to1,count1)
-          else if( count1 < count2 )
-            (to2,count2)
-          else if( to1 < to2 )
-            (to1,count1)
+        case ( (label1,labelCount1), (label2,labelCount2) ) =>
+          if( labelCount1 > labelCount2 )
+            (label1,labelCount1)
+          else if( labelCount1 < labelCount2 )
+            (label2,labelCount2)
+          else if( label1 < label2 )
+            (label1,labelCount1)
           else
-            (to2,count2)
+            (label2,labelCount2)
       }
+
+      val labelEdge2 = labelEdge1.map {
+        case ((from,to),label) => (from,to)
+      }
+      .join(vertexLabel)
       .map {
-        case (from,(to,count)) => (from,to)
+        case (from,(to,(fromLabel,fromLabelCount)))
+        => (to,(from,fromLabel,fromLabelCount))
       }
-map.collect.foreach(println)//////
-      if( map.isEmpty ) {
-        // if mapping is empty, ie no label is to be changed, terminate
+      .join(vertexLabel)
+      .map {
+        case (to,((from, fromLabel,fromCount), (toLabel,toCount))) =>
+          if( fromCount > toCount )
+            ((from,to),fromLabel)
+          else if( fromCount < toCount )
+            ((from,to),toLabel)
+          else if( fromLabel < toLabel )
+            ((from,to),fromLabel)
+          else /* if( fromLabel >= toLabel ) */
+            ((from,to),toLabel)
+      }
+
+      val equivalence = labelEdge1.join(labelEdge2).map {
+        case (edge,(oldLabel,newLabel)) => oldLabel==newLabel
+      }
+      .reduce(_&&_)
+      if( equivalence )
         labelEdge1
-      }
-      else { // otherwise keep iterating
-        // merge each edge with the mapping
-        // (label,((from,to),newLabel))
-        val labelEdge2 = labelEdge1.map {
-          case ((from,to),label) => (label,(from,to))
-        }
-        .leftOuterJoin(map).map {
-          case (label,((from,to),Some(newLabel))) => ((from,to),newLabel)
-          case (label,((from,to),None)) => ((from,to),label)
-        }
+      else
         labelEdge( labelEdge2 )
-      }
     }
-    // invoke recursive function
     labelEdge( labelEdge1 )
   }
 

@@ -95,8 +95,6 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
   def testEdgeLabeling( a1: Array[(Int,Int)], a2: Array[((Int,Int),Int)] ) = {
     val edges2bLabeled = sc.parallelize(a1)
     val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
-    edgesLabeled.collect.sorted.foreach(print)
-    println("")
     assert( vertexLabelUnique(edgesLabeled) )
     val expectedLabel = sc.parallelize(a2)
     assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
