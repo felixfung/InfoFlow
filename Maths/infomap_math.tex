@@ -308,13 +308,10 @@ Initiation:
 Loop:
 \begin{enumerate}
     \setcounter{enumi}{-1}
-    \item Each edge is associated with a label, so that each vertex is associated with at least one label.
-    \item Count the label occurrences associated with each vertex, so that for each vertex, we have a list of labels and its associated count.
-    \item Re-associate each vertex with its max-count label.
-    \item If no relabeling is needed, terminate.
-    %\item Count the edge label occurrences.
-    %\item For each edge, if both vertices have nonzero label counts, produce a map from vertex of low count to vertex of high count.
-    %\item If we have an empty map, terminate loop. Otherwise, apply the map to the edge labels.
+    \item Count the label occurrences for each label.
+    \item For each vertex, find the label with the maximum occurrence associated with it.
+    \item For each edge, label it according to the vertex with a higher label count.
+    \item If for each edge, the new labeling is identical to the old, terminate. Else, repeat.
 \end{enumerate}
 
 \subsection{Performance Improvement}
