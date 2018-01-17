@@ -55,16 +55,11 @@ object InfoFlow
       .reduceByKey(_+_)
 
       val vertexLabel = labelEdge1.flatMap {
-        case ((from,to),label) => Seq( ((from,label),1), ((to,label),1) )
-      }
-      .reduceByKey(_+_)
-      .map {
-        case ((vertex,label),count) => (label,(vertex,count))
+        case ((from,to),label) => Seq( (label,from), (label,to) )
       }
       .join(labelCount)
       .map {
-        case (label,((vertex,count),labelCount)) =>
-          (vertex,(label,labelCount))
+        case (label,(vertex,labelCount)) => (vertex,(label,labelCount))
       }
       .reduceByKey {
         case ( (label1,labelCount1), (label2,labelCount2) ) =>
