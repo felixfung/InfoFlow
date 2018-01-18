@@ -22,7 +22,6 @@ class ConfigTest extends FunSuite with BeforeAndAfter
   before {
     val conf = new SparkConf()
       .setAppName("InfoFlow config file parsing tests")
-      .setMaster("local[*]")
       .set("spark.default.parallelism", "1")
     sc = new SparkContext(conf)
     sc.setLogLevel("OFF")

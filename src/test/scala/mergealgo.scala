@@ -29,7 +29,7 @@ extends FunSuite
     val pj = new PajekFile( sc, pjFile )
     val nodes = new Nodes( pj, 0.85, 1e-3 )
     val initPartition = Partition.init(nodes)
-    val logger = new LogFile(outputDir,true,true,0,false)
+    val logger = new LogFile(outputDir,true,true,0,false,false)
     val finalPartition = merge(
       initPartition, logger
     )

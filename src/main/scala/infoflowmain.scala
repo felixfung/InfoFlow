@@ -28,21 +28,19 @@ object InfoFlowMain {
     // initialize parameters from config file
     val pajekFile = config.pajekFile
     val dampingFactor = config.dampingFactor
-    val mergeAlgo: MergeAlgo =
-      if( config.mergeAlgo == "InfoMap" ) new InfoMap
-      else if( config.mergeAlgo == "InfoFlow" ) new InfoFlow
-      else throw new Exception("Merge algorithm must be InfoMap or InfoFlow")
+    val mergeAlgo: MergeAlgo = MergeAlgo.choose( config.mergeAlgo )
     val logFile = new LogFile(
       config.logDir,
       config.logWriteLog, config.rddText,
-      config.rddJSon, config.logSteps
+      config.rddJSon, config.logSteps,
+      false
     )
 
   /***************************************************************************
    * Initialize Spark Context
    ***************************************************************************/
     val conf = new SparkConf()
-      .setAppName("InfoMap TwoLevel Test")
+      .setAppName("InfoFlow")
       .setMaster( config.master )
     val sc = new SparkContext(conf)
     sc.setLogLevel("OFF")

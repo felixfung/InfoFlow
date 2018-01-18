@@ -16,7 +16,8 @@ class LogFile(
   val writeLog: Boolean,
   val rddText: Boolean,
   val rddJSon: Int, // 0->no output; 1->output full graph; 2->reduced graph
-  val logSteps: Boolean
+  val logSteps: Boolean,
+  val append: Boolean
 ) {
   /***************************************************************************
    * Constructor: create directory and log file within
@@ -25,14 +26,21 @@ class LogFile(
   // create output directory
   new File(outputDir).mkdirs
   // create file to store the loop of code lengths
-  val logFile = new PrintWriter(new File(outputDir + "/log.txt"))
+  val logFile = {
+    val file = new File( outputDir +"/log.txt" )
+    if( append && file.exists && !file.isDirectory )
+      new PrintWriter( new FileOutputStream(file,true) )
+    else
+      new PrintWriter(file)
+  }
 
-  /* *************************************************************************
+  /***************************************************************************
    * write message to log file
    ***************************************************************************/
   def write( msg: String ) =
     if( writeLog ) {
-      logFile.write(msg)
+      /*if( append )*/ logFile.append(msg)
+      //else logFile.write(msg)
       logFile.flush
     }
 

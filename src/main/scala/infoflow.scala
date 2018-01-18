@@ -124,10 +124,6 @@ object InfoFlow
 
 class InfoFlow extends MergeAlgo
 {
-  /***************************************************************************
-   * logging system
-   ***************************************************************************/
-
   def apply( partition: Partition, logFile: LogFile ): Partition = {
 
     val nodeNumber = partition.nodeNumber

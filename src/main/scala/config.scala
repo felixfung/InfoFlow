@@ -8,8 +8,8 @@ class Config( fileName: String ) {
 
   val(
     master, pajekFile, mergeAlgo, dampingFactor,
-    logDir, logWriteLog, rddText, rddJSon, logSteps
-  ): (String, String,String,Double,String,Boolean,Boolean,Int,Boolean) = {
+    logDir, logWriteLog, rddText, rddJSon, logSteps ):
+  (String, String,String,Double,String,Boolean,Boolean,Int,Boolean) = {
 
   /***************************************************************************
    * read and parse JSon file content
@@ -44,7 +44,7 @@ class Config( fileName: String ) {
     val logDir = json.map(_("logDir")).getOrElse(".")
     val logWriteLog = json.map(_("logWriteLog")).getOrElse("false").toBoolean
     val rddText = json.map(_("logRddText")).getOrElse("false").toBoolean
-    val rddJSon = json.map(_("logRddJSon")).getOrElse("false").toInt
+    val rddJSon = json.map(_("logRddJSon")).getOrElse("1").toInt
     val logSteps = json.map(_("logSteps")).getOrElse("false").toBoolean
 
     (
