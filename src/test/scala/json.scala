@@ -73,7 +73,7 @@ class JSonTest extends FunSuite with BeforeAndAfter
     }
   }
 
-  test("Reduced JSon exportation of Rosvall example graph") {
+  /*test("Reduced JSon exportation of Rosvall example graph") {
     try {
       // export JSon file
       val pj = new PajekFile( sc, "Nets/rosvall.net" )
@@ -119,7 +119,7 @@ class JSonTest extends FunSuite with BeforeAndAfter
       file.delete
       FileUtils.deleteDirectory( new File("unittestlog") )
     }
-  }
+  }*/
 
   /***************************************************************************
    * Stop Spark Context
