@@ -25,36 +25,49 @@ case class Partition
 
   // function prints each partitioning as a node
   def saveReduceJSon( fileName: String ): Unit = {
-    val reduceNodes = partitioning.map {
-      case (node,module) => (module.toString,module)
-    }
-    .distinct
 
-    val reducedEdges = {
-      iWj.map {
-        case ((from,to),weight) => (from,(to,weight))
-      }
-      .join(names)
-      .map {
-        case (from,((to,weight),fromName)) => (fromName,(to,weight))
-      }
-      .join(partitioning)
-      .map {
-        case (from,((to,weight),fromIdx))
-        => (to,(fromIdx,weight))
-      }
-      .join(names)
-      .map {
-        case (to,((fromIdx,weight),toName)) => (toName,(fromIdx,weight))
-      }
-      .join(partitioning)
-      .map {
-        case (to,((fromIdx,weight),toIdx))
-        => ((fromIdx.toString,toIdx.toString),weight)
-      }
+    val reducedNodeNames = partitioning.map {
+      case (name,module) => (module,name)
+    }
+    .reduceByKey {
+      case (name1,name2) => name1 +"+"+ name2
     }
 
-    saveJSon( fileName, reduceNodes.collect.sorted, reducedEdges.collect.sorted )
+    val reducedNodes = reducedNodeNames.map {
+      case (module,name) => (name,module)
+    }
+
+    val reducedEdges = iWj.map {
+      case ((from,to),weight) => (from,(to,weight))
+    }
+    .join(names)
+    .map {
+      case (from,((to,weight),fromName)) => (fromName,(to,weight))
+    }
+    .join(partitioning)
+    .map {
+      case (from,((to,weight),fromIdx)) => (to,(fromIdx,weight))
+    }
+    .join(names)
+    .map {
+      case (to,((fromIdx,weight),toName)) => (toName,(fromIdx,weight))
+    }
+    .join(partitioning)
+    .map {
+      case (to,((fromIdx,weight),toIdx)) => (fromIdx,(toIdx,weight))
+    }
+    .join(reducedNodeNames)
+    .map {
+      case (from,((to,weight),fromName)) => (to,(fromName,weight))
+    }
+    .join(reducedNodeNames)
+    .map {
+      case (to,((fromName,weight),toName)) => ((fromName,toName),weight)
+    }
+
+    saveJSon( fileName,
+      reducedNodes.collect.sorted, reducedEdges.collect.sorted
+    )
   }
 
   /***************************************************************************
@@ -75,7 +88,6 @@ case class Partition
     // write node data
     file.write( "{\n\t\"nodes\": [\n" )
     val nodeCount = nodes.size
-    //nodes.collect.sorted.zipWithIndex.foreach {
     for( idx <- 0 to nodeCount-1 ) {
     nodes(idx) match {
       case (node,module) => {
@@ -95,7 +107,6 @@ case class Partition
     // write edge data
     file.write( "\t\"links\": [\n" )
     val edgeCount = edges.size
-    //edges.collect.sorted.zipWithIndex.foreach {
     for( idx <- 0 to edgeCount-1 ) {
     edges(idx) match {
       case ((from,to),weight) =>

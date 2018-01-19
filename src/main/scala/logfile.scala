@@ -58,8 +58,10 @@ class LogFile(
     if( rddJSon>0 && ( !stepping || logSteps ) ) {
       if( rddJSon == 1 )
         partition.saveJSon( outputDir +"/" +id )
-      else if( rddJSon == 2 )
+      else if( rddJSon == 2 ) {
         partition.saveReduceJSon( outputDir +"/" +id )
+
+      }
     }
 
   /***************************************************************************
