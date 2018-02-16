@@ -430,6 +430,7 @@ class InfoFlow extends MergeAlgo
           tele,
           partition.names,
           newPartitioning,
+          partition.iWj0,
           newiWj,
           newModules,
           newCodeLength

@@ -297,7 +297,7 @@ class InfoMap extends MergeAlgo
 
           val newPartition = Partition(
             nodeNumber, tele, partition.names,
-            newPartitioning, newiWj,
+            newPartitioning, partition.iWj0, newiWj,
             partition.modules,
             newCodeLength
           )
@@ -326,7 +326,7 @@ class InfoMap extends MergeAlgo
 
     val inputPartition = Partition(
       nodeNumber, tele, partition.names,
-      partition.partitioning, partition.iWj, modules,
+      partition.partitioning, partition.iWj0, partition.iWj, modules,
       partition.codeLength
     )
 

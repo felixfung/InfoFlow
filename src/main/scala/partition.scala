@@ -9,7 +9,8 @@ case class Partition
   val tele: Double,
   val names: RDD[(Int,String)],
   val partitioning: RDD[(Int,Int)],
-  val iWj: RDD[((Int,Int),Double)],
+  val iWj0: RDD[((Int,Int),Double)],
+  val iWj:  RDD[((Int,Int),Double)],
   val modules: RDD[(Int,(Int,Double,Double,Double))],
   val codeLength: Double
 )
@@ -29,7 +30,7 @@ case class Partition
       case (id,(group,name)) => (id,1,name,group)
     }
     .collect ++fakeNodes
-    saveJSon( fileName, nodes, iWj.collect )
+    saveJSon( fileName, nodes.sorted, iWj0.collect.sorted, 0,1 )
   }
 
   // function prints each partitioning as a node
@@ -59,7 +60,7 @@ case class Partition
     }
 
     saveJSon( fileName,
-      reducedNodes.collect.sorted, reducedEdges.collect.sorted
+      reducedNodes.collect.sorted, iWj.collect.sorted, 1,4
     )
   }
 
@@ -72,8 +73,15 @@ case class Partition
   private def saveJSon(
     fileName: String,
     nodes: Array[(Int,Int,String,Int)], // (id,size,name,group)
-    edges: Array[((Int,Int),Double)]       // ((from,to),width)
+    edges: Array[((Int,Int),Double)],   // ((from,to),width)
+    minNodeSize: Int, maxNodeSize: Int
   ): Unit = {
+
+    // simple helper function for linear scaling of node and edge size
+    def lScale( x0: Double, x1: Double, x2: Double,
+                y0: Double, y1: Double
+    ): Double
+    = y0 +(y1-y0) *(x1-x0) /(x2-x0)
 
     // open file
     val file = new PrintWriter( new File(fileName) )
@@ -81,12 +89,24 @@ case class Partition
     // write node data
     file.write( "{\n\t\"nodes\": [\n" )
     val nodeCount = nodes.size
+    val minNodeSize = nodes.map {
+      case (_,size,_,_) => size
+    }
+    .min
+    val maxNodeSize = nodes.map {
+      case (_,size,_,_) => size
+    }
+    .max
     for( idx <- 0 to nodeCount-1 ) {
       nodes(idx) match {
         case (id,size,name,group) => {
+          val radius = lScale( minNodeSize,
+            Math.sqrt(size), Math.sqrt(maxNodeSize),
+            minNodeSize,maxNodeSize
+          )
           file.write(
             "\t\t{\"id\": \"" +id.toString
-            +"\", \"size\": \"" +size.toString
+            +"\", \"size\": \"" +radius.toString
             +"\", \"name\": \"" +name
             +"\", \"group\": \"" +group.toString
             +"\"}"
@@ -102,13 +122,22 @@ case class Partition
     // write edge data
     file.write( "\t\"links\": [\n" )
     val edgeCount = edges.size
+    val minEdgeSize = edges.map {
+      case (_,weight) => weight
+    }
+    .min
+    val maxEdgeSize = edges.map {
+      case (_,weight) => weight
+    }
+    .max
     for( idx <- 0 to edgeCount-1 ) {
       edges(idx) match {
         case ((from,to),weight) =>
+          val width = lScale(minEdgeSize,Math.sqrt(weight),Math.sqrt(maxEdgeSize),1,4)
           file.write(
             "\t\t{\"source\": \"" +from.toString
             +"\", \"target\": \"" +to.toString
-            +"\", \"value\": "+weight.toString
+            +"\", \"width\": "+width.toString
             +"}"
           )
           if( idx < edgeCount-1 )
@@ -221,7 +250,7 @@ object Partition {
 
     // construct partition
     Partition( nodeNumber.toInt, tele, nodes.names, partitioning,
-      iWj, modules, codeLength )
+      iWj, iWj, modules, codeLength )
   }
 
   /***************************************************************************
