@@ -7,9 +7,8 @@ case class Partition
 (
   val nodeNumber: Int,
   val tele: Double,
-  val names: RDD[(Int,String)], // only for saving to json
-  val edges: RDD[((String,String),Double)], // only for saving to json
-  val partitioning: RDD[(String,Int)],
+  val names: RDD[(Int,String)],
+  val partitioning: RDD[(Int,Int)],
   val iWj: RDD[((Int,Int),Double)],
   val modules: RDD[(Int,(Int,Double,Double,Double))],
   val codeLength: Double
@@ -20,49 +19,43 @@ case class Partition
    ***************************************************************************/
 
   // function prints all nodes, with the partition labeling
-  def saveJSon( fileName: String ): Unit =
-    saveJSon( fileName, partitioning.collect.sorted, edges.collect.sorted )
+  def saveJSon( fileName: String ): Unit = {
+    // fake nodes to preserve group ordering/coloring
+    val fakeNodes = names.map {
+      case (idx,_) => (-idx,0,"",idx)
+    }
+    .collect
+    val nodes = partitioning.join(names).map {
+      case (id,(group,name)) => (id,1,name,group)
+    }
+    .collect ++fakeNodes
+    saveJSon( fileName, nodes, iWj.collect )
+  }
 
   // function prints each partitioning as a node
   def saveReduceJSon( fileName: String ): Unit = {
-
-    val reducedNodeNames = partitioning.map {
-      case (name,module) => (module,name)
+    val reducedNodes = names.join(partitioning).map {
+      case (id,(name,module)) => (module,(name,1))
     }
     .reduceByKey {
-      case (name1,name2) => name1 +"+"+ name2
+      case ( (name1,count1), (name2,count2) ) =>
+        ( name1 +"+"+ name2, count1+count2 )
     }
-
-    val reducedNodes = reducedNodeNames.map {
-      case (module,name) => (name,module)
+    .map {
+      case (id,(name,count)) => (id,count,name,id)
     }
 
     val reducedEdges = iWj.map {
       case ((from,to),weight) => (from,(to,weight))
     }
-    .join(names)
-    .map {
-      case (from,((to,weight),fromName)) => (fromName,(to,weight))
+    .join(partitioning).map {
+      case (from,((to,weight),fromGroup)) => (to,(fromGroup,weight))
     }
-    .join(partitioning)
-    .map {
-      case (from,((to,weight),fromIdx)) => (to,(fromIdx,weight))
+    .join(partitioning).map {
+      case (to,((fromGroup,weight),toGroup)) => ((fromGroup,toGroup),weight)
     }
-    .join(names)
-    .map {
-      case (to,((fromIdx,weight),toName)) => (toName,(fromIdx,weight))
-    }
-    .join(partitioning)
-    .map {
-      case (to,((fromIdx,weight),toIdx)) => (fromIdx,(toIdx,weight))
-    }
-    .join(reducedNodeNames)
-    .map {
-      case (from,((to,weight),fromName)) => (to,(fromName,weight))
-    }
-    .join(reducedNodeNames)
-    .map {
-      case (to,((fromName,weight),toName)) => ((fromName,toName),weight)
+    .reduceByKey {
+      case (weight1,weight2) => weight1 +weight2
     }
 
     saveJSon( fileName,
@@ -78,8 +71,8 @@ case class Partition
    ***************************************************************************/
   private def saveJSon(
     fileName: String,
-    nodes: Array[(String,Int)],
-    edges: Array[((String,String),Double)]
+    nodes: Array[(Int,Int,String,Int)], // (id,size,name,group)
+    edges: Array[((Int,Int),Double)]       // ((from,to),width)
   ): Unit = {
 
     // open file
@@ -89,18 +82,20 @@ case class Partition
     file.write( "{\n\t\"nodes\": [\n" )
     val nodeCount = nodes.size
     for( idx <- 0 to nodeCount-1 ) {
-    nodes(idx) match {
-      case (node,module) => {
-        file.write(
-          "\t\t{\"id\": \"" +node
-          +"\", \"group\": " +module.toString
-          +"}"
-        )
-        if( idx < nodeCount-1 )
-          file.write(",")
-        file.write("\n")
+      nodes(idx) match {
+        case (id,size,name,group) => {
+          file.write(
+            "\t\t{\"id\": \"" +id.toString
+            +"\", \"size\": \"" +size.toString
+            +"\", \"name\": \"" +name
+            +"\", \"group\": \"" +group.toString
+            +"\"}"
+          )
+          if( idx < nodeCount-1 )
+            file.write(",")
+          file.write("\n")
+        }
       }
-    }
     }
     file.write( "\t],\n" )
 
@@ -108,18 +103,18 @@ case class Partition
     file.write( "\t\"links\": [\n" )
     val edgeCount = edges.size
     for( idx <- 0 to edgeCount-1 ) {
-    edges(idx) match {
-      case ((from,to),weight) =>
-        file.write(
-          "\t\t{\"source\": \"" +from
-          +"\", \"target\": \"" +to
-          +"\", \"value\": "+(100*weight).toString
-          +"}"
-        )
-        if( idx < edgeCount-1 )
-          file.write(",")
-        file.write("\n")
-    }
+      edges(idx) match {
+        case ((from,to),weight) =>
+          file.write(
+            "\t\t{\"source\": \"" +from.toString
+            +"\", \"target\": \"" +to.toString
+            +"\", \"value\": "+weight.toString
+            +"}"
+          )
+          if( idx < edgeCount-1 )
+            file.write(",")
+          file.write("\n")
+      }
     }
     file.write("\t]")
 
@@ -144,8 +139,8 @@ object Partition {
 
     // for each node, which module it belongs to
     // here, each node is assigned its own module
-    val partitioning: RDD[(String,Int)] = nodes.names.map {
-      case (idx,name) => (name,idx)
+    val partitioning: RDD[(Int,Int)] = nodes.names.map {
+      case (idx,name) => (idx,idx)
     }
 
     // probability of transitioning within two modules w/o teleporting
@@ -225,7 +220,7 @@ object Partition {
     }
 
     // construct partition
-    Partition( nodeNumber.toInt, tele, nodes.names, edges, partitioning,
+    Partition( nodeNumber.toInt, tele, nodes.names, partitioning,
       iWj, modules, codeLength )
   }
 
