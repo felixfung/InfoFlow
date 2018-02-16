@@ -46,19 +46,6 @@ case class Partition
       case (id,(name,count)) => (id,count,name,id)
     }
 
-    val reducedEdges = iWj.map {
-      case ((from,to),weight) => (from,(to,weight))
-    }
-    .join(partitioning).map {
-      case (from,((to,weight),fromGroup)) => (to,(fromGroup,weight))
-    }
-    .join(partitioning).map {
-      case (to,((fromGroup,weight),toGroup)) => ((fromGroup,toGroup),weight)
-    }
-    .reduceByKey {
-      case (weight1,weight2) => weight1 +weight2
-    }
-
     saveJSon( fileName,
       reducedNodes.collect.sorted, iWj.collect.sorted, 1,4
     )
@@ -89,21 +76,22 @@ case class Partition
     // write node data
     file.write( "{\n\t\"nodes\": [\n" )
     val nodeCount = nodes.size
-    val minNodeSize = nodes.map {
+    val minSize = nodes.map {
       case (_,size,_,_) => size
     }
     .min
-    val maxNodeSize = nodes.map {
+    val maxSize = nodes.map {
       case (_,size,_,_) => size
     }
     .max
     for( idx <- 0 to nodeCount-1 ) {
       nodes(idx) match {
         case (id,size,name,group) => {
-          val radius = lScale( minNodeSize,
-            Math.sqrt(size), Math.sqrt(maxNodeSize),
-            minNodeSize,maxNodeSize
-          )
+          val radius = lScale(
+            Math.sqrt(minSize),
+            Math.sqrt(size),
+            Math.sqrt(maxSize),
+          minNodeSize,maxNodeSize)
           file.write(
             "\t\t{\"id\": \"" +id.toString
             +"\", \"size\": \"" +radius.toString
@@ -133,7 +121,11 @@ case class Partition
     for( idx <- 0 to edgeCount-1 ) {
       edges(idx) match {
         case ((from,to),weight) =>
-          val width = lScale(minEdgeSize,Math.sqrt(weight),Math.sqrt(maxEdgeSize),1,4)
+          val width = lScale(
+            Math.sqrt(minEdgeSize),
+            Math.sqrt(weight),
+            Math.sqrt(maxEdgeSize),
+          1,4)
           file.write(
             "\t\t{\"source\": \"" +from.toString
             +"\", \"target\": \"" +to.toString
