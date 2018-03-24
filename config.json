@@ -5,6 +5,6 @@
   "logDir": "Rosvall",
   "logWriteLog": "true",
   "logRddText": "false",
-  "logRddJSon": "1",
+  "logRddJSon": "2",
   "logSteps": "false"
 }
