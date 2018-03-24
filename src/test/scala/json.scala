@@ -10,6 +10,9 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
 
+import org.scalatest._
+import Matchers._
+
 import java.io.File
 import java.io.FileReader
 import java.io.BufferedReader
@@ -47,11 +50,13 @@ class JSonTest extends FunSuite with BeforeAndAfter
       val chkArray = Array[String](
         "{",
         "\t\"nodes\": [",
-        "\t\t{\"id\": \"m01\", \"group\": 1},",
-        "\t\t{\"id\": \"m02\", \"group\": 2}",
+        "\t\t{\"id\": \"1\", \"size\": \"1\", \"name\": \"m01\", \"group\": \"1\"},",
+        "\t\t{\"id\": \"2\", \"size\": \"1\", \"name\": \"m02\", \"group\": \"2\"},",
+        "\t\t{\"id\": \"-1\", \"size\": \"0\", \"name\": \"\", \"group\": \"1\"},",
+        "\t\t{\"id\": \"-2\", \"size\": \"0\", \"name\": \"\", \"group\": \"2\"}",
         "\t],",
         "\t\"links\": [",
-        "\t\t{\"source\": \"m01\", \"target\": \"m02\", \"value\": 35.1035921701126}",
+        "\t\t{\"source\": \"1\", \"target\": \"2\", \"value\": 0.351035921701126}",
         "\t]",
         "}"
       )
@@ -73,7 +78,7 @@ class JSonTest extends FunSuite with BeforeAndAfter
     }
   }
 
-  /*test("Reduced JSon exportation of Rosvall example graph") {
+  test("Reduced JSon exportation of Rosvall example graph") {
     try {
       // export JSon file
       val pj = new PajekFile( sc, "Nets/rosvall.net" )
@@ -87,26 +92,26 @@ class JSonTest extends FunSuite with BeforeAndAfter
       // read and verify JSon file
       val reader = new BufferedReader( new FileReader("unittestfile.json") )
       val chkArray = Array[String](
-        "{",
-        "\t\"nodes\": [",
-        "\t\t{\"id\": \"17\", \"group\": 17},",
-        "\t\t{\"id\": \"2\", \"group\": 2},",
-        "\t\t{\"id\": \"23\", \"group\": 23},",
-        "\t\t{\"id\": \"7\", \"group\": 7}",
-        "\t],",
-        "\t\"links\": [",
-		"\t\t{\"source\": \"17\", \"target\": \"23\", \"value\": 0.8674494124000919},",
-		"\t\t{\"source\": \"2\", \"target\": \"7\", \"value\": 0.22363558809370296},",
-		"\t\t{\"source\": \"7\", \"target\": \"17\", \"value\": 1.89285421768626},",
-		"\t\t{\"source\": \"7\", \"target\": \"23\", \"value\": 0.6803128149374325}",
-        "\t]",
-        "}"
+        "\\{",
+        "\t\"nodes\": \\[",
+        "\t\t\\{\"id\": \"2\", \"size\": \"6\", \"name\": \"red.*\", \"group\": \"2\"\\},",
+        "\t\t\\{\"id\": \"7\", \"size\": \"7\", \"name\": \"orange.*\", \"group\": \"7\"\\},",
+        "\t\t\\{\"id\": \"17\", \"size\": \"8\", \"name\": \"green.*\", \"group\": \"17\"\\},",
+        "\t\t\\{\"id\": \"23\", \"size\": \"4\", \"name\": \"blue.*\", \"group\": \"23\"\\}",
+        "\t\\],",
+        "\t\"links\": \\[",
+		"\t\t\\{\"source\": \"2\", \"target\": \"7\", \"value\": 0.0022363558809370297\\},",
+		"\t\t\\{\"source\": \"7\", \"target\": \"17\", \"value\": 0.0189285421768626\\},",
+		"\t\t\\{\"source\": \"7\", \"target\": \"23\", \"value\": 0.006803128149374325\\},",
+		"\t\t\\{\"source\": \"17\", \"target\": \"23\", \"value\": 0.008674494124000919\\}",
+        "\t\\]",
+        "\\}"
       )
       var line = reader.readLine
       var lineIdx = 0
       var looping = true
       while(looping) {
-        assert( line === chkArray(lineIdx) )
+        line should fullyMatch regex( chkArray(lineIdx) )
         lineIdx += 1
         line = reader.readLine
         looping = ( line != null )
@@ -119,7 +124,7 @@ class JSonTest extends FunSuite with BeforeAndAfter
       file.delete
       FileUtils.deleteDirectory( new File("unittestlog") )
     }
-  }*/
+  }
 
   /***************************************************************************
    * Stop Spark Context

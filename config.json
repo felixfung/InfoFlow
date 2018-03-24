@@ -1,8 +1,9 @@
 {
-  "Pajek": "Nets/rosvall.net",
+  "Master": "local[*]",
+  "Pajek": "Nets/data/football.net",
   "Algo": "InfoFlow",
   "damping": "0.85",
-  "logDir": "Rosvall",
+  "logDir": "Output",
   "logWriteLog": "true",
   "logRddText": "false",
   "logRddJSon": "2",
