@@ -197,6 +197,12 @@ class InfoFlow extends MergeAlgo
     ): Partition = {
 
   /***************************************************************************
+   * create local checkpoint to truncate RDD lineage (every ten loops)
+   ***************************************************************************/
+      if( loop%10 == 0 )
+        deltaL.localCheckpoint
+
+  /***************************************************************************
    * each module seeks to merge with another connected module
    * which would offer the greatest reduction in code length
    ***************************************************************************/

@@ -41,7 +41,7 @@ class LogFile(
     if( writeLog ) {
       /*if( append )*/ logFile.append(msg)
       //else logFile.write(msg)
-      logFile.flush
+      //logFile.flush
     }
 
   /***************************************************************************
