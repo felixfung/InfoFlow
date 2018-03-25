@@ -25,6 +25,7 @@ extends Serializable {
       }
       .reduceByKey(_+_)
     }
+    outLinkTotalWeight.cache
 
     // nodes without outbound links are "dangling"
     val dangling: RDD[Int] = names.leftOuterJoin(outLinkTotalWeight)
@@ -58,7 +59,7 @@ extends Serializable {
     val vRand = names.map{ case (idx,_) => (idx,1.0/n.toDouble) }
     val vSum = vRand.values.sum
     val vNorm = vRand.map { case (idx,x) => (idx,x/vSum) }
-    Nodes.pageRank( stoMat, vNorm, n, damping, errTh )
+    Nodes.pageRank( stoMat, vNorm, n, damping, errTh, 0 )
   }
 }
 
@@ -67,7 +68,7 @@ object Nodes {
    * PageRank algorithm
    ***************************************************************************/
   def pageRank( stoMat: Matrix, freq: RDD[(Int,Double)],
-    n: Int, damping: Double, errTh: Double )
+    n: Int, damping: Double, errTh: Double, loop: Int )
   : RDD[(Int,Double)] = {
 
     // 2D Euclidean distance between two vectors
@@ -78,6 +79,10 @@ object Nodes {
       .sum
       Math.sqrt(diffSq)
     }
+
+    // create local checkpoint to truncate RDD lineage (every ten loops)
+    if( loop%10 == 0 )
+      freq.localCheckpoint
 
     // the random walk contribution of the ergodic frequency
     val stoFreq = stoMat *freq
@@ -96,13 +101,13 @@ object Nodes {
     // recursive call until freq converges wihtin error threshold
     val err = dist2D(freq,newFreq)
     if( err < errTh ) newFreq
-    else pageRank( stoMat, newFreq, n, damping, errTh )
+    else pageRank( stoMat, newFreq, n, damping, errTh, loop+1 )
   }
 }
 
 sealed case class Matrix
-( val sparse: RDD[(Int,(Int,Double))],
-  val constCol: RDD[(Int,Double)] )
+( sparse: RDD[(Int,(Int,Double))],
+  constCol: RDD[(Int,Double)] )
 extends Serializable {
   /***************************************************************************
    * A matrix class stored using sparse entries

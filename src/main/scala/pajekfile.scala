@@ -42,6 +42,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       case (line,index) => line
     }
     .zipWithIndex
+    reducedLinedFile.cache
 
   /***************************************************************************
    * Get node number n

@@ -100,7 +100,6 @@ class InfoMap extends MergeAlgo
    * returns ( final minimized code length, node partitioning )
    * node partitioning in the form of RDD[(node index, module index)]
    ***************************************************************************/
-    //@scala.annotation.tailrec
     def recursiveMerge(
       loop: Int,
       qi_sum: Double,
@@ -138,8 +137,7 @@ class InfoMap extends MergeAlgo
       }
 
   /***************************************************************************
-   * if there are no modules to merge,
-   * teminate
+   * if there are no modules to merge, teminate
    ***************************************************************************/
       if( table.isEmpty )
       {
