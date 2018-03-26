@@ -133,7 +133,6 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
         """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]*""".r
       val edgeRegex2 =
         """(?i)[ \t]*?([0-9]+)[ \t]+([0-9]*)[ \t]+([0-9.]+)[ \t]*""".r
-      val edgeList = """[ \t]+([0-9]+).*""".r
 
       lineEdges.flatMap {
         case edgeRegex1(from,to) => Seq( ((from.toInt,to.toInt),1.0) )
@@ -146,7 +145,6 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
             case toVertex => ((vertices(0).toInt,toVertex.toInt),1.0)
           }
         }
-        case _ => Seq()
       }
       // aggregate the weights
       .reduceByKey(_+_)
