@@ -97,8 +97,6 @@ class InfoMap extends MergeAlgo
    * recursive function
    * meat of algorithm
    * greedily merge modules until code length is minimized
-   * returns ( final minimized code length, node partitioning )
-   * node partitioning in the form of RDD[(node index, module index)]
    ***************************************************************************/
     def recursiveMerge(
       loop: Int,
@@ -111,8 +109,10 @@ class InfoMap extends MergeAlgo
   /***************************************************************************
    * create local checkpoint to truncate RDD lineage (every ten loops)
    ***************************************************************************/
-      if( loop%10 == 0 )
+      if( loop%10 == 0 ) {
         table.localCheckpoint
+        partition.localCheckpoint
+      }
 
   /***************************************************************************
    * logging
@@ -340,7 +340,6 @@ class InfoMap extends MergeAlgo
         inputPartition,
         table
       )
-
     newPartition
   }
 

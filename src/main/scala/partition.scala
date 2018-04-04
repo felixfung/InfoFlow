@@ -15,6 +15,15 @@ case class Partition
   val codeLength: Double
 )
 {
+  def localCheckpoint: Unit = {
+    //names.localCheckpoint
+    val dummy = partitioning.count
+    partitioning.localCheckpoint
+    //iWj0.localCheckpoint
+    iWj.localCheckpoint
+    modules.localCheckpoint
+  }
+
   /***************************************************************************
    * functions to save graph into json file
    ***************************************************************************/
@@ -45,7 +54,6 @@ case class Partition
     .map {
       case (id,(name,count)) => (id,count,name,id)
     }
-
     saveJSon( fileName,
       reducedNodes.collect.sorted, iWj.collect.sorted, 1,4
     )
