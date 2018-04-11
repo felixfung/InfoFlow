@@ -17,7 +17,7 @@ In between nodes there may be a directed edge ωαβ from node α to node
 β. The directed edge weights are normalized with respect to the outgoing
 node, so that
 
-![]("https://latex.codecogs.com/svg.latex?\sum_\alpha&space;\omega_{\alpha\beta}&space;=&space;1)
+![](https://latex.codecogs.com/svg.latex?\sum_\alpha&space;\omega_{\alpha\beta}&space;=&space;1)
 
 ## Getting Started
 
