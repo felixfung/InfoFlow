@@ -42,6 +42,47 @@ where
 
 ![](https://latex.codecogs.com/svg.latex?\mathrm{plogp}(x)&space;=&space;x&space;\mathrm{log}_2&space;x)
 
+### Simplifying calculations
+
+We develop maths to reduce the computational complexity for merging calculations.
+Specifically, we find recursive relations, so that when we merge
+modules j and k into i, we calculate the properties of i from those of j and
+k.
+
+#### Calculating merging quantities
+
+We can rewrite
+
+![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)\sum_{\alpha\in&space;i}\sum_{\beta\notin&space;i}p_\alpha\omega_{\alpha\beta})
+
+as
+
+![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i)
+
+with
+
+![](https://latex.codecogs.com/svg.latex?w_i&space;=&space;\sum_{\alpha\in&space;i}\sum_{\beta\notin&space;i}p_\alpha\omega_{\alpha\beta})
+
+being the exit probability without teleportation.
+
+We can define a similar quantity, the transition probability without teleportation from module \(j\) to module \(k\):
+
+![](https://latex.codecogs.com/svg.latex?w_{jk}&space;=&space;\sum_{\alpha\in&space;j}\sum_{\beta\in&space;k}p_\alpha\omega_{\alpha\beta})
+
+Now, if we merge modules j and k into into a new module with index i,
+the exit probability would be follow
+
+![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)\sum_{\alpha\in&space;i}\sum_{\beta\notin&space;i}p_\alpha\omega_{\alpha\beta})
+
+with
+
+![](https://latex.codecogs.com/svg.latex?n_i&space;&=&space;n_j&space;&plus;n_k)
+![](https://latex.codecogs.com/svg.latex?p_i&space;&=&space;p_j&space;&plus;p_k)
+
+and the exit probability without teleportation can be calculated via:
+
+![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\notin&space;i}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\\mathrm{or}~\alpha\in&space;k}}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\\mathrm{and}\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\alpha\in&space;j}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\\mathrm{and}\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\\mathrm{and}\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
