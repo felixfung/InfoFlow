@@ -271,7 +271,7 @@ Combining the first and third terms,
 
 which we can recognize as
 
-![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;w_{\mathcal{M}_i}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;\label{eq:multimerge-w}&space;\\&space;w_{\mathcal{M}_i}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;\label{eq:multimerge-wi}&space;\\&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\label{eq:multimerge-wij}&space;\end{align*})
+![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;w_{\mathcal{M}_i}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;\\&space;w_{\mathcal{M}_i}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\end{align*})
 
 which we can immediately see as linear generalizations of
 the previous equations, and may be calculated iteratively as the previous algorithm. We can calculate
@@ -288,6 +288,86 @@ This is directly analogous to
 Thus, the mathematical properties of merging multiple modules into one
 are identical to that of merging two modules. This is key to developing
 multi-merge algorithm.
+
+### Algorithm
+
+Initiation is similar to the infomap algorithm, so that we have an RDD
+of modular properties in the format (index,n,p,w,q), and edge properties
+((vertex1,vertex2),summed connection weight), ((vertex1,vertex2),deltaL).
+
+Loop:
+
+  -  For each module, seek to merge with another module that would offer
+    the greatest reduction in code length. If no such merge exists, the
+    module does not seek to merge. Then, we have O(e) edges.
+  - For each of these edges, label it to the module index to be merged to, so
+    that each connected component of the graph has the same label. This
+    has O(k) complexity, k being the size of the connected component. The
+    precise algorithm is described below.
+  - Recalculate modular and edge property values via aggregations:
+
+    ![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;n_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;n_k\\&space;p_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;p_k\\&space;w_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;w_k&space;-\sum_{k\leftrightharpoons&space;k'\rightarrow&space;i}&space;w_{k\leftrightharpoons&space;k'}\\&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_{i\leftrightharpoons&space;j}&space;&=&space;\sum_{k\rightarrow&space;i}&space;\sum_{k'\rightarrow&space;j}&space;w_{k\leftrightharpoons&space;k'}&space;\\&space;L&space;&=&space;\mathrm{plogp}\left(&space;\sum_iq_i&space;\right)&space;-2\sum_i\mathrm{plogp}\left(q_i\right)&space;\\&space;&&space;-\sum_\alpha&space;\mathrm{plogp}(p_\alpha)&space;&plus;\sum_i\mathrm{plogp}\left(&space;p_i&plus;q_i&space;\right)&space;\\&space;\Delta&space;L_{i\leftrightharpoons&space;j}&space;&=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;j}-q_i-q_j&plus;\sum_k&space;q_k&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right]&space;\\&space;&-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;j})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;\\&space;&&plus;\mathrm{plogp}(p_{i\leftrightharpoons&space;j}&plus;q_{i\leftrightharpoons&space;j})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;\end{align*})
+
+### Labeling connected components
+
+This algorithm labels a graph so that all connected components are labeled by the same module index, the module index being the one that occurs the most frequently within the linked edges.
+
+Initiation:
+  - Given the edges, count the occurrences of the vertices.
+  - Label each edge to one of the two vertices with the higher occurrence.
+
+Loop:
+  - Count the label occurrences for each label.
+  - For each vertex, find the label with the maximum occurrence associated with it.
+  - For each edge, label it according to the vertex with a higher label count.
+  - If for each edge, the new labeling is identical to the old, terminate. Else, repeat.
+
+### Performance Improvement
+
+Infomap performs greedy merges of two modules until no more merges can
+be performed. If there are n nodes in the graph and m modules in the end,
+then there are n − m merges, since we assume the graph is sparse and the
+edges are proportional to the number of nodes. Since each loop merges two
+modules, there are n−m−1 loops. Thus, infomap has linear time complexity
+to the number of nodes/edges.
+
+In the multiple merging scheme, within each loop each module merges
+with one other module. Let’s assume in each loop, k modules merge into one
+on average. Then, let there be l loops, and as before, n nodes are merged
+into m modules. Since each loop reduces the amount of modules by k times,
+we have
+
+![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;n&space;k^{-l}&space;&=&space;m&space;\\&space;k^l&space;&=&space;\frac{n}{m}&space;\\&space;l&space;&=&space;\mathrm{log}_k&space;n&space;-\mathrm{log}_k&space;m&space;\end{align*})
+
+Within each merge, there are O(k) operations to aggregate the indices appropriately
+for the merges.
+
+Thus, the overall time complexity is O(k log n). For example, if k = 2,
+i.e., every pair of modules are merged every step, then we have O(2 log n)
+complexity, i.e., logarithmic complexity in the number of nodes/edges.
+
+In the worst cases, we have linear time complexity, if l = 1, k = n/m,
+so that the overall complexity is O(k) = O(n/m). Another possibility is if
+InfoFlow degenerates into InfoMap, so that we merge a pair of modules every
+step, and of course recover linear complexity
+
+The central reason behind the logarithmic time complexity is the constant
+average merging of k modules into one. The constancy of this factor likely
+depends on the network structure. Given a sparse network, the number of
+edges is similar to the number of nodes. If we make the assumption that
+k is proportional to the number of edges, then after a loop, the number of
+modules is reduced by a factor of k, and so is the number of edges. Thus, the
+network sparsity remains unchanged, and k is unchanged also. Of course,
+ultimately, actual performance benchmarks are required.
+
+The logarithmic complexity and the k constant suggests that perhaps enforced
+binary merging, i.e., either pair-wise merge or no merge at all for some
+modules, might achieve best runtime complexity. A possible catch-22 might
+be that, to enforce pair-wise merges, O(k) explorations would be needed, so
+that the runtime complexity remains the same, and actual performance is
+11
+even penalized. Further mathematical ideas, simulations and benchmarks
+would be required for further explorations.
 
 ## Getting Started
 
