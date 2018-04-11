@@ -7,7 +7,17 @@ This section provides the discrete maths that allow the InfoMap algorithm to be 
 
 ### Fundamentals
 
+These are the fundamental maths found in the original paper [Martin Rosvall and Carl T. Bergstrom PNAS January 29, 2008. 105 (4) 1118-1123; https://doi.org/10.1073/pnas.0706851105]:
 
+#### Nodes
+
+Each node is indexed, with the index denoted by greek alphabets α, β or γ.
+Each node α is associated with an ergodic frequency pα.
+In between nodes there may be a directed edge ωαβ from node α to node
+β. The directed edge weights are normalized with respect to the outgoing
+node, so that
+
+![]("https://latex.codecogs.com/svg.latex?\sum_\alpha&space;\omega_{\alpha\beta}&space;=&space;1)
 
 ## Getting Started
 
@@ -75,7 +85,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Author
 
-* **Felix Fung** - *Everything* - [asdf](https://github.com/asdf)
+* **Felix Fung** - *Everything* - [Felix Fung](https://github.com/felixfung)
 
 ## License
 
