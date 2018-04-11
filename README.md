@@ -111,7 +111,7 @@ This allows economical calculations.
 We can do similar for wil, if we merged modules j and k into i, and l is
 some other module:
 
-![](https://latex.codecogs.com/svg.latex?w_{il}&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\\mathrm{or}~\alpha\in&space;k}}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\alpha\in&space;j}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl})
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_{il}&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\\mathrm{or}~\alpha\in&space;k}}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\alpha\in&space;j}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl}&space;\end{align*})
 
 and similarly for wli:
 
@@ -123,7 +123,11 @@ define
 
 ![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;=&space;w_{il}&space;&plus;w_{li})
 
-and we can verify that Eq.~(\ref{eq:w_il}) and Eq.~(\ref{eq:w_li}) combine to give
+and we can verify that
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_{il}&space;&=&space;w_{jl}&space;&plus;w_{kl}\\&space;w_{li}&space;&=&space;w_{lj}&space;&plus;w_{lk}&space;\end{align*})
+
+combine to give
 
 ![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;&=&space;w_{il}&space;&plus;w_{li}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl}&space;&plus;w_{lj}&space;&plus;w_{lk}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{lj}&space;&plus;w_{kl}&space;&plus;w_{lk}&space;\\&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l})
 
@@ -131,7 +135,7 @@ and this quantity is applied via
 
 ![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_i&space;&=&space;w_j&space;&plus;w_k&space;-w_{j\leftrightharpoons&space;l}&space;\end{align*})
 
-The calculations above has a key, central message: that \textbf{for the purpose of community detection, we can forget about the actual nodal properties; after each merge, we only need to keep track of a module/community}.
+The calculations above has a key, central message: that **for the purpose of community detection, we can forget about the actual nodal properties; after each merge, we only need to keep track of a module/community**.
 
 ## Getting Started
 
