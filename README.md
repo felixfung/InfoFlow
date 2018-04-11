@@ -65,7 +65,7 @@ with
 
 being the exit probability without teleportation.
 
-We can define a similar quantity, the transition probability without teleportation from module \(j\) to module \(k\):
+We can define a similar quantity, the transition probability without teleportation from module j to module k:
 
 ![](https://latex.codecogs.com/svg.latex?w_{jk}&space;=&space;\sum_{\alpha\in&space;j}\sum_{\beta\in&space;k}p_\alpha\omega_{\alpha\beta})
 
@@ -77,15 +77,22 @@ the exit probability would be follow
 with
 
 ![](https://latex.codecogs.com/svg.latex?n_i&space;&=&space;n_j&space;&plus;n_k)
+
 ![](https://latex.codecogs.com/svg.latex?p_i&space;&=&space;p_j&space;&plus;p_k)
 
 and the exit probability without teleportation can be calculated via:
 
-![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\notin&space;i}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\\mathrm{or}~\alpha\in&space;k}}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\\mathrm{and}\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\alpha\in&space;j}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\\mathrm{and}\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\\mathrm{and}\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
+![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\notin&space;i}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\or~\alpha\in&space;k}}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\alpha\in&space;j}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
 
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+since we are looking at the exit probability of a module, there are no self
+connections within modules, so that the specification of pαwαβ given α ∈ i,
+β /∈ i is redundant. Then we have
+
+
 
 ### Prerequisites
 
