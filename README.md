@@ -209,6 +209,7 @@ Initiation:
     of a module with teleportation, ∆L is the change in code length
     if the two modules are merged. Vertex1 and vertex2 are arranged such
     that vertex1 is always smaller than vertex2.
+
 Loop:
   - Pick the row that has the smallest ∆L. If it is non-negative, terminate
     the algorithm.
