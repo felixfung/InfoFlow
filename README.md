@@ -77,22 +77,65 @@ the exit probability would be follow
 with
 
 ![](https://latex.codecogs.com/svg.latex?n_i&space;&=&space;n_j&space;&plus;n_k)
-
 ![](https://latex.codecogs.com/svg.latex?p_i&space;&=&space;p_j&space;&plus;p_k)
 
 and the exit probability without teleportation can be calculated via:
 
 ![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\notin&space;i}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\or~\alpha\in&space;k}}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\alpha\in&space;j}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
 since we are looking at the exit probability of a module, there are no self
 connections within modules, so that the specification of pαwαβ given α ∈ i,
 β /∈ i is redundant. Then we have
 
+![](https://latex.codecogs.com/svg.latex?w_i&space;=&space;\sum_{\alpha\in&space;j}&space;\sum_{\beta\notin&space;k}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_{\beta\notin&space;j}&space;p_\alpha\omega_{\alpha\beta})
 
+which conforms with intuition, that the exit probability without teleportation
+of the new module is equal to the exit probability of all nodes without
+counting for the connections from j to k, or from k to j.
+
+We can further simplify the maths by expanding the non-inclusive set
+specification:
+
+![](https://latex.codecogs.com/svg.latex?w_i&space;=&space;\sum_{\alpha\in&space;j}&space;\left[&space;\sum_\beta&space;p_\alpha\omega_{\alpha\beta}&space;-\sum_{\beta\in&space;k}&space;p_\alpha\omega_{\alpha\beta}&space;\right]&space;&plus;\sum_{\alpha\in&space;k}&space;\left[&space;\sum_\beta&space;p_\alpha\omega_{\alpha\beta}&space;-\sum_{\beta\in&space;j}&space;p_\alpha\omega_{\alpha\beta}&space;\right])
+
+Expanding gives:
+
+![](https://latex.codecogs.com/svg.latex?w_i&space;=&space;\sum_{\alpha\in&space;j}&space;\sum_\beta&space;p_\alpha\omega_{\alpha\beta}&space;-\sum_{\alpha\in&space;j}\sum_{\beta\in&space;k}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_\beta&space;p_\alpha\omega_{\alpha\beta}&space;-\sum_{\alpha\in&space;k}\sum_{\beta\in&space;j}&space;p_\alpha\omega_{\alpha\beta})
+
+which by definition is
+
+![](https://latex.codecogs.com/svg.latex?w_i&space;=&space;w_j&space;-w_{jk}&space;&plus;w_k&space;-w_{kj})
+
+This allows economical calculations.
+
+We can do similar for wil, if we merged modules j and k into i, and l is
+some other module:
+
+![](https://latex.codecogs.com/svg.latex?w_{il}&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\\mathrm{or}~\alpha\in&space;k}}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\alpha\in&space;j}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl})
+
+and similarly for wli:
+
+![](https://latex.codecogs.com/svg.latex?w_{li}&space;=&space;w_{lj}&space;&plus;w_{lk})
+
+We can simplify further. The directionality of the connections are not
+needed, since wij and wji always appear together in Eq. (16). Then, we can
+define
+
+![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;=&space;w_{il}&space;&plus;w_{li})
+
+and we can verify that Eq.~(\ref{eq:w_il}) and Eq.~(\ref{eq:w_li}) combine to give
+
+![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;&=&space;w_{il}&space;&plus;w_{li}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl}&space;&plus;w_{lj}&space;&plus;w_{lk}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{lj}&space;&plus;w_{kl}&space;&plus;w_{lk}&space;\\&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l})
+
+and this quantity is applied via
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_i&space;&=&space;w_j&space;&plus;w_k&space;-w_{j\leftrightharpoons&space;l}&space;\end{align*})
+
+The calculations above has a key, central message: that \textbf{for the purpose of community detection, we can forget about the actual nodal properties; after each merge, we only need to keep track of a module/community}.
+
+## Getting Started
+
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ### Prerequisites
 
