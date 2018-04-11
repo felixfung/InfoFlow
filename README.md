@@ -153,11 +153,11 @@ change in code length is:
 
 so that if we keep track of Pi qi , we can calculate ∆L quickly by plugging in pi , pj , pk, qi , qj , qk.
 
-## InfoMap Algorithm
+### InfoMap Algorithm
 
 The algorithm consists of two stages, the initial condition and the loop:
 
-### Initial condition
+#### Initial condition
 
 Each node is its own module, so that we have:
 
@@ -167,7 +167,7 @@ and ∆L is calculated for all possible merging pairs according to
 
 ![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;\Delta&space;L_i&space;&=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right]&space;\nonumber\\&space;&-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k)&space;\nonumber\\&space;&&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k)&space;\label{eq:DeltaL}&space;\end{align*})
 
-### Loop
+#### Loop
 
 Find the merge pairs that would minimize the code length; if the code length
 cannot be reduced then terminate the loop. Otherwise, merge the pair to
@@ -184,7 +184,7 @@ and
 is recalculated for all merging pairs that involve module i, i.e., for each wil.
 The sum Pi qi is iterated in each loop by adding qi − qj − qk.
 
-## Algorithm
+### Algorithm
 
 Given the above math, the pseudocode is:
 
@@ -224,6 +224,70 @@ Loop:
   - Repeat from Step 1.
 There are O(e) merges, e being the number of edges in the graph.
 
+## Merging multiple modules at once
+
+In the previous sections, we have developed the discrete mathematics and
+algorithm that performs community detection with O(e) loops, based on the
+key mathematical finding that we only need to remember modular properties,
+not nodal ones.
+
+The algorithm above does not take advantage of the parallel processing
+capabilities of Spark. One obvious improvement possibility is to perform
+multiple merges per loop. However, algorithms so far focus on merging two
+modules on each iteration, which is not compatible with the idea of performing
+multiple merges, unless we can make sure no module is involved with
+more than one merge at once.
+
+Here, rather than focusing on making sure that no module is involved with
+more than one merge at once, we can explore the idea of merging multiple
+modules at once. Thus, we can perform parallel merges in the same loop
+iteration, where possibly all modules are involved in some merge
+
+### Mathematics
+
+Here we develop the mathematics to keep track of merging multiple modules
+at once.
+
+We consider multiple modules Mi merging into a module M. Another
+way to express this equivalently is to say that a module M is partitioned
+into i non-overlapping subsets:
+
+![](https://latex.codecogs.com/svg.latex?\mathcal{M}&space;=&space;\sum_i&space;\mathcal{M}_i)
+
+Then we can expand the nodal sum over module M into the sum over all
+nodes in all submodules Mi
+, the exit probability of the merged module M
+becomes:
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\left[&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\right]&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\mathcal{M}_j}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\end{align*})
+
+where we expand the second term with respect to the Mj’s to give
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;&-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\in\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;\end{align*})
+
+Combining the first and third terms,
+
+![](https://latex.codecogs.com/svg.latex?w_\mathcal{M}&space;=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta})
+
+which we can recognize as
+
+![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;w_{\mathcal{M}_i}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;\label{eq:multimerge-w}&space;\\&space;w_{\mathcal{M}_i}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;\label{eq:multimerge-wi}&space;\\&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\label{eq:multimerge-wij}&space;\end{align*})
+
+which we can immediately see as linear generalizations of
+the previous equations, and may be calculated iteratively as the previous algorithm. We can calculate
+wMiMj by expanding on the partitioning:
+
+![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;&=&space;\sum_{\mathcal{M}_k\in\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_k}&space;\sum_{\mathcal{M}_{k'}\in\mathcal{M}_j}&space;\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}\\&space;&=&space;\sum_{\mathcal{M}_k\in\mathcal{M}_i}&space;\sum_{\mathcal{M}_{k'}\in\mathcal{M}_j}&space;w_{\mathcal{M}_k\mathcal{M}_{k'}}&space;\end{align*})
+
+so that when we merge a number of modules together, we can calculate its
+connections with other modules by aggregating the existing modular connections.
+This is directly analogous to
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_{il}&space;&=&space;w_{jl}&space;&plus;w_{kl}\\&space;w_{li}&space;&=&space;w_{lj}&space;&plus;w_{lk}&space;\end{align*})
+
+Thus, the mathematical properties of merging multiple modules into one
+are identical to that of merging two modules. This is key to developing
+multi-merge algorithm.
 
 ## Getting Started
 
