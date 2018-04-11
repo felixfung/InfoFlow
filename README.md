@@ -137,6 +137,93 @@ and this quantity is applied via
 
 The calculations above has a key, central message: that **for the purpose of community detection, we can forget about the actual nodal properties; after each merge, we only need to keep track of a module/community**.
 
+### Calculating code length reduction
+
+Given an initial code length according to
+
+![](https://latex.codecogs.com/svg.latex?L&space;=&space;\mathrm{plogp}\left(&space;\sum_iq_i&space;\right)&space;-2\sum_i\mathrm{plogp}\left(q_i\right)&space;-\sum_\alpha&space;\mathrm{plogp}(p_\alpha)&space;&plus;\sum_i\mathrm{plogp}\left(&space;p_i&plus;q_i&space;\right))
+
+further iterations in code
+length calculation can calculated via dynamic programming. Whenever we
+merge two modules j and k into i, with new module frequency pi and qi
+, the
+change in code length is:
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;\Delta&space;L_i&space;&=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right]&space;\nonumber\\&space;&-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k)&space;\nonumber\\&space;&&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k)&space;\label{eq:DeltaL}&space;\end{align*})
+
+so that if we keep track of Pi qi , we can calculate ∆L quickly by plugging in pi , pj , pk, qi , qj , qk.
+
+## InfoMap Algorithm
+
+The algorithm consists of two stages, the initial condition and the loop:
+
+### Initial condition
+
+Each node is its own module, so that we have:
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;n_i&space;&=&space;1\\&space;p_i&space;&=&space;p_\alpha&space;\\&space;w_i&space;&=&space;p_\alpha\sum_{\beta\neq\alpha}\omega_{\alpha\beta}&space;\\&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_{i\leftrightharpoons&space;j}&space;&=&space;\omega_{ij}&space;&plus;\omega_{ji},&space;~~~\forall&space;\omega_{ij}~\mathrm{and}~\omega_{ji}&space;\end{align*})
+
+and ∆L is calculated for all possible merging pairs according to
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;\Delta&space;L_i&space;&=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right]&space;\nonumber\\&space;&-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k)&space;\nonumber\\&space;&&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k)&space;\label{eq:DeltaL}&space;\end{align*})
+
+### Loop
+
+Find the merge pairs that would minimize the code length; if the code length
+cannot be reduced then terminate the loop. Otherwise, merge the pair to
+form a module with the following quantities, so that if we merge modules j
+and k into i, then: (these equations are presented in previous sections, but
+now repeated for ease of reference)
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;n_i&space;&=&space;n_j&space;&plus;n_k&space;\\&space;p_i&space;&=&space;p_j&space;&plus;p_k&space;\\&space;w_i&space;&=&space;w_j&space;&plus;w_k&space;-w_{j\leftrightharpoons&space;k}&space;\\&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_{i\leftrightharpoons&space;l}&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l},&space;~~~\forall&space;l\neq&space;i&space;\end{align*})
+
+and
+
+![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;\Delta&space;L_{i\leftrightharpoons&space;l}&space;&=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;l}-q_i-q_l&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right]&space;\nonumber\\&space;&-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;l})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_l)&space;\nonumber\\&space;&&plus;\mathrm{plogp}(p_i&plus;q_{i\leftrightharpoons&space;l})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_l&plus;q_l)&space;\end{align*})
+
+is recalculated for all merging pairs that involve module i, i.e., for each wil.
+The sum Pi qi is iterated in each loop by adding qi − qj − qk.
+
+## Algorithm
+
+Given the above math, the pseudocode is:
+
+Initiation:
+  - Construct a table (i.e. row and column), where each row is an undirected
+    edge between modules in the graph. Each row is of format (
+    (vertex1,vertex2), ( n1, n2, p1, p2, w1, w2, w12, q1, q2, ∆L ) ). The
+    quantities n, p, w, q, are properties of the two modules, n is the nodal
+    size of the module, p is the ergodic frequency of the module, w is the
+    6
+    exit probability of a module without teleportation, q is the exit probability
+    of a module with teleportation, ∆L is the change in code length
+    if the two modules are merged. Vertex1 and vertex2 are arranged such
+    that vertex1 is always smaller than vertex2.
+  - Construct a table (i.e. row and column), where each row is an undirected
+    edge between modules in the graph. Each row is of format (
+    (vertex1,vertex2), ( n1, n2, p1, p2, w1, w2, w12, q1, q2, ∆L ) ). The
+    quantities n, p, w, q, are properties of the two modules, n is the nodal
+    size of the module, p is the ergodic frequency of the module, w is the
+    6
+    exit probability of a module without teleportation, q is the exit probability
+    of a module with teleportation, ∆L is the change in code length
+    if the two modules are merged. Vertex1 and vertex2 are arranged such
+    that vertex1 is always smaller than vertex2.
+Loop:
+  - Pick the row that has the smallest ∆L. If it is non-negative, terminate
+    the algorithm.
+  - Calculate the newly merged module size, ergodic frequency, exit probabilities.
+  -  Calculate the new RDD of edges by deleting the edges between the
+    merging modules, and then aggregate all edges associated with module
+    2 to those in module 1.
+  - Update the table by aggregating all rows associated with module 2 to
+    those in module 1. Join the table with the RDD of edges. Since the
+    RDD of edges contain w1k, we can now calculate ∆L and put it in
+    the table for all rows associated with module 1.
+  - Repeat from Step 1.
+There are O(e) merges, e being the number of edges in the graph.
+
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
