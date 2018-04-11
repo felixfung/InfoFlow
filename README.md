@@ -19,6 +19,29 @@ node, so that
 
 ![](https://latex.codecogs.com/svg.latex?\sum_\alpha&space;\omega_{\alpha\beta}&space;=&space;1)
 
+The nodes are unchanged for all partitioning schemes.
+
+#### Modules
+
+The nodes are partitioned into modules. Each module is indexed with Latin
+alphabets i, j, or k.
+
+Each module has ergodic frequency:
+
+![](https://latex.codecogs.com/svg.latex?p_i&space;=&space;\sum_{\alpha\in&space;i}p_\alpha)
+
+and probability of exiting the module is:
+
+![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)\sum_{\alpha\in&space;i}\sum_{\beta\notin&space;i}p_\alpha\omega_{\alpha\beta})
+
+with these, we try to minimize the code length:
+
+![](https://latex.codecogs.com/svg.latex?L&space;=&space;\mathrm{plogp}\left(&space;\sum_iq_i&space;\right)&space;-2\sum_i\mathrm{plogp}\left(q_i\right)&space;-\sum_\alpha&space;\mathrm{plogp}(p_\alpha)&space;&plus;\sum_i\mathrm{plogp}\left(&space;p_i&plus;q_i&space;\right))
+
+where
+
+![](https://latex.codecogs.com/svg.latex?\mathrm{plogp}(x)&space;=&space;x&space;\mathrm{log}_2&space;x)
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
