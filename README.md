@@ -403,7 +403,11 @@ on average. Then, let there be l loops, and as before, n nodes are merged
 into m modules. Since each loop reduces the amount of modules by k times,
 we have
 
-![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;n&space;k^{-l}&space;&=&space;m&space;\\&space;k^l&space;&=&space;\frac{n}{m}&space;\\&space;l&space;&=&space;\mathrm{log}_k&space;n&space;-\mathrm{log}_k&space;m&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?n&space;k^{-l}&space;&=&space;m)
+
+![](https://latex.codecogs.com/svg.latex?k^l&space;=&space;\frac{n}{m})
+
+![](https://latex.codecogs.com/svg.latex?l&space;&=&space;\mathrm{log}_k&space;n&space;-\mathrm{log}_k&space;m)
 
 Within each merge, there are O(k) operations to aggregate the indices appropriately
 for the merges.
