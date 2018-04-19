@@ -207,7 +207,15 @@ form a module with the following quantities, so that if we merge modules j
 and k into i, then: (these equations are presented in previous sections, but
 now repeated for ease of reference)
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;n_i&space;&=&space;n_j&space;&plus;n_k&space;\\&space;p_i&space;&=&space;p_j&space;&plus;p_k&space;\\&space;w_i&space;&=&space;w_j&space;&plus;w_k&space;-w_{j\leftrightharpoons&space;k}&space;\\&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_{i\leftrightharpoons&space;l}&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l},&space;~~~\forall&space;l\neq&space;i&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?n_i&space;&=&space;n_j&space;&plus;n_k)
+
+![](https://latex.codecogs.com/svg.latex?p_i&space;&=&space;p_j&space;&plus;p_k)
+
+![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;w_j&space;&plus;w_k&space;-w_{j\leftrightharpoons&space;k})
+
+![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i)
+
+![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l},&space;~~~\forall&space;l\neq&space;i)
 
 and
 
