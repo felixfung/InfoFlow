@@ -441,7 +441,7 @@ would be required for further explorations.
 
 ## Author
 
-* **Felix Fung** - *Everything* - [Felix Fung](https://github.com/felixfung)
+* **Felix Fung** [Github](https://github.com/felixfung)
 
 ## License
 
