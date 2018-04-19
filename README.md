@@ -321,7 +321,11 @@ Combining the first and third terms,
 
 which we can recognize as
 
-![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;w_{\mathcal{M}_i}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;\\&space;w_{\mathcal{M}_i}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;w_{\mathcal{M}_i}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;\label{eq:multimerge-w})
+
+![](https://latex.codecogs.com/svg.latex?w_{\mathcal{M}_i}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;\label{eq:multimerge-wi})
+
+![](https://latex.codecogs.com/svg.latex?w_{\mathcal{M}_i\mathcal{M}_j}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\label{eq:multimerge-wij})
 
 which we can immediately see as linear generalizations of
 the previous equations, and may be calculated iteratively as the previous algorithm. We can calculate
