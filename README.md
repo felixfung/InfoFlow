@@ -139,7 +139,13 @@ and we can verify that
 
 combine to give
 
-![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;&=&space;w_{il}&space;&plus;w_{li}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl}&space;&plus;w_{lj}&space;&plus;w_{lk}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{lj}&space;&plus;w_{kl}&space;&plus;w_{lk}&space;\\&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l})
+![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;=&space;w_{il}&space;&plus;w_{li})
+
+![](https://latex.codecogs.com/svg.latex?=&space;w_{jl}&space;&plus;w_{kl}&space;&plus;w_{lj}&space;&plus;w_{lk})
+
+![](https://latex.codecogs.com/svg.latex?=&space;w_{jl}&space;&plus;w_{lj}&space;&plus;w_{kl}&space;&plus;w_{lk})
+
+![](https://latex.codecogs.com/svg.latex?=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l})
 
 and this quantity is applied via
 
