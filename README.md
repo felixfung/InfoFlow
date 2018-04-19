@@ -83,9 +83,9 @@ and the exit probability without teleportation can be calculated via:
 
 ![](https://latex.codecogs.com/gif.latex?w_i&space;=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\notin&space;i}&space;p_\alpha\omega_{\alpha\beta})
 
-![](https://www.codecogs.com/eqnedit.php?latex==&space;\sum_{\substack{~~~\alpha\in&space;j\\or~\alpha\in&space;k}}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
-
 ![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\substack{\alpha\in&space;j\\or~\alpha\in&space;k}}&space;~~&space;\sum_{\substack{\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\alpha\in&space;j}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and&space;\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and&space;\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
 
 since we are looking at the exit probability of a module, there are no self
 connections within modules, so that the specification of pαwαβ given α ∈ i,
