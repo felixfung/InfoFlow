@@ -115,7 +115,13 @@ This allows economical calculations.
 We can do similar for wil, if we merged modules j and k into i, and l is
 some other module:
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_{il}&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\\mathrm{or}~\alpha\in&space;k}}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\alpha\in&space;j}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl}&space;\end{align*})
+![](https://www.codecogs.com/eqnedit.php?latex=w_{il}&space;=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://www.codecogs.com/eqnedit.php?latex=w_{il}&space;=&space;\sum_{\substack{~~~\alpha\in&space;j\\or~\alpha\in&space;k}}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://www.codecogs.com/eqnedit.php?latex=w_{il}&space;=&space;\sum_{\alpha\in&space;j}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://www.codecogs.com/eqnedit.php?latex=w_{il}&space;=&space;w_{jl}&space;&plus;w_{kl})
 
 and similarly for wli:
 
