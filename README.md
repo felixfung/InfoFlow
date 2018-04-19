@@ -165,11 +165,11 @@ merge two modules j and k into i, with new module frequency pi and qi
 , the
 change in code length is:
 
-![](https://www.codecogs.com/eqnedit.php?latex=\Delta&space;L_i&space;=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right])
+![](https://latex.codecogs.com/svg.latex?\Delta&space;L_i&space;=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right])
 
-![](https://www.codecogs.com/eqnedit.php?latex=&space;=&space;-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k))
+![](https://latex.codecogs.com/svg.latex?-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k))
 
-![](https://www.codecogs.com/eqnedit.php?latex==&space;&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k))
+![](https://latex.codecogs.com/svg.latex?&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k))
 
 so that if we keep track of Pi qi , we can calculate ∆L quickly by plugging in pi , pj , pk, qi , qj , qk.
 
