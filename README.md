@@ -361,11 +361,17 @@ Loop:
   - Recalculate modular and edge property values via aggregations:
 
     ![](https://latex.codecogs.com/svg.latex?n_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;n_k)
+
     ![](https://latex.codecogs.com/svg.latex?p_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;p_k)
+
     ![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;w_k&space;-\sum_{k\leftrightharpoons&space;k'\rightarrow&space;i}&space;w_{k\leftrightharpoons&space;k'})
+
     ![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i)
+
     ![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;j}&space;=&space;\sum_{k\rightarrow&space;i}&space;\sum_{k'\rightarrow&space;j}&space;w_{k\leftrightharpoons&space;k'})
+
     ![](https://latex.codecogs.com/svg.latex?L&space;&=&space;\mathrm{plogp}\left(&space;\sum_iq_i&space;\right)&space;-2\sum_i\mathrm{plogp}\left(q_i\right)&space;&&space;-\sum_\alpha&space;\mathrm{plogp}(p_\alpha)&space;&plus;\sum_i\mathrm{plogp}\left(&space;p_i&plus;q_i&space;\right))
+
     ![](https://latex.codecogs.com/svg.latex?\Delta&space;L_{i\leftrightharpoons&space;j}&space;&=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;j}-q_i-q_j&plus;\sum_k&space;q_k&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right]&space;\\&space;&-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;j})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;\\&space;&&plus;\mathrm{plogp}(p_{i\leftrightharpoons&space;j}&plus;q_{i\leftrightharpoons&space;j})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j))
 
 ### Labeling connected components
