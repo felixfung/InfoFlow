@@ -219,7 +219,11 @@ now repeated for ease of reference)
 
 and
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;\Delta&space;L_{i\leftrightharpoons&space;l}&space;&=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;l}-q_i-q_l&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right]&space;\nonumber\\&space;&-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;l})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_l)&space;\nonumber\\&space;&&plus;\mathrm{plogp}(p_i&plus;q_{i\leftrightharpoons&space;l})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_l&plus;q_l)&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?\Delta&space;L_{i\leftrightharpoons&space;l}&space;=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;l}-q_i-q_l&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right])
+
+![](https://latex.codecogs.com/svg.latex?-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;l})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_l))
+
+![](https://latex.codecogs.com/svg.latex?&plus;\mathrm{plogp}(p_i&plus;q_{i\leftrightharpoons&space;l})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_l&plus;q_l))
 
 is recalculated for all merging pairs that involve module i, i.e., for each wil.
 The sum Pi qi is iterated in each loop by adding qi − qj − qk.
