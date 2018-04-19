@@ -81,7 +81,11 @@ with
 
 and the exit probability without teleportation can be calculated via:
 
-![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\notin&space;i}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\or~\alpha\in&space;k}}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}\\&space;&=&space;\sum_{\alpha\in&space;j}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
+![](https://latex.codecogs.com/gif.latex?w_i&space;=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\notin&space;i}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\substack{\alpha\in&space;j\\or~\alpha\in&space;k}}&space;~~&space;\sum_{\substack{\beta\notin&space;j\\and\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\alpha\in&space;j}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and&space;\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;~~&space;\sum_{\substack{~~~~\beta\notin&space;j\\and&space;\beta\notin&space;k}}&space;p_\alpha\omega_{\alpha\beta})
 
 since we are looking at the exit probability of a module, there are no self
 connections within modules, so that the specification of pαwαβ given α ∈ i,
@@ -111,7 +115,13 @@ This allows economical calculations.
 We can do similar for wil, if we merged modules j and k into i, and l is
 some other module:
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_{il}&space;&=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\substack{~~~\alpha\in&space;j\\\mathrm{or}~\alpha\in&space;k}}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;\sum_{\alpha\in&space;j}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl}&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?w_{il}&space;=&space;\sum_{\alpha\in&space;i}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\substack{~~~\alpha\in&space;j\\or~\alpha\in&space;k}}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\alpha\in&space;j}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta}&space;&plus;\sum_{\alpha\in&space;k}&space;\sum_{\beta\in&space;l}&space;p_\alpha\omega_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;w_{jl}&space;&plus;w_{kl})
 
 and similarly for wli:
 
@@ -129,7 +139,13 @@ and we can verify that
 
 combine to give
 
-![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;&=&space;w_{il}&space;&plus;w_{li}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{kl}&space;&plus;w_{lj}&space;&plus;w_{lk}&space;\\&space;&=&space;w_{jl}&space;&plus;w_{lj}&space;&plus;w_{kl}&space;&plus;w_{lk}&space;\\&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l})
+![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;=&space;w_{il}&space;&plus;w_{li})
+
+![](https://latex.codecogs.com/svg.latex?=&space;w_{jl}&space;&plus;w_{kl}&space;&plus;w_{lj}&space;&plus;w_{lk})
+
+![](https://latex.codecogs.com/svg.latex?=&space;w_{jl}&space;&plus;w_{lj}&space;&plus;w_{kl}&space;&plus;w_{lk})
+
+![](https://latex.codecogs.com/svg.latex?=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l})
 
 and this quantity is applied via
 
@@ -149,7 +165,11 @@ merge two modules j and k into i, with new module frequency pi and qi
 , the
 change in code length is:
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;\Delta&space;L_i&space;&=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right]&space;\nonumber\\&space;&-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k)&space;\nonumber\\&space;&&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k)&space;\label{eq:DeltaL}&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?\Delta&space;L_i&space;=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right])
+
+![](https://latex.codecogs.com/svg.latex?-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k))
+
+![](https://latex.codecogs.com/svg.latex?&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k))
 
 so that if we keep track of Pi qi , we can calculate ∆L quickly by plugging in pi , pj , pk, qi , qj , qk.
 
@@ -161,11 +181,23 @@ The algorithm consists of two stages, the initial condition and the loop:
 
 Each node is its own module, so that we have:
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;n_i&space;&=&space;1\\&space;p_i&space;&=&space;p_\alpha&space;\\&space;w_i&space;&=&space;p_\alpha\sum_{\beta\neq\alpha}\omega_{\alpha\beta}&space;\\&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_{i\leftrightharpoons&space;j}&space;&=&space;\omega_{ij}&space;&plus;\omega_{ji},&space;~~~\forall&space;\omega_{ij}~\mathrm{and}~\omega_{ji}&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?n_i&space;=&space;1)
+
+![](https://latex.codecogs.com/svg.latex?p_i&space;&=&space;p_\alpha)
+
+![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;p_\alpha\sum_{\beta\neq\alpha}\omega_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau&space;\frac{n-n_i}{n-1}&space;p_i&space;&plus;(1-\tau)w_i)
+
+![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;j}&space;=&space;\omega_{ij}&space;&plus;\omega_{ji},&space;~~~\forall&space;\omega_{ij}~\mathrm{and}~\omega_{ji})
 
 and ∆L is calculated for all possible merging pairs according to
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;\Delta&space;L_i&space;&=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right]&space;\nonumber\\&space;&-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k)&space;\nonumber\\&space;&&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k)&space;\label{eq:DeltaL}&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?\Delta&space;L_i&space;=&space;\mathrm{plogp}\left[&space;q_i-q_j-q_k&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_i&space;q_i&space;\right])
+
+![](https://latex.codecogs.com/svg.latex?-2&space;\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;&plus;2\mathrm{plogp}(q_k))
+
+![](https://latex.codecogs.com/svg.latex?&plus;\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;-\mathrm{plogp}(p_k&plus;q_k))
 
 #### Loop
 
@@ -175,11 +207,23 @@ form a module with the following quantities, so that if we merge modules j
 and k into i, then: (these equations are presented in previous sections, but
 now repeated for ease of reference)
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;n_i&space;&=&space;n_j&space;&plus;n_k&space;\\&space;p_i&space;&=&space;p_j&space;&plus;p_k&space;\\&space;w_i&space;&=&space;w_j&space;&plus;w_k&space;-w_{j\leftrightharpoons&space;k}&space;\\&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_{i\leftrightharpoons&space;l}&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l},&space;~~~\forall&space;l\neq&space;i&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?n_i&space;&=&space;n_j&space;&plus;n_k)
+
+![](https://latex.codecogs.com/svg.latex?p_i&space;&=&space;p_j&space;&plus;p_k)
+
+![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;w_j&space;&plus;w_k&space;-w_{j\leftrightharpoons&space;k})
+
+![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i)
+
+![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;l}&space;&=&space;w_{j\leftrightharpoons&space;l}&space;&plus;w_{k\leftrightharpoons&space;l},&space;~~~\forall&space;l\neq&space;i)
 
 and
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;\Delta&space;L_{i\leftrightharpoons&space;l}&space;&=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;l}-q_i-q_l&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right]&space;\nonumber\\&space;&-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;l})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_l)&space;\nonumber\\&space;&&plus;\mathrm{plogp}(p_i&plus;q_{i\leftrightharpoons&space;l})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_l&plus;q_l)&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?\Delta&space;L_{i\leftrightharpoons&space;l}&space;=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;l}-q_i-q_l&plus;\sum_i&space;q_i&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right])
+
+![](https://latex.codecogs.com/svg.latex?-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;l})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_l))
+
+![](https://latex.codecogs.com/svg.latex?&plus;\mathrm{plogp}(p_i&plus;q_{i\leftrightharpoons&space;l})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_l&plus;q_l))
 
 is recalculated for all merging pairs that involve module i, i.e., for each wil.
 The sum Pi qi is iterated in each loop by adding qi − qj − qk.
@@ -259,7 +303,13 @@ nodes in all submodules Mi
 , the exit probability of the merged module M
 becomes:
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\left[&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\right]&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\mathcal{M}_j}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\left[&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\right])
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\mathcal{M}_j}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta})
 
 where we expand the second term with respect to the Mj’s to give
 
@@ -271,7 +321,11 @@ Combining the first and third terms,
 
 which we can recognize as
 
-![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;w_{\mathcal{M}_i}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;\\&space;w_{\mathcal{M}_i}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;w_{\mathcal{M}_i}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\mathcal{M}_j\neq\mathcal{M}_i}&space;w_{\mathcal{M}_i\mathcal{M}_j}&space;\label{eq:multimerge-w})
+
+![](https://latex.codecogs.com/svg.latex?w_{\mathcal{M}_i}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}_i}&space;p_\alpha&space;w_{\alpha\beta}&space;\label{eq:multimerge-wi})
+
+![](https://latex.codecogs.com/svg.latex?w_{\mathcal{M}_i\mathcal{M}_j}&space;&=&space;\sum_{\alpha\in\mathcal{M}_i}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\label{eq:multimerge-wij})
 
 which we can immediately see as linear generalizations of
 the previous equations, and may be calculated iteratively as the previous algorithm. We can calculate
@@ -306,7 +360,19 @@ Loop:
     precise algorithm is described below.
   - Recalculate modular and edge property values via aggregations:
 
-    ![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;n_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;n_k\\&space;p_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;p_k\\&space;w_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;w_k&space;-\sum_{k\leftrightharpoons&space;k'\rightarrow&space;i}&space;w_{k\leftrightharpoons&space;k'}\\&space;q_i&space;&=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i&space;\\&space;w_{i\leftrightharpoons&space;j}&space;&=&space;\sum_{k\rightarrow&space;i}&space;\sum_{k'\rightarrow&space;j}&space;w_{k\leftrightharpoons&space;k'}&space;\\&space;L&space;&=&space;\mathrm{plogp}\left(&space;\sum_iq_i&space;\right)&space;-2\sum_i\mathrm{plogp}\left(q_i\right)&space;\\&space;&&space;-\sum_\alpha&space;\mathrm{plogp}(p_\alpha)&space;&plus;\sum_i\mathrm{plogp}\left(&space;p_i&plus;q_i&space;\right)&space;\\&space;\Delta&space;L_{i\leftrightharpoons&space;j}&space;&=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;j}-q_i-q_j&plus;\sum_k&space;q_k&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right]&space;\\&space;&-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;j})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;\\&space;&&plus;\mathrm{plogp}(p_{i\leftrightharpoons&space;j}&plus;q_{i\leftrightharpoons&space;j})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j)&space;\end{align*})
+    ![](https://latex.codecogs.com/svg.latex?n_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;n_k)
+
+    ![](https://latex.codecogs.com/svg.latex?p_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;p_k)
+
+    ![](https://latex.codecogs.com/svg.latex?w_i&space;&=&space;\sum_{k\rightarrow&space;i}&space;w_k&space;-\sum_{k\leftrightharpoons&space;k'\rightarrow&space;i}&space;w_{k\leftrightharpoons&space;k'})
+
+    ![](https://latex.codecogs.com/svg.latex?q_i&space;=&space;\tau\frac{n-n_i}{n-1}p_i&space;&plus;(1-\tau)w_i)
+
+    ![](https://latex.codecogs.com/svg.latex?w_{i\leftrightharpoons&space;j}&space;=&space;\sum_{k\rightarrow&space;i}&space;\sum_{k'\rightarrow&space;j}&space;w_{k\leftrightharpoons&space;k'})
+
+    ![](https://latex.codecogs.com/svg.latex?L&space;&=&space;\mathrm{plogp}\left(&space;\sum_iq_i&space;\right)&space;-2\sum_i\mathrm{plogp}\left(q_i\right)&space;&&space;-\sum_\alpha&space;\mathrm{plogp}(p_\alpha)&space;&plus;\sum_i\mathrm{plogp}\left(&space;p_i&plus;q_i&space;\right))
+
+    ![](https://latex.codecogs.com/svg.latex?\Delta&space;L_{i\leftrightharpoons&space;j}&space;&=&space;\mathrm{plogp}\left[&space;q_{i\leftrightharpoons&space;j}-q_i-q_j&plus;\sum_k&space;q_k&space;\right]&space;-\mathrm{plogp}&space;\left[&space;\sum_k&space;q_k&space;\right]&space;\\&space;&-2&space;\mathrm{plogp}(q_{i\leftrightharpoons&space;j})&space;&plus;2\mathrm{plogp}(q_i)&space;&plus;2\mathrm{plogp}(q_j)&space;\\&space;&&plus;\mathrm{plogp}(p_{i\leftrightharpoons&space;j}&plus;q_{i\leftrightharpoons&space;j})&space;-\mathrm{plogp}(p_i&plus;q_i)&space;-\mathrm{plogp}(p_j&plus;q_j))
 
 ### Labeling connected components
 
@@ -337,7 +403,11 @@ on average. Then, let there be l loops, and as before, n nodes are merged
 into m modules. Since each loop reduces the amount of modules by k times,
 we have
 
-![](https://latex.codecogs.com/gif.latex?\begin{align*}&space;n&space;k^{-l}&space;&=&space;m&space;\\&space;k^l&space;&=&space;\frac{n}{m}&space;\\&space;l&space;&=&space;\mathrm{log}_k&space;n&space;-\mathrm{log}_k&space;m&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?n&space;k^{-l}&space;&=&space;m)
+
+![](https://latex.codecogs.com/svg.latex?k^l&space;=&space;\frac{n}{m})
+
+![](https://latex.codecogs.com/svg.latex?l&space;&=&space;\mathrm{log}_k&space;n&space;-\mathrm{log}_k&space;m)
 
 Within each merge, there are O(k) operations to aggregate the indices appropriately
 for the merges.
@@ -371,7 +441,7 @@ would be required for further explorations.
 
 ## Author
 
-* **Felix Fung** - *Everything* - [Felix Fung](https://github.com/felixfung)
+* **Felix Fung** [Github](https://github.com/felixfung)
 
 ## License
 
