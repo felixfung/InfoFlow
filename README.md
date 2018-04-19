@@ -303,7 +303,13 @@ nodes in all submodules Mi
 , the exit probability of the merged module M
 becomes:
 
-![](https://latex.codecogs.com/svg.latex?\begin{align*}&space;w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\left[&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\right]&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\\&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\mathcal{M}_j}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta}&space;\end{align*})
+![](https://latex.codecogs.com/svg.latex?w_\mathcal{M}&space;&=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\notin\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\left[&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta}&space;\right])
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\beta\in\mathcal{M}}&space;p_\alpha&space;w_{\alpha\beta})
+
+![](https://latex.codecogs.com/svg.latex?=&space;\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_\beta&space;p_\alpha&space;w_{\alpha\beta}&space;-\sum_{\mathcal{M}_i}&space;\sum_{\alpha\in\mathcal{M}_i}&space;\sum_{\mathcal{M}_j}\sum_{\beta\in\mathcal{M}_j}&space;p_\alpha&space;w_{\alpha\beta})
 
 where we expand the second term with respect to the Mj’s to give
 
