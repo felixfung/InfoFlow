@@ -37,7 +37,7 @@ class JSonTest extends FunSuite with BeforeAndAfter
   /***************************************************************************
    * Test Cases
    ***************************************************************************/
-  test("JSon exportation of trivial graph") {
+  ignore("JSon exportation of trivial graph") {
     try {
       // export JSon file
       val pj = new PajekFile( sc, "Nets/trivial.net" )
@@ -78,7 +78,7 @@ class JSonTest extends FunSuite with BeforeAndAfter
     }
   }
 
-  test("Reduced JSon exportation of Rosvall example graph") {
+  ignore("Reduced JSon exportation of Rosvall example graph") {
     try {
       // export JSon file
       val pj = new PajekFile( sc, "Nets/rosvall.net" )
