@@ -4,10 +4,11 @@ import org.apache.spark.rdd.RDD
 
 import org.apache.hadoop.mapred.InvalidInputException
 
-//import scala.util.matching.Regex
-
 object PajekFile
 {
+  // given lines of declaration of Pajek sections (lines start with '*')
+  // return the interval of line numbers, inclusive
+  // that belong to those sections
   def intervals( starlines: List[(String,Long)] ): (
     List[(Long,Long)], List[(Long,Long)], List[(Long,Long)]
   ) = {
@@ -45,15 +46,6 @@ object PajekFile
         case _ => section = "Nil"
       }
     }
-    /*section match {
-      case "Vertex"   =>
-        vertexLines = (prevline,starlines.size-1L)::vertexLines
-      case "Edge"     =>
-        edgeLines = (prevline,starlines.size-1L)::edgeLines
-      case "EdgeList" =>
-        edgeListLines = (prevline,starlines.size-1L)::edgeListLines
-      case "Nil"      => ()
-    }*/
 
     if( vertexLines.size != 1 )
       throw new Exception(
@@ -127,13 +119,6 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       .sortBy( _._2 )
       PajekFile.intervals( starlines )
     }
-/*println(filename)
-println("VERTEX")
-vertexLines.foreach(println)
-println("EDGE")
-edgeLines.foreach(println)
-println("LIST")
-edgeListLines.foreach(println)*/
 
   /***************************************************************************
    * Get node number n
@@ -154,6 +139,12 @@ edgeListLines.foreach(println)*/
     }
 
   /***************************************************************************
+   * declare regex for comments, used to match all lined comments
+   ***************************************************************************/
+
+    val commentRegex = """\%(.*)""".r
+
+  /***************************************************************************
    * Read vertex information
    ***************************************************************************/
 
@@ -166,12 +157,17 @@ edgeListLines.foreach(println)*/
 
       val name = lines.map {
         case (line,index) => line match {
+          case commentRegex(_*) => ( -1L, "" ) // to be filtered out later
           case vertexRegex(lineindex,vertexname)
             =>( lineindex.toLong, vertexname )
           case _ => throw new Exception(
             "Vertex definition error: line " +index.toString
           )
         }
+      }
+      // filter out non-positive indices
+      .filter {
+        case (index,_) => index>0
       }
 
       // check indices are unique
@@ -210,6 +206,7 @@ edgeListLines.foreach(println)*/
       // parse line
       .map {
         case (line,index) => line match {
+          case commentRegex(_*) => ( (-1L,-1L), 0.0 ) // to be filtered later
           case edgeRegex1(from,to) =>
             ( (from.toLong,to.toLong), 1.0 )
           case edgeRegex2(from,to,weight) =>
@@ -228,16 +225,25 @@ edgeListLines.foreach(println)*/
       }
       // parse line
       .flatMap {
-        case (line,index) =>
-          val vertices = line.split("\\s+").filter(x => !x.isEmpty)
-          val verticesSlice = vertices.slice(1, vertices.length)
-          verticesSlice.map {
-            case toVertex => ((vertices(0).toLong, toVertex.toLong), 1.0)
+        case (line,index) => line match {
+          case commentRegex(_*) =>
+            Seq( ((-1L,-1L),0.0) ) // to be filtered later
+          case _ => {
+            val vertices = line.split("\\s+").filter(x => !x.isEmpty)
+            val verticesSlice = vertices.slice(1, vertices.length)
+            verticesSlice.map {
+              case toVertex => ((vertices(0).toLong, toVertex.toLong), 1.0)
+            }
           }
+        }
       }
 
       // combine edge1 +edge2
       edge1.union(edge2)
+      // filter commented lines ( (-1,-1) pairs )
+      .filter {
+        case ((from,to),weight) => !(from==to && to== -1)
+      }
       // aggregate the weights
       .reduceByKey(_+_)
       .map {
