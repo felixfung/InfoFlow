@@ -17,7 +17,7 @@ case class Partition
 {
   def localCheckpoint: Unit = {
     //names.localCheckpoint
-    val dummy = partitioning.count
+    val dummy = partitioning.count // this action forces RDD evaluation
     partitioning.localCheckpoint
     //iWj0.localCheckpoint
     iWj.localCheckpoint
@@ -32,20 +32,20 @@ case class Partition
   def saveJSon( fileName: String ): Unit = {
     // fake nodes to preserve group ordering/coloring
     val fakeNodes = names.map {
-      case (idx,_) => (-idx,0,"",idx)
+      case (idx,_) => (-idx,0L,"",idx)
     }
     .collect
     val nodes = partitioning.join(names).map {
-      case (id,(group,name)) => (id,1,name,group)
+      case (id,(group,name)) => (id,1L,name,group)
     }
     .collect ++fakeNodes
-    //saveJSon( fileName, nodes.sorted, iWj0.collect.sorted, 0,1 )
+    saveJSon( fileName, nodes.sorted, iWj0.collect.sorted, 0,1 )
   }
 
   // function prints each partitioning as a node
   def saveReduceJSon( fileName: String ): Unit = {
     val reducedNodes = names.join(partitioning).map {
-      case (id,(name,module)) => (module,(name,1))
+      case (id,(name,module)) => (module,(name,1L))
     }
     .reduceByKey {
       case ( (name1,count1), (name2,count2) ) =>
@@ -54,9 +54,9 @@ case class Partition
     .map {
       case (id,(name,count)) => (id,count,name,id)
     }
-    /*saveJSon( fileName,
+    saveJSon( fileName,
       reducedNodes.collect.sorted, iWj.collect.sorted, 1,4
-    )*/
+    )
   }
 
   /***************************************************************************
@@ -85,70 +85,74 @@ case class Partition
     val file = new PrintWriter( new File(fileName) )
 
     // write node data
-    file.write( "{\n\t\"nodes\": [\n" )
-    val nodeCount = nodes.size
-    val minSize = nodes.map {
-      case (_,size,_,_) => size
-    }
-    .min
-    val maxSize = nodes.map {
-      case (_,size,_,_) => size
-    }
-    .max
-    for( idx <- 0 to nodeCount-1 ) {
-      nodes(idx) match {
-        case (id,size,name,group) => {
-          val radius = lScale(
-            Math.sqrt(minSize),
-            Math.sqrt(size),
-            Math.sqrt(maxSize),
-          minNodeSize,maxNodeSize)
-          file.write(
-            "\t\t{\"id\": \"" +id.toString
-            +"\", \"size\": \"" +radius.toString
-            +"\", \"name\": \"" +name
-            +"\", \"group\": \"" +group.toString
-            +"\"}"
-          )
-          if( idx < nodeCount-1 )
-            file.write(",")
-          file.write("\n")
+    if( !nodes.isEmpty ) {
+      file.write( "{\n\t\"nodes\": [\n" )
+      val nodeCount = nodes.size
+      val minSize = nodes.map {
+        case (_,size,_,_) => size
+      }
+      .min
+      val maxSize = nodes.map {
+        case (_,size,_,_) => size
+      }
+      .max
+      for( idx <- 0 to nodeCount-1 ) {
+        nodes(idx) match {
+          case (id,size,name,group) => {
+            val radius = lScale(
+              Math.sqrt(minSize),
+              Math.sqrt(size),
+              Math.sqrt(maxSize),
+            minNodeSize,maxNodeSize)
+            file.write(
+              "\t\t{\"id\": \"" +id.toString
+              +"\", \"size\": \"" +radius.toString
+              +"\", \"name\": \"" +name
+              +"\", \"group\": \"" +group.toString
+              +"\"}"
+            )
+            if( idx < nodeCount-1 )
+              file.write(",")
+            file.write("\n")
+          }
         }
       }
+      file.write( "\t],\n" )
     }
-    file.write( "\t],\n" )
 
     // write edge data
-    file.write( "\t\"links\": [\n" )
-    val edgeCount = edges.size
-    val minEdgeSize = edges.map {
-      case (_,weight) => weight
-    }
-    .min
-    val maxEdgeSize = edges.map {
-      case (_,weight) => weight
-    }
-    .max
-    for( idx <- 0 to edgeCount-1 ) {
-      edges(idx) match {
-        case ((from,to),weight) =>
-          val width = lScale(
-            Math.sqrt(minEdgeSize),
-            Math.sqrt(weight),
-            Math.sqrt(maxEdgeSize),
-          1,4)
-          file.write(
-            "\t\t{\"source\": \"" +from.toString
-            +"\", \"target\": \"" +to.toString
-            +"\", \"width\": "+width.toString
-            +"}"
-          )
-          if( idx < edgeCount-1 )
-            file.write(",")
-          file.write("\n")
+    if( !edges.isEmpty ) {
+      file.write( "\t\"links\": [\n" )
+      val edgeCount = edges.size
+      val minEdgeSize = edges.map {
+        case (_,weight) => weight
       }
+      .min
+      val maxEdgeSize = edges.map {
+        case (_,weight) => weight
+      }
+      .max
+      for( idx <- 0 to edgeCount-1 ) {
+        edges(idx) match {
+          case ((from,to),weight) =>
+            val width = lScale(
+              Math.sqrt(minEdgeSize),
+              Math.sqrt(weight),
+              Math.sqrt(maxEdgeSize),
+            1,4)
+            file.write(
+              "\t\t{\"source\": \"" +from.toString
+              +"\", \"target\": \"" +to.toString
+              +"\", \"width\": "+width.toString
+              +"}"
+            )
+            if( idx < edgeCount-1 )
+              file.write(",")
+            file.write("\n")
+        }
+      }
+      file.write("\t]")
     }
-    file.write("\t]")
 
     // close file
     file.write( "\n}" )
