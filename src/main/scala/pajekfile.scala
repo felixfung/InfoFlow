@@ -24,25 +24,25 @@ object PajekFile
     for( (line,index) <- starlines ) {
       section match {
         case "Vertex"   =>
-          vertexLines = (prevline,index-1)::vertexLines
+          vertexLines   = vertexLines ::: List( (prevline,index-1) )
         case "Edge"     =>
-          edgeLines = (prevline,index-1)::edgeLines
+          edgeLines     = edgeLines ::: List( (prevline,index-1) )
         case "EdgeList" =>
-          edgeListLines = (prevline,index-1)::edgeListLines
+          edgeListLines = edgeListLines ::: List( (prevline,index-1) )
         case "Nil"      => ()
       }
       prevline = index+1
-      val vertexRegex = """(?i)\*Vertices.*?(\d+)""".r
-      val edgeRegex = """(?i)\*Arcs""".r
-      val edge2Regex = """(?i)\*Edges""".r
-      val edgelistRegex = """(?i)\*Arcslist""".r
-      val edgelist2Regex = """(?i)\*Edgeslist""".r
+      val vertexRegex = """(?i)\s*\*Vertices.*""".r
+      val edgelistRegex = """(?i)\s*\*Arcslist.*""".r
+      val edgelist2Regex = """(?i)\s*\*Edgeslist.*""".r
+      val edgeRegex = """(?i)\s*\*Arcs.*""".r
+      val edge2Regex = """(?i)\s*\*Edges.*""".r
       line match {
         case vertexRegex(_*) => section = "Vertex"
-        case edgeRegex(_*) => section = "Edge"
-        case edge2Regex(_*) => section = "Edge"
         case edgelistRegex(_*) => section ="EdgeList"
         case edgelist2Regex(_*) => section = "EdgeList"
+        case edgeRegex(_*) => section = "Edge"
+        case edge2Regex(_*) => section = "Edge"
         case _ => section = "Nil"
       }
     }
