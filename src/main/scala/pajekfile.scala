@@ -6,6 +6,77 @@ import org.apache.hadoop.mapred.InvalidInputException
 
 //import scala.util.matching.Regex
 
+object PajekFile
+{
+  def intervals( starlines: List[(String,Long)] ): (
+    List[(Long,Long)], List[(Long,Long)], List[(Long,Long)]
+  ) = {
+    // in this block has to use sequential programming
+    // since Pajek sectioning is inherently sequential
+
+    var prevline: Long = 1
+    var section: String = "Nil"
+    var vertexLines: List[(Long,Long)] = Nil
+    var edgeLines: List[(Long,Long)] = Nil
+    var edgeListLines: List[(Long,Long)] = Nil
+
+    for( (line,index) <- starlines ) {
+      section match {
+        case "Vertex"   =>
+          vertexLines = (prevline,index-1)::vertexLines
+        case "Edge"     =>
+          edgeLines = (prevline,index-1)::edgeLines
+        case "EdgeList" =>
+          edgeListLines = (prevline,index-1)::edgeListLines
+        case "Nil"      => ()
+      }
+      prevline = index+1
+      val vertexRegex = """(?i)\*Vertices.*?(\d+)""".r
+      val edgeRegex = """(?i)\*Arcs""".r
+      val edge2Regex = """(?i)\*Edges""".r
+      val edgelistRegex = """(?i)\*Arcslist""".r
+      val edgelist2Regex = """(?i)\*Edgeslist""".r
+      line match {
+        case vertexRegex(_*) => section = "Vertex"
+        case edgeRegex(_*) => section = "Edge"
+        case edge2Regex(_*) => section = "Edge"
+        case edgelistRegex(_*) => section ="EdgeList"
+        case edgelist2Regex(_*) => section = "EdgeList"
+        case _ => section = "Nil"
+      }
+    }
+    /*section match {
+      case "Vertex"   =>
+        vertexLines = (prevline,starlines.size-1L)::vertexLines
+      case "Edge"     =>
+        edgeLines = (prevline,starlines.size-1L)::edgeLines
+      case "EdgeList" =>
+        edgeListLines = (prevline,starlines.size-1L)::edgeListLines
+      case "Nil"      => ()
+    }*/
+
+    if( vertexLines.size != 1 )
+      throw new Exception(
+        "There must be one and only one vertex number specification"
+      )
+
+    ( vertexLines, edgeLines, edgeListLines )
+  }
+
+  // check that a line index is within a list of intervals, inclusive
+  def withinBound( index: Long, intervals: List[(Long,Long)] ): Boolean = {
+    def recursiveFn( index: Long, intervals: List[(Long,Long)] ): Boolean =
+      intervals match {
+        case Nil => false
+        case interval::interval_tail =>
+          if( interval._1<=index && index<=interval._2 ) true
+          else if( index < interval._1 ) false
+          else recursiveFn( index, interval_tail )
+      }
+    recursiveFn( index, intervals )
+  }
+}
+
 sealed class PajekFile( sc: SparkContext, val filename: String )
 {
 
@@ -41,69 +112,28 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
     val( vertexLines, edgeLines, edgeListLines ): (
       List[(Long,Long)], List[(Long,Long)], List[(Long,Long)]
     ) = {
-      // in this block has to use sequential programming
-      // since Pajek sectioning is inherently sequential
-
-      var prevline: Long = 1
-      var section: String = "Nil"
-      var vertexLines: List[(Long,Long)] = Nil
-      var edgeLines: List[(Long,Long)] = Nil
-      var edgeListLines: List[(Long,Long)] = Nil
-
-      val starlines = {
-        val starRegex = """\*.*(\d+)""".r
+      val starlines: List[(String,Long)] = {
+        val starRegex = """\*([a-zA-Z]+).*""".r
         linedFile.filter {
           case (line,index) => line match {
-            case starRegex(idx) => true
+            case starRegex(id) => true
             case _ => false
           }
         }
       }
+      .union( sc.parallelize( Array( ( "", linedFile.count ) ) ) )
       .collect
+      .toList
       .sortBy( _._2 )
-
-      for( (line,index) <- starlines ) {
-        section match {
-          case "Vertex"   => vertexLines = (prevline,index-1)::vertexLines
-          case "Edge"     => edgeLines = (prevline,index-1)::edgeLines
-          case "EdgeList" => edgeListLines = (prevline,index-1)::edgeListLines
-          case "Nil"      => ()
-        }
-        prevline = index+1
-        val vertexRegex = """(?i)\*Vertices.*?(\d+)""".r
-        val edgeRegex = """(?i)\*Arcs""".r
-        val edge2Regex = """(?i)\*Edges""".r
-        val edgelistRegex = """(?i)\*Arcslist""".r
-        val edgelist2Regex = """(?i)\*Edgeslist""".r
-        line match {
-          case vertexRegex(_*) => section = "Vertex"
-          case edgeRegex(_*) => section = "Edge"
-          case edge2Regex(_*) => section = "Edge"
-          case edgelistRegex(_*) => section ="EdgeList"
-          case edgelist2Regex(_*) => section = "EdgeList"
-        }
-      }
-
-      if( vertexLines.size != 1 )
-        throw new Exception(
-          "There must be one and only one vertex number specification"
-        )
-
-      ( vertexLines, edgeLines, edgeListLines )
+      PajekFile.intervals( starlines )
     }
-
-    // check that a line index is within a list of intervals, inclusive
-    def withinBound( index: Long, intervals: List[(Long,Long)] ): Boolean = {
-      def recursiveFn( index: Long, intervals: List[(Long,Long)] ): Boolean =
-        intervals match {
-          case Nil => false
-          case interval::interval_tail =>
-            if( interval._1<=index && index<=interval._2 ) true
-            else if( index < interval._1 ) false
-            else recursiveFn( index, interval_tail )
-        }
-      recursiveFn( index, intervals )
-    }
+/*println(filename)
+println("VERTEX")
+vertexLines.foreach(println)
+println("EDGE")
+edgeLines.foreach(println)
+println("LIST")
+edgeListLines.foreach(println)*/
 
   /***************************************************************************
    * Get node number n
@@ -131,7 +161,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       val vertexRegex = """[ \t]*?([0-9]+)[ \t]+\"(.*)\".*""".r
       // filter the relevant lines
       val lines = linedFile.filter {
-        case (_,index) => withinBound( index, vertexLines )
+        case (_,index) => PajekFile.withinBound( index, vertexLines )
       }
 
       val name = lines.map {
@@ -175,7 +205,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       val edge1 =linedFile
       // filter the relevant lines
       .filter {
-        case (_,index) => withinBound( index, edgeLines )
+        case (_,index) => PajekFile.withinBound( index, edgeLines )
       }
       // parse line
       .map {
@@ -194,7 +224,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       val edge2 = linedFile
       // filter the relevant lines
       .filter {
-        case (_,index) => withinBound( index, edgeListLines )
+        case (_,index) => PajekFile.withinBound( index, edgeListLines )
       }
       // parse line
       .flatMap {
