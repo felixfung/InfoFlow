@@ -4,6 +4,8 @@ import org.apache.spark.rdd.RDD
 
 import org.apache.hadoop.mapred.InvalidInputException
 
+//import scala.util.matching.Regex
+
 sealed class PajekFile( sc: SparkContext, val filename: String )
 {
 
@@ -36,24 +38,8 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
    * small meaning <10, probably
    ***************************************************************************/
 
-    val starlines = {
-      //val starRegex = """(\*)""".r
-        val starRegex = """(?i)\*Vertices""".r
-      linedFile.filter {
-        case (line,index) => line match {
-          case starRegex(_) => true
-          case _ => print(line+"\n");false
-        }
-      }
-      .collect
-      .sortBy( _._2 )
-    }
-
-    println(starlines.size)
-    val ( vertexLines, edgeLines, edgeListLines ): (
-      List[(Long,Long)],
-      List[(Long,Long)],
-      List[(Long,Long)]
+    val( vertexLines, edgeLines, edgeListLines ): (
+      List[(Long,Long)], List[(Long,Long)], List[(Long,Long)]
     ) = {
       // in this block has to use sequential programming
       // since Pajek sectioning is inherently sequential
@@ -64,25 +50,40 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       var edgeLines: List[(Long,Long)] = Nil
       var edgeListLines: List[(Long,Long)] = Nil
 
-      for ((line, index) <- starlines) {
-        if( section == "Vertex" ) vertexLines = (prevline,index-1)::vertexLines
-        if( section == "Edge" ) edgeLines = (prevline,index-1):: edgeLines
-        if( section == "EdgeList" )edgeListLines = (prevline,index-1)::edgeListLines
+      val starlines = {
+        val starRegex = """\*.*(\d+)""".r
+        linedFile.filter {
+          case (line,index) => line match {
+            case starRegex(idx) => true
+            case _ => false
+          }
+        }
+      }
+      .collect
+      .sortBy( _._2 )
+
+      for( (line,index) <- starlines ) {
+        section match {
+          case "Vertex"   => vertexLines = (prevline,index-1)::vertexLines
+          case "Edge"     => edgeLines = (prevline,index-1)::edgeLines
+          case "EdgeList" => edgeListLines = (prevline,index-1)::edgeListLines
+          case "Nil"      => ()
+        }
         prevline = index+1
-        val vertexRegex = """(?i)\*Vertices""".r
+        val vertexRegex = """(?i)\*Vertices.*?(\d+)""".r
         val edgeRegex = """(?i)\*Arcs""".r
         val edge2Regex = """(?i)\*Edges""".r
         val edgelistRegex = """(?i)\*Arcslist""".r
         val edgelist2Regex = """(?i)\*Edgeslist""".r
         line match {
-          case vertexRegex(_) => section = "Vertex"
-          case edgeRegex(_) => section = "Edge"
-          case edge2Regex(_) => section = "Edge"
-          case edgelistRegex(_) => section ="EdgeList"
-          case edgelist2Regex(_) => section = "EdgeList"
+          case vertexRegex(_*) => section = "Vertex"
+          case edgeRegex(_*) => section = "Edge"
+          case edge2Regex(_*) => section = "Edge"
+          case edgelistRegex(_*) => section ="EdgeList"
+          case edgelist2Regex(_*) => section = "EdgeList"
         }
       }
-//println(vertexLines.size)
+
       if( vertexLines.size != 1 )
         throw new Exception(
           "There must be one and only one vertex number specification"
