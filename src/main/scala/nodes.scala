@@ -10,8 +10,8 @@ extends Serializable {
   /***************************************************************************
    * Grab these directly from the PajekFile
    ***************************************************************************/
-  val n: Int = pajek.n
-  val names: RDD[(Int,String)] = pajek.names
+  val n: Long = pajek.n
+  val names: RDD[(Long,String)] = pajek.names
 
   /***************************************************************************
    * Normalized sparse matrix for PageRank calculation
@@ -19,7 +19,7 @@ extends Serializable {
   val stoMat: Matrix = {
 
     // sum of weight of outlinks
-    val outLinkTotalWeight: RDD[(Int,Double)] = {
+    val outLinkTotalWeight: RDD[(Long,Double)] = {
       pajek.sparseMat.map {
         case (from,(to,weight)) => (from,weight)
       }
@@ -28,7 +28,7 @@ extends Serializable {
     outLinkTotalWeight.cache
 
     // nodes without outbound links are "dangling"
-    val dangling: RDD[Int] = names.leftOuterJoin(outLinkTotalWeight)
+    val dangling: RDD[Long] = names.leftOuterJoin(outLinkTotalWeight)
     .filter {
       case (_,(_,Some(_))) => false
       case (_,(_,None)) => true
@@ -55,7 +55,7 @@ extends Serializable {
   /***************************************************************************
    * Ergodic nodal frequencies
    ***************************************************************************/
-  val ergodicFreq: RDD[(Int,Double)] = {
+  val ergodicFreq: RDD[(Long,Double)] = {
     val vRand = names.map{ case (idx,_) => (idx,1.0/n.toDouble) }
     val vSum = vRand.values.sum
     val vNorm = vRand.map { case (idx,x) => (idx,x/vSum) }
@@ -67,12 +67,12 @@ object Nodes {
   /***************************************************************************
    * PageRank algorithm
    ***************************************************************************/
-  def pageRank( stoMat: Matrix, freq: RDD[(Int,Double)],
-    n: Int, damping: Double, errTh: Double, loop: Int )
-  : RDD[(Int,Double)] = {
+  def pageRank( stoMat: Matrix, freq: RDD[(Long,Double)],
+    n: Long, damping: Double, errTh: Double, loop: Long )
+  : RDD[(Long,Double)] = {
 
     // 2D Euclidean distance between two vectors
-    def dist2D( v1: RDD[(Int,Double)], v2: RDD[(Int,Double)] ): Double = {
+    def dist2D( v1: RDD[(Long,Double)], v2: RDD[(Long,Double)] ): Double = {
       val diffSq = (v1 join v2).map {
         case (idx,(e1,e2)) => (e1-e2)*(e1-e2)
       }
@@ -106,13 +106,13 @@ object Nodes {
 }
 
 sealed case class Matrix
-( sparse: RDD[(Int,(Int,Double))],
-  constCol: RDD[(Int,Double)] )
+( sparse: RDD[(Long,(Long,Double))],
+  constCol: RDD[(Long,Double)] )
 extends Serializable {
   /***************************************************************************
    * A matrix class stored using sparse entries
    ***************************************************************************/
-  def *( vector: RDD[(Int,Double)] ): RDD[(Int,Double)] = {
+  def *( vector: RDD[(Long,Double)] ): RDD[(Long,Double)] = {
 
     // constCol is an optimization,
     // if all entries within a column has constant value

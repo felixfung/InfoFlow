@@ -3,7 +3,7 @@ import java.io._
 
 object InfoFlow
 {
-  def labelEdges( edge2label: RDD[(Int,Int)] ): RDD[((Int,Int),Int)] = {
+  def labelEdges( edge2label: RDD[(Long,Long)] ): RDD[((Long,Long),Long)] = {
   /***************************************************************************
    * given an RDD of edges,
    * partition the edges according to the connected components
@@ -46,8 +46,8 @@ object InfoFlow
   /***************************************************************************
    * recursive function
    ***************************************************************************/
-    def labelEdge( labelEdge1: RDD[((Int,Int),Int)] )
-    : RDD[((Int,Int),Int)] = {
+    def labelEdge( labelEdge1: RDD[((Long,Long),Long)] )
+    : RDD[((Long,Long),Long)] = {
 
       val labelCount = labelEdge1.map {
         case ((from,to),label) => (label,1)
@@ -107,8 +107,8 @@ object InfoFlow
   }
 
   def calDeltaL(
-    nodeNumber: Int,
-    n1: Int, n2: Int, p1: Double, p2: Double,
+    nodeNumber: Long,
+    n1: Long, n2: Long, p1: Double, p2: Double,
     tele: Double, w12: Double,
     qi_sum: Double, q1: Double, q2: Double
   ) = {
@@ -191,9 +191,9 @@ class InfoFlow extends MergeAlgo
    *       module, and so on; in which case we merge all these modules
    ***************************************************************************/
     def recursiveMerge(
-      loop: Int,
+      loop: Long,
       partition: Partition,
-      deltaL: RDD[((Int,Int),Double)]
+      deltaL: RDD[((Long,Long),Double)]
     ): Partition = {
 
   /***************************************************************************
@@ -208,7 +208,7 @@ class InfoFlow extends MergeAlgo
    ***************************************************************************/
       // module to merge
       // (module,module to seek merge to)
-      val m2Merge: RDD[(Int,Int)] = deltaL.flatMap {
+      val m2Merge: RDD[(Long,Long)] = deltaL.flatMap {
         case ((idx1,idx2),deltaL12)
         => Seq( (idx2,(idx1,deltaL12)), (idx1,(idx2,deltaL12)) )
       }
@@ -252,11 +252,11 @@ class InfoFlow extends MergeAlgo
 
         // labeled connection
         // ((from,to),module)
-        val labeledConn: RDD[((Int,Int),Int)] = InfoFlow.labelEdges(m2Merge)
+        val labeledConn: RDD[((Long,Long),Long)] = InfoFlow.labelEdges(m2Merge)
 
         // this map maps each old module index into a new module index
         // (moduleFrom,moduleTo)
-        val moduleMap: RDD[(Int,Int)] = labeledConn.flatMap {
+        val moduleMap: RDD[(Long,Long)] = labeledConn.flatMap {
           case ((vertex1,vertex2),labelV) =>
             Seq( (vertex1,labelV), (vertex2,labelV) )
         }
@@ -287,7 +287,7 @@ class InfoFlow extends MergeAlgo
 
         // intra-modular exit probabilities within each new module
         // (module,all exit probability within new module)
-        val intraMw: RDD[(Int,Double)] = labeledConn.join(partition.iWj).map {
+        val intraMw: RDD[(Long,Double)] = labeledConn.join(partition.iWj).map {
           case ((from,to),(module,weight)) => (module,weight)
         }
         .reduceByKey(_+_)
@@ -299,7 +299,7 @@ class InfoFlow extends MergeAlgo
         // if the new indices are different, they are intemodular connections
         // and will be aggregated into w_ij's
         // ((module1,module2),iWj)
-        val interiWj: RDD[((Int,Int),Double)] = partition.iWj.map {
+        val interiWj: RDD[((Long,Long),Double)] = partition.iWj.map {
           case ((from,to),weight) => (from,(to,weight))
         }
         .leftOuterJoin(moduleMap).map {
@@ -320,7 +320,7 @@ class InfoFlow extends MergeAlgo
         }
 
         // (module,(n,p,w,q))
-        val newModules: RDD[(Int,(Int,Double,Double,Double))] = {
+        val newModules: RDD[(Long,(Long,Double,Double,Double))] = {
           // aggregate n,p,w over the same modular index
           // for n and p, that gives the final result
           // for w, we have to subtract w12 in the next step
@@ -383,7 +383,7 @@ class InfoFlow extends MergeAlgo
 
         // ((module1,module2),wij)
         // map the vertices to new vertices, then aggregate
-        val newiWj: RDD[((Int,Int),Double)] = interiWj.filter {
+        val newiWj: RDD[((Long,Long),Double)] = interiWj.filter {
           case ((from,to),weight) => from!=to
         }
         .reduceByKey(_+_)
@@ -393,7 +393,7 @@ class InfoFlow extends MergeAlgo
         // for the next loop, where each module seeks
         // to merge with another one greedily
         // ((from,to),deltaL)
-        val newDeltaL: RDD[((Int,Int),Double)] = newiWj.map {
+        val newDeltaL: RDD[((Long,Long),Double)] = newiWj.map {
           case ((m1,m2),w12) => (m1,(m2,w12))
         }
         .join(newModules).map {

@@ -5,13 +5,13 @@ import java.io._
 
 case class Partition
 (
-  val nodeNumber: Int,
+  val nodeNumber: Long,
   val tele: Double,
-  val names: RDD[(Int,String)],
-  val partitioning: RDD[(Int,Int)],
-  val iWj0: RDD[((Int,Int),Double)],
-  val iWj:  RDD[((Int,Int),Double)],
-  val modules: RDD[(Int,(Int,Double,Double,Double))],
+  val names: RDD[(Long,String)],
+  val partitioning: RDD[(Long,Long)],
+  val iWj0: RDD[((Long,Long),Double)],
+  val iWj:  RDD[((Long,Long),Double)],
+  val modules: RDD[(Long,(Long,Double,Double,Double))],
   val codeLength: Double
 )
 {
@@ -39,7 +39,7 @@ case class Partition
       case (id,(group,name)) => (id,1,name,group)
     }
     .collect ++fakeNodes
-    saveJSon( fileName, nodes.sorted, iWj0.collect.sorted, 0,1 )
+    //saveJSon( fileName, nodes.sorted, iWj0.collect.sorted, 0,1 )
   }
 
   // function prints each partitioning as a node
@@ -54,9 +54,9 @@ case class Partition
     .map {
       case (id,(name,count)) => (id,count,name,id)
     }
-    saveJSon( fileName,
+    /*saveJSon( fileName,
       reducedNodes.collect.sorted, iWj.collect.sorted, 1,4
-    )
+    )*/
   }
 
   /***************************************************************************
@@ -67,9 +67,9 @@ case class Partition
    ***************************************************************************/
   private def saveJSon(
     fileName: String,
-    nodes: Array[(Int,Int,String,Int)], // (id,size,name,group)
-    edges: Array[((Int,Int),Double)],   // ((from,to),width)
-    minNodeSize: Int, maxNodeSize: Int
+    nodes: Array[(Long,Long,String,Long)], // (id,size,name,group)
+    edges: Array[((Long,Long),Double)],   // ((from,to),width)
+    minNodeSize: Long, maxNodeSize: Long
   ): Unit = {
 
     // simple helper function for linear scaling of node and edge size
@@ -171,7 +171,7 @@ object Partition {
 
     // for each node, which module it belongs to
     // here, each node is assigned its own module
-    val partitioning: RDD[(Int,Int)] = nodes.names.map {
+    val partitioning: RDD[(Long,Long)] = nodes.names.map {
       case (idx,name) => (idx,idx)
     }
 
@@ -179,7 +179,7 @@ object Partition {
     // the merging operation is symmetric towards the two modules
     // identify the merge operation by
     // (smaller module index,bigger module index)
-    val iWj: RDD[((Int,Int),Double)] = {
+    val iWj: RDD[((Long,Long),Double)] = {
       // sparse transition matrix without self loop
       val stoMat = nodes.stoMat.sparse.filter {
         case (from,(to,weight)) => from != to
@@ -210,8 +210,8 @@ object Partition {
 
     // probability of exiting a module without teleporting
     // module information (module #, (n, p, w, q))
-    val modules: RDD[(Int,(Int,Double,Double,Double))] = {
-      val wi: RDD[(Int,Double)] = {
+    val modules: RDD[(Long,(Long,Double,Double,Double))] = {
+      val wi: RDD[(Long,Double)] = {
         nodes.stoMat.sparse.filter { // filter away self loop
           case (from,(to,_)) => from != to
         }
@@ -252,7 +252,7 @@ object Partition {
     }
 
     // construct partition
-    Partition( nodeNumber.toInt, tele, nodes.names, partitioning,
+    Partition( nodeNumber, tele, nodes.names, partitioning,
       iWj, iWj, modules, codeLength )
   }
 
@@ -260,12 +260,12 @@ object Partition {
    * math function for calculating q and L
    ***************************************************************************/
 
-  def calQ( nodeNumber: Int, n: Int, p: Double, tele: Double, w: Double ) =
+  def calQ( nodeNumber: Long, n: Long, p: Double, tele: Double, w: Double ) =
     tele*(nodeNumber-n)/(nodeNumber-1)*p +(1-tele)*w
 
   def calDeltaL(
-    nodeNumber: Int,
-    n1: Int, n2: Int, p1: Double, p2: Double,
+    nodeNumber: Long,
+    n1: Long, n2: Long, p1: Double, p2: Double,
     tele: Double, w12: Double,
     qi_sum: Double, q1: Double, q2: Double
   ) = {
@@ -285,7 +285,7 @@ object Partition {
 
   def calCodeLength(
     qi_sum: Double, ergodicFreqSum: Double,
-    modules: RDD[(Int,(Int,Double,Double,Double))]
+    modules: RDD[(Long,(Long,Double,Double,Double))]
   ) =
     if( modules.count > 1 ) (
       modules.map {

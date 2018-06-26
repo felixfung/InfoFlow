@@ -32,7 +32,7 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
    * Given a labeled set of edges,
    * verify that no vertex are labeled with two labels
    ***************************************************************************/
-  def vertexLabelUnique( edges: RDD[((Int,Int),Int)] ): Boolean = {
+  def vertexLabelUnique( edges: RDD[((Long,Long),Long)] ): Boolean = {
     edges.flatMap {
       case ((from,to),label) => Seq( (from,label), (to,label) )
     }
@@ -54,12 +54,12 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
     * since the connected components are the same according to the labels
     ***************************************************************************/
   def connectedComponentsEq(
-    edges1: RDD[((Int,Int),Int)],
-    edges2: RDD[((Int,Int),Int)]
+    edges1: RDD[((Long,Long),Long)],
+    edges2: RDD[((Long,Long),Long)]
   ): Boolean = {
 
-    def labeledEdges22DArray( edges: RDD[((Int,Int),Int)] ) = {
-      def tupleComp( t1: Array[(Int,Int)], t2: Array[(Int,Int)] ) =
+    def labeledEdges22DArray( edges: RDD[((Long,Long),Long)] ) = {
+      def tupleComp( t1: Array[(Long,Long)], t2: Array[(Long,Long)] ) =
         t1(0)._1 <= t2(0)._1
       edges.map {
         case ((from,to),label) => (label,(from,to))
@@ -92,7 +92,7 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
     }
   }
 
-  def testEdgeLabeling( a1: Array[(Int,Int)], a2: Array[((Int,Int),Int)] ) = {
+  def testEdgeLabeling( a1: Array[(Long,Long)], a2: Array[((Long,Long),Long)] ) = {
     val edges2bLabeled = sc.parallelize(a1)
     val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
     assert( vertexLabelUnique(edgesLabeled) )
@@ -106,7 +106,7 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
 
   test("Empty graph") {
     val thrown = intercept[Exception] {
-      val emptyArray = sc.parallelize( Array[(Int,Int)]() )
+      val emptyArray = sc.parallelize( Array[(Long,Long)]() )
       InfoFlow.labelEdges(emptyArray)
     }
     assert( thrown.getMessage === "Empty RDD argument" )

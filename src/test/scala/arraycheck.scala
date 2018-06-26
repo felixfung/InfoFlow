@@ -1,9 +1,9 @@
-class ArrayCheck( a1: Array[(Int,Double)], a2: Array[(Int,Double)] )
+class ArrayCheck( a1: Array[(Long,Double)], a2: Array[(Long,Double)] )
 {
   val v1 = a1.sorted
   val v2 = a2.sorted
   val msg = printString(v1) +" does not equal "+ printString(v2)
-  def printString( array: Array[(Int,Double)] ): String = {
+  def printString( array: Array[(Long,Double)] ): String = {
     var res = "Array( "
     array.foreach{
       case (idx,entry)

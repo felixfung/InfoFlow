@@ -7,10 +7,10 @@ object InfoMap
   /***************************************************************************
    * given all relevant quantities, calculate new table entry
    ***************************************************************************/
-  def tableEntry( nodeNumber: Int, tele: Double,
-    qi_sum: Double, n1: Int, n2: Int, p1: Double, p2: Double,
+  def tableEntry( nodeNumber: Long, tele: Double,
+    qi_sum: Double, n1: Long, n2: Long, p1: Double, p2: Double,
     w1: Double, w2: Double, w12: Double, q1: Double, q2: Double ):
-  (Int,Int,Double,Double,Double,Double,Double,Double,Double,Double) = {
+  (Long,Long,Double,Double,Double,Double,Double,Double,Double,Double) = {
     val q12 = Partition.calQ( nodeNumber, n1+n2, p1+p2, tele, w1+w2-w12 )
     if( q12 > 0 ) {
       val (deltaLi12,_) = Partition.calDeltaL(
@@ -99,10 +99,10 @@ class InfoMap extends MergeAlgo
    * greedily merge modules until code length is minimized
    ***************************************************************************/
     def recursiveMerge(
-      loop: Int,
+      loop: Long,
       qi_sum: Double,
       partition: Partition,
-      table: RDD[((Int,Int),(Int,Int,
+      table: RDD[((Long,Long),(Long,Long,
         Double,Double,Double,Double,Double,Double,Double,Double))]
     ): Partition = {
 
@@ -321,7 +321,7 @@ class InfoMap extends MergeAlgo
     // when they are associated with an edge
     // so, we return an empty modules RDD
     val modules = table.map {
-      case _ => (0,(0,0.0,0.0,0.0))
+      case _ => (0L,(0L,0.0,0.0,0.0))
     }
     .distinct
     .filter {
