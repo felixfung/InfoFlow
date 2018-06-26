@@ -76,7 +76,10 @@ case class Partition
     def lScale( x0: Double, x1: Double, x2: Double,
                 y0: Double, y1: Double
     ): Double
-    = y0 +(y1-y0) *(x1-x0) /(x2-x0)
+    = if( x2==x0 )
+        1
+      else
+        y0 +(y1-y0) *(x1-x0) /(x2-x0)
 
     // open file
     val file = new PrintWriter( new File(fileName) )
