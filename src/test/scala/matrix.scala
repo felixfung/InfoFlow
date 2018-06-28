@@ -23,7 +23,6 @@ class MatrixTest extends FunSuite with BeforeAndAfter
     val conf = new SparkConf()
       .setAppName("InfoMap matrix tests")
       .setMaster("local[*]")
-      .set("spark.default.parallelism", "1")
     sc = new SparkContext(conf)
     sc.setLogLevel("OFF")
   }

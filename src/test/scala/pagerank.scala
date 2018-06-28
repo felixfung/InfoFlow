@@ -28,7 +28,6 @@ class PageRankTest extends FunSuite with BeforeAndAfter
     val conf = new SparkConf()
       .setAppName("InfoMap page rank tests")
       .setMaster("local[*]")
-      .set("spark.default.parallelism", "1")
     sc = new SparkContext(conf)
     sc.setLogLevel("OFF")
   }
