@@ -155,7 +155,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
         case (_,index) => PajekFile.withinBound( index, vertexLines )
       }
 
-      val name = lines.map {
+      val nameFromFile = lines.map {
         case (line,index) => line match {
           case commentRegex(_*) => ( -1L, "" ) // to be filtered out later
           case vertexRegex(lineindex,vertexname)
@@ -167,11 +167,11 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
       }
       // filter out non-positive indices
       .filter {
-        case (index,_) => index>0
+        case (index,_) => index > 0
       }
 
       // check indices are unique
-      name.map {
+      nameFromFile.map {
         case (index,name) => (index,1)
       }
       .reduceByKey(_+_)
@@ -180,7 +180,21 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
           throw new Exception("Vertex index "+index.toString+" is not unique!")
       }
 
-      name
+      // Pajek file format allows unspecified nodes
+      // e.g. when the node number is 6 and only node 1,2,3 are specified,
+      // nodes 4,5,6 are still assumed to exist with node name = node index
+
+      // names of unspecified nodes
+      val idx2name: RDD[(Long,String)] = sc.parallelize( List.range(1,n+1) )
+      .map {
+        case x => ( x, x.toString )
+      }
+
+      nameFromFile.rightOuterJoin(idx2name)
+      .map {
+        case ( idx, (Some(name),_) ) => (idx,name)
+        case ( idx, (None,default) ) => (idx,default)
+      }
     }
 
   /***************************************************************************
