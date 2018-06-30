@@ -161,7 +161,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
           case vertexRegex(lineindex,vertexname)
             =>( lineindex.toLong, vertexname )
           case _ => throw new Exception(
-            "Vertex definition error: line " +index.toString
+            "Vertex definition error: line " +(index+1).toString
           )
         }
       }
@@ -226,7 +226,7 @@ sealed class PajekFile( sc: SparkContext, val filename: String )
           case edgeRegex2(from,to,weight) =>
             ( (from.toLong,to.toLong) ,weight.toDouble )
           case _ => throw new Exception(
-            "Edge definition error: line " +index.toString
+            "Edge definition error: line " +(index+1).toString
           )
         }
       }
