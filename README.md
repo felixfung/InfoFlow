@@ -435,7 +435,6 @@ binary merging, i.e., either pair-wise merge or no merge at all for some
 modules, might achieve best runtime complexity. A possible catch-22 might
 be that, to enforce pair-wise merges, O(k) explorations would be needed, so
 that the runtime complexity remains the same, and actual performance is
-11
 even penalized. Further mathematical ideas, simulations and benchmarks
 would be required for further explorations.
 
