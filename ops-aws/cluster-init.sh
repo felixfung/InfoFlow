@@ -1,51 +1,73 @@
 #!/bin/bash
 
-bucket=
-jar=
-bootstrap=
+#=============================================================================
+# Configuration variables
+#=============================================================================
+
+keyname=
+region=
+subnet=
+slave_security_group=
+master_security_group=
+
 instance_type=
 instance_count=
-keyname=
-loguri=
-region=
+ebs_size=
+
+bootstrap=
+num_executors=
+executor_cores=
+driver_memory=
+executor_memory=
+bucket=
+jar=
+
+#=============================================================================
+# Below is script
+#=============================================================================
+
+core_count=$(expr "$instance_count" - 1)
+if [ $core_count -gt 0 ]; then
+    core_node="{                                                              \
+        \"InstanceCount\": $core_count,                                       \
+        \"EbsConfiguration\": {                                               \
+            \"EbsBlockDeviceConfigs\": [                                      \
+                {                                                             \
+                   \"VolumeSpecification\": {                                 \
+                        \"SizeInGB\": $ebs_size,                              \
+                        \"VolumeType\": \"gp2\"                               \
+                    },                                                        \
+                    \"VolumesPerInstance\": 1                                 \
+                }                                                             \
+            ]                                                                 \
+        },                                                                    \
+        \"InstanceGroupType\": \"CORE\",                                      \
+        \"InstanceType\": \"$instance_type\",                                 \
+        \"Name\": \"Core Instance Group\"                                     \
+    },"
+fi
 
 echo aws emr create-cluster                                                   \
     --applications Name=Ganglia Name=Spark Name=Zeppelin                      \
     --ec2-attributes \'{                                                      \
         \"KeyName\": \""$keyname"\",                                          \
         \"InstanceProfile\": \"EMR_EC2_DefaultRole\",                         \
-        \"SubnetId\": \"subnet-d5e88cda\",                                    \
-        \"EmrManagedSlaveSecurityGroup\": \"sg-010cef2262e4e2eb3\",           \
-        \"EmrManagedMasterSecurityGroup\": \"sg-06b3348aacbf2f71e\"           \
+        \"SubnetId\": \"$subnet\",                                            \
+        \"EmrManagedSlaveSecurityGroup\": \""$slave_security_group"\",        \
+        \"EmrManagedMasterSecurityGroup\": \""$master_security_group"\"       \
     }\'                                                                       \
     --service-role EMR_DefaultRole                                            \
     --release-label emr-5.15.0                                                \
     --name 'InfoFlow'                                                         \
     --instance-groups \'[                                                     \
-        {                                                                     \
-            \"InstanceCount\": "$instance_count",                             \
-            \"EbsConfiguration\": {                                           \
-                \"EbsBlockDeviceConfigs\": [                                  \
-                    {                                                         \
-                       \"VolumeSpecification\": {                             \
-                            \"SizeInGB\": 32,                                 \
-                            \"VolumeType\": \"gp2\"                           \
-                        },                                                    \
-                        \"VolumesPerInstance\": 1                             \
-                    }                                                         \
-                ]                                                             \
-            },                                                                \
-            \"InstanceGroupType\": \"CORE\",                                  \
-            \"InstanceType\": \"$instance_type\",                             \
-            \"Name\": \"Core Instance Group\"                                 \
-        },                                                                    \
+        "$core_node"                                                          \
         {                                                                     \
             \"InstanceCount\": 1,                                             \
             \"EbsConfiguration\": {                                           \
                 \"EbsBlockDeviceConfigs\": [                                  \
                     {                                                         \
                         \"VolumeSpecification\": {                            \
-                            \"SizeInGB\": 32,                                 \
+                            \"SizeInGB\": $ebs_size,                          \
                             \"VolumeType\": \"gp2\"                           \
                         },                                                    \
                         \"VolumesPerInstance\": 1                             \
@@ -66,6 +88,10 @@ echo aws emr create-cluster                                                   \
             \"ActionOnFailure\": \"TERMINATE_CLUSTER\",                       \
             \"Args\": [                                                       \
                 \"spark-submit\",                                             \
+                \"--num-executors\", \"$num_executors\",                      \
+                \"--executor-cores\", \"$executor_cores\",                    \
+                \"--driver-memory\", \"$driver_memory\",                      \
+                \"--executor-memory\", \"$executor_memory\",                  \
                 \"--class\", \"InfoFlowMain\",                                \
                 \""s3://$bucket/$jar"\",                                      \
                 \""/home/hadoop/config.json"\"                                \
