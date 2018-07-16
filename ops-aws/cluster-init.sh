@@ -14,7 +14,7 @@ instance_type=
 instance_count=
 ebs_size=
 
-bootstrap=
+bootstrap='scp_config.sh'
 num_executors=
 executor_cores=
 driver_memory=
