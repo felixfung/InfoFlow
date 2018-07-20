@@ -98,6 +98,7 @@ class InfoMap extends MergeAlgo
    * meat of algorithm
    * greedily merge modules until code length is minimized
    ***************************************************************************/
+    @scala.annotation.tailrec
     def recursiveMerge(
       loop: Long,
       qi_sum: Double,
