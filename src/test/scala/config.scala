@@ -1,49 +1,75 @@
+/***************************************************************************
+ * Test Suite for parsing config file
+ ***************************************************************************/
+
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+import org.apache.spark.SparkConf
+import org.apache.spark.rdd.RDD
+
 import java.io._
 
-class ConfigFileTest extends FunSuite
+class ConfigTest extends FunSuite with BeforeAndAfter
 {
-  test("Parse simple config file") {
-    val filename = "unittestconfig.json"
+
+  /***************************************************************************
+   * Initialize Spark Context
+   ***************************************************************************/
+  var sc: SparkContext = _
+  before {
+    val conf = new SparkConf()
+      .setAppName("InfoFlow config file parsing tests")
+      .setMaster("local[*]")
+    sc = new SparkContext(conf)
+    sc.setLogLevel("OFF")
+  }
+
+  /***************************************************************************
+   * Test Cases
+   ***************************************************************************/
+  test("Parse sample config file") {
     try {
       // produce config file
-      val writer = new PrintWriter(new File(filename))
+      val writer = new PrintWriter(new File("unittestconfig.json"))
       writer.write("{\n")
       writer.write("\t\"Master\": \"local[*]\",\n")
-      writer.write("\t\"Graph\": \"Nets/rosvall.net\",\n")
+      writer.write("\t\"Pajek\": \"Nets/rosvall.net\",\n")
       writer.write("\t\"Algo\": \"InfoFlow\",\n")
-      writer.write("\t\"tele\": \"0.15\",\n")
-      writer.write("\t\"log\": {\n")
-      writer.write("\t\t\"log path\": \"Output/log.txt\",\n")
-      writer.write("\t\t\"Parquet path\": \"\",\n")
-      writer.write("\t\t\"RDD path\": \"\",\n")
-      writer.write("\t\t\"Json path\": \"Output/graph.json\",\n")
-      writer.write("\t\t\"save partition\": \"true\",\n")
-      writer.write("\t\t\"save name\": \"true\",\n")
-      writer.write("\t\t\"debug\": \"true\"\n")
-      writer.write("\t}\n")
-      writer.write("}\n")
+      writer.write("\t\"damping\": \"0.85\",\n")
+      writer.write("\t\"logDir\": \"Football\",\n")
+      writer.write("\t\"logWriteLog\": \"true\",\n")
+      writer.write("\t\"logRddText\": \"true\",\n")
+      writer.write("\t\"logRddJSon\": \"1\",\n")
+      writer.write("\t\"logSteps\": \"false\"\n")
+      writer.write("}")
       writer.close
 
       // verify parsing
-      val configFile = ConfigFile(filename)
-      assert( configFile.master === "local[*]" )
-      assert( configFile.graphFile === "Nets/rosvall.net" )
-      assert( configFile.algorithm === "InfoFlow" )
-      assert( configFile.tele === 0.15 )
-      assert( configFile.logFile.pathLog === "Output/log.txt" )
-      assert( configFile.logFile.pathParquet === "" )
-      assert( configFile.logFile.pathRDD === "" )
-      assert( configFile.logFile.pathJson === "Output/graph.json" )
-      assert( configFile.logFile.savePartition === true )
-      assert( configFile.logFile.saveName === true )
-      assert( configFile.logFile.debug === true )
+      val config = new Config("unittestconfig.json")
+      assert( config.master === "local[*]" )
+      assert( config.pajekFile === "Nets/rosvall.net" )
+      assert( config.dampingFactor === 0.85 )
+      assert( config.mergeAlgo === "InfoFlow" )
+      assert( config.logWriteLog === true )
+      assert( config.rddText === true )
+      assert( config.rddJSon === 1 )
+      assert( config.logSteps === false )
     }
     finally {
-      val file = new File(filename)
+      // delete config file
+      val file = new File("unittestconfig.json")
       file.delete
     }
+  }
+
+  /***************************************************************************
+   * Stop Spark Context
+   ***************************************************************************/
+  after {
+    if( sc != null )
+      sc.stop
   }
 }
