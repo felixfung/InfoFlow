@@ -23,23 +23,24 @@ object InfoFlowMain {
     val configFileName =
       if( args.size == 0 ) "config.json"
       else /*args.size==1*/ args(0)
-    val config = new Config(configFileName)
+    val config = new ConfigFile(configFileName)
 
     // initialize parameters from config file
-    val pajekFile = config.pajekFile
-    val dampingFactor = config.dampingFactor
-    val mergeAlgo: MergeAlgo = MergeAlgo.choose( config.mergeAlgo )
+    val communityDetection = CommunityDetection.choose( config.algorithm )
     val logFile = new LogFile(
-      config.logDir,
-      config.logWriteLog, config.rddText,
-      config.rddJSon, config.logSteps,
-      false
+      config.logFile.pathLog,
+      config.logFile.pathParquet,
+      config.logFile.pathRDD,
+      config.logFile.pathJson,
+      config.logFile.savePartition,
+      config.logFile.saveName,
+      config.logFile.debug
     )
 
   /***************************************************************************
    * Initialize Spark Context
    ***************************************************************************/
-    val conf = new SparkConf()
+    val conf = new SparkConf
       .setAppName("InfoFlow")
       .setMaster( config.master )
     val sc = new SparkContext(conf)
@@ -48,16 +49,10 @@ object InfoFlowMain {
   /***************************************************************************
    * read pajek file and solve
    ***************************************************************************/
-    val pajek = new PajekFile(sc,pajekFile)
-    val nodes = new Nodes(pajek,dampingFactor,1e-3)
-    val initPartition = Partition.init(nodes)
-    val finalPartition = mergeAlgo(initPartition,logFile)
-
-  /***************************************************************************
-   * Output
-   ***************************************************************************/
-    if( !logFile.logSteps )
-      logFile.saveJSon( finalPartition, "graph.json", false )
+    val graph: Graph = GraphReader( sc, config.graphFile )
+    val net0: Network = Network.init( graph, config.tele )
+    val net1: Network = communityDetection( graph, net0, logFile )
+    logFile.save( net1, graph, false, "" )
 
   /***************************************************************************
    * Stop Spark Context
