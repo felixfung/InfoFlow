@@ -23,7 +23,7 @@ sealed case class Network
 )
 
 /*****************************************************************************
- * given a graph/GraphFrame (probably from GraphFile.graph)
+ * given a Graph (probably from GraphFile.graph)
  * and the PageRank teleportation probability
  * calculate PageRank and exit probabilities for each node
  * these are put and returned to a Network object
