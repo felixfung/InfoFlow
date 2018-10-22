@@ -23,10 +23,12 @@ object InfoFlowMain {
     val configFileName =
       if( args.size == 0 ) "config.json"
       else /*args.size==1*/ args(0)
-    val config = new ConfigFile(configFileName)
+    val config = ConfigFile(configFileName)
 
-    // initialize parameters from config file
+    // initialize community detection algorithm
     val communityDetection = CommunityDetection.choose( config.algorithm )
+
+    // create log file object
     val logFile = new LogFile(
       config.logFile.pathLog,
       config.logFile.pathParquet,
@@ -47,7 +49,7 @@ object InfoFlowMain {
     sc.setLogLevel("OFF")
 
   /***************************************************************************
-   * read pajek file and solve
+   * read file, solve, save
    ***************************************************************************/
     val graph: Graph = GraphReader( sc, config.graphFile )
     val net0: Network = Network.init( graph, config.tele )
