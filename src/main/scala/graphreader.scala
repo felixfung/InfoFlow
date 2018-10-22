@@ -6,7 +6,7 @@ object GraphReader
       case regex(_,ext) => {
         if( ext.toLowerCase == "net" )
           PajekReader( sc, filename )
-        else if( ext.toLowerCase == "ext" )
+        else if( ext.toLowerCase == "parquet" )
           ParquetReader( sc, filename )
         else
           throw new Exception(
