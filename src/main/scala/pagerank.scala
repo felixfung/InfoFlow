@@ -1,8 +1,8 @@
-  /***************************************************************************
-   * PageRank calculation
-   * given initial ergodic frequency and edges
-   * calculation terminates when consequtive iterations differ less than errTh
-   ***************************************************************************/
+/*****************************************************************************
+ * PageRank calculation
+ * given initial ergodic frequency and edges
+ * calculation terminates when consequtive iterations differ less than errTh
+ *****************************************************************************/
 
 import org.apache.spark.rdd.RDD
 
