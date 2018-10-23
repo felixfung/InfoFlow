@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
 
 object PajekReader
 {
-  def apply( sc: SparkContext, filename: String ): GraphFrame = {
+  def apply( sc: SparkContext, filename: String ): Graph = {
     try {
       // graph elements stored as local list
       // to be converted to DataFrame and stored in GrapheFrame

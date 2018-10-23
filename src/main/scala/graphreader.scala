@@ -1,3 +1,5 @@
+import org.apache.spark.SparkContext
+
 object GraphReader
 {
   def apply( sc: SparkContext, filename: String ): Graph = {
