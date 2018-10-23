@@ -42,7 +42,7 @@ object InfoFlowMain {
   /***************************************************************************
    * Initialize Spark Context
    ***************************************************************************/
-    val conf = new SparkConf
+    val conf = new SparkConf()
       .setAppName("InfoFlow")
       .setMaster( config.master )
     val sc = new SparkContext(conf)
