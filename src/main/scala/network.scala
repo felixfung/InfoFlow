@@ -45,7 +45,7 @@ object Network
     // w and q are mathematically identical to p
     // as long as there is at least one connection
     // | id , size , prob , exitw , exitq |
-    val vertexProp: RDD[(Long,Long,Double,Double,Double)] = {
+    val vertexProp: RDD[(Long,(Long,Double,Double,Double))] = {
 
       val exitw: RDD[(Long,Double)] = graph.edges
       .join( ergodicFreq )
@@ -54,9 +54,9 @@ object Network
       }
       .reduceByKey(_+_)
 
-      ergodicFreq.leftOuterJoin(wi)
+      ergodicFreq.leftOuterJoin(exitw)
       .map {
-        case (idx,freq,Some(w)) => (idx,(1,freq,w,tele*freq+(1-tele)*w))
+        case (idx,(freq,Some(w))) => (idx,(1,freq,w,tele*freq+(1-tele)*w))
         case (idx,(freq,None)) => (idx,(1,freq,0,tele*freq))
       }
     }
@@ -78,13 +78,14 @@ object Network
 
   private def calErgodicFreq( graph: Graph, tele: Double )
   : RDD[(Long,Double)] = {
+    val nodeNumber: Long = graph.vertices.count
 
     val edges: Matrix = {
 
       // sum of weight of outgoing links
       val outLinkTotalWeight: RDD[(Long,Double)] = {
         graph.edges.map {
-          case (from,to,weight) => (from,weight)
+          case (from,(to,weight)) => (from,weight)
         }
       .reduceByKey(_+_)
       }
@@ -102,7 +103,7 @@ object Network
 
       // dangling nodes jump to uniform probability
       val constCol = dangling.map (
-        x => ( x, 1.0/n.toDouble )
+        x => ( x, 1.0/nodeNumber.toDouble )
       )
 
       // normalize the edge weights
@@ -116,9 +117,9 @@ object Network
 
     // start with uniform ergodic frequency
     val freqUniform = graph.vertices.map {
-      case (idx,_,_) => ( idx, 1.0/n.toDouble )
+      case (idx,_) => ( idx, 1.0/nodeNumber.toDouble )
     }
 
-    PageRank( edges, freqUniform, n, 1.0-tele, errTh, 0 )
+    PageRank( edges, freqUniform, nodeNumber, 1.0-tele, 1e-3/*errTh*/, 0 )
   }
 }
