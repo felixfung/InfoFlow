@@ -1,33 +1,33 @@
-  /***************************************************************************
-   * Helper class to write log merging progress and save graph data
-   *
-   * Data:
-   * merging progress data is dictated by the specific merge algorithm
-   * generally involving the code length, number of merges, number of modules;
-   * network data involve:
-   *   vertices: | id , size (number of nodes) , prob (ergodic frequency) |
-   *   edges: | src , dst , weight (exit prob w/o tele) |
-   * equally important is the original graph
-   * stored in Graph case class
-   * which provides a mapping from each node to each module index
-   * and the names of each node
-   * to be used in conjunction with the partitioning data
-   *     vertices: | id , name , module |
-   *     edges:    | from , to , exit prob. w/o tele |
-   *
-   * File formats:
-   * merging progress data is written to a plain text file
-   * graph data saving format(s) is specified in constructor
-   * options include plain text file, Parquet, Json
-   * partitioning data is saved in the same format as graph data
-   *
-   * Debugging data:
-   * each LogFile instantiation may or may not be for debugging purpose
-   * each operation might or might not be for debugging purpose
-   * so that an operation is only performed if:
-   *   (1) the operation is not for debugging, OR
-   *   (2) the log file object is for debugging
-   ***************************************************************************/
+/*((**************************************************************************
+ * Helper class to write log merging progress and save graph data
+ *
+ * Data:
+ * merging progress data is dictated by the specific merge algorithm
+ * generally involving the code length, number of merges, number of modules;
+ * network data involve:
+ *   vertices: | id , size (number of nodes) , prob (ergodic frequency) |
+ *   edges: | src , dst , weight (exit prob w/o tele) |
+ * equally important is the original graph
+ * stored in Graph case class
+ * which provides a mapping from each node to each module index
+ * and the names of each node
+ * to be used in conjunction with the partitioning data
+ *     vertices: | id , name , module |
+ *     edges:    | from , to , exit prob. w/o tele |
+ *
+ * File formats:
+ * merging progress data is written to a plain text file
+ * graph data saving format(s) is specified in constructor
+ * options include plain text file, Parquet, Json
+ * partitioning data is saved in the same format as graph data
+ *
+ * Debugging data:
+ * each LogFile instantiation may or may not be for debugging purpose
+ * each operation might or might not be for debugging purpose
+ * so that an operation is only performed if:
+ *   (1) the operation is not for debugging, OR
+ *   (2) the log file object is for debugging
+ *((**************************************************************************/
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
