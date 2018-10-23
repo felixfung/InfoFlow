@@ -23,11 +23,13 @@ object PageRank
     }
 
     // create local checkpoint to truncate RDD lineage (every ten loops)
-    if( loop%10 == 0 )
+    if( loop%10 == 0 ) {
       freq.localCheckpoint
+      val forceEval = freq.count
+    }
 
     // the random walk contribution of the ergodic frequency
-    val stoFreq = stoMat *freq
+    val stoFreq = edges *freq
 
     // the random jump contribution of the ergodic frequency
     val bgFreq = freq.map {
@@ -43,7 +45,7 @@ object PageRank
     // recursive call until freq converges wihtin error threshold
     val err = dist2D(freq,newFreq)
     if( err < errTh ) newFreq
-    else pageRank( stoMat, newFreq, n, damping, errTh, loop+1 )
+    else PageRank( edges, newFreq, n, damping, errTh, loop+1 )
   }
 }
 
