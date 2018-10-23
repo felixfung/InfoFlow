@@ -14,12 +14,12 @@ import scala.collection.mutable.ListBuffer
 
 object PajekReader
 {
-  def apply( ss: SparkSession, filename: String ): GraphFrame = {
+  def apply( sc: SparkContext, filename: String ): GraphFrame = {
     try {
       // graph elements stored as local list
       // to be converted to DataFrame and stored in GrapheFrame
       // after file reading
-      var vertices = new ListBuffer[(Long,String,Long)]()
+      var vertices = new ListBuffer[(Long,(String,Long))]()
       var edges = new ListBuffer[((Long,Long),Double)]()
 
       // regexes to match lines in file
@@ -97,7 +97,7 @@ object PajekReader
           val newVertex = line match {
             case vertexRegex( idx, name ) =>
               if( 1<=idx.toLong && idx.toLong<=nodeNumber )
-                ( idx.toLong, name, idx.toLong )
+                ( idx.toLong, (name,idx.toLong) )
               // check that index is in valid range
               else throw new Exception(
                 "Vertex index must be within [1,"+nodeNumber.toString
@@ -186,26 +186,26 @@ object PajekReader
    * if vertices are not unique, throw error
    * if a vertex is missing, put in default name
    ***************************************************************************/
-      val verticesRDD: RDD[(Long,String,Long)] = {
+      val verticesRDD: RDD[(Long,(String,Long))] = {
         // initiate array
-        val verticesArray = new Array[(Long,String,Long)](nodeNumber)
-        for( idx <- 1 to nodeNumber )
-          verticesArray( idx-1 ) = (-1,"",-1)
+        val verticesArray = new Array[(Long,(String,Long))](nodeNumber.toInt)
+        for( idx <- 1 to nodeNumber.toInt )
+          verticesArray( idx-1 ) = (-1L,("",-1L))
         // put in each vertices list element to array
         // and check for duplication
-        for( (idx,name,module) <- vertices ) {
-          if( verticesArray(idx-1)._1 != -1 )
+        for( (idx,(name,module)) <- vertices ) {
+          if( verticesArray(idx.toInt-1)._1 != -1 )
             throw new Exception(
-              "Vertex "+verticesArray(idx-1)._1.toString+" is not unique!"
+              "Vertex "+verticesArray(idx.toInt-1)._1.toString+" is not unique!"
             )
-          verticesArray( idx-1 ) = ( idx, name, module )
+          verticesArray( idx.toInt-1 ) = ( idx, (name,module) )
         }
         // Pajek file format allows unspecified nodes
         // e.g. when the node number is 6 and only node 1,2,3 are specified,
         // nodes 4,5,6 are still assumed to exist with node name = node index
-        for( idx <- 1 to nodeNumber )
+        for( idx <- 1 to nodeNumber.toInt )
           if( verticesArray( idx-1 )._1 == -1 )
-            verticesArray( idx-1 ) = ( idx, idx.toString, idx )
+            verticesArray( idx-1 ) = ( idx, (idx.toString,idx) )
         // convert to RDD
         sc.parallelize( verticesArray )
       }
@@ -214,8 +214,11 @@ object PajekReader
    * parallelize edges, aggregate edges with the same vertices
    ***************************************************************************/
 
-      val edgesRDD: RDD[((Long,Long),Double)] = sc.parallelize(edges)
+      val edgesRDD: RDD[(Long,(Long,Double))] = sc.parallelize(edges)
       .reduceByKey(_+_)
+      .map {
+        case ((from,to),weight) => (from,(to,weight))
+      }
 
   /***************************************************************************
    * return Graph
