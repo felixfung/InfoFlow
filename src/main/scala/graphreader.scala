@@ -1,6 +1,6 @@
 object GraphReader
 {
-  def apply(  sc: SparkContext, val filename: String ): Graph = {
+  def apply( sc: SparkContext, filename: String ): Graph = {
     val regex = """(.*)\.(\w+)""".r
     filename match {
       case regex(_,ext) => {
