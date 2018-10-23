@@ -15,9 +15,9 @@ sealed case class Network
 (
   nodeNumber: Long, tele: Double,
   // | idx , n , p , w , q |
-  vertexProp: RDD[(Long,(Long,Double,Double,Double))],
+  vertices: RDD[(Long,(Long,Double,Double,Double))],
   // | index from , index to , weight |
-  edgeWeight: RDD[(Long,(Long,Double))],
+  edges: RDD[(Long,(Long,Double))],
   probSum: Double, // sum of ergodic frequency, for codelength calculation
   codelength: Double // codelength given modules
 )
@@ -45,7 +45,7 @@ object Network
     // w and q are mathematically identical to p
     // as long as there is at least one connection
     // | id , size , prob , exitw , exitq |
-    val vertexProp: RDD[(Long,(Long,Double,Double,Double))] = {
+    val vertices: RDD[(Long,(Long,Double,Double,Double))] = {
 
       val exitw: RDD[(Long,Double)] = graph.edges
       .join( ergodicFreq )
@@ -66,12 +66,12 @@ object Network
     }
     .sum
 
-    val codelength = CommunityDetection.calCodelength( vertexProp, probSum )
+    val codelength = CommunityDetection.calCodelength( vertices, probSum )
 
     // return Network object
     Network(
       nodeNumber, tele,
-      vertexProp, graph.edges,
+      vertices, graph.edges,
       probSum, codelength
     )
   }
