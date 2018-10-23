@@ -13,13 +13,13 @@ import org.apache.spark.rdd.RDD
 
 sealed case class Network
 (
-  nodeNumber, tele,
+  nodeNumber: Long, tele: Double,
   // | idx , n , p , w , q |
   vertexProp: RDD[(Long,(Long,Double,Double,Double))],
   // | index from , index to , weight |
   edgeWeight: RDD[(Long,(Long,Double))],
-  probSum, // sum of ergodic frequency, needed for codelength calculation
-  codelength // codelength given modules
+  probSum: Double, // sum of ergodic frequency, for codelength calculation
+  codelength: Double // codelength given modules
 )
 
 /*****************************************************************************
@@ -56,7 +56,7 @@ object Network
 
       ergodicFreq.leftOuterJoin(wi)
       .map {
-        case (idx,freq,Some(w)) => (idx,1,freq,w,tele*freq+(1-tele)*w))
+        case (idx,freq,Some(w)) => (idx,(1,freq,w,tele*freq+(1-tele)*w))
         case (idx,(freq,None)) => (idx,(1,freq,0,tele*freq))
       }
     }
