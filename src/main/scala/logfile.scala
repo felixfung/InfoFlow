@@ -31,7 +31,6 @@
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
-import org.graphframes._
 
 import java.io._
 
@@ -82,12 +81,12 @@ sealed class LogFile(
    * save graph into formats specified from object parameters
    ***************************************************************************/
   def save(
-    // network: reduced graph, where each node is a community
-    network: Network,
     // graphFile: original graph, all nodes and edges
     // vertices: | id , name , module |
     // edges: | from , to , exit prob. w/o tele |
     graphFile: Graph,
+    // network: reduced graph, where each node is a community
+    network: Network,
     debugging: Boolean,
     debugExt: String // this string is appended to file name (for debugging)
   ): Unit = {
@@ -180,7 +179,7 @@ sealed class LogFile(
   }
 }
 
-object LogFile
+/*object LogFile
 {
   def saveParquet( filename: String, struct: DataFrame ): Unit
   = struct.write.parquet(filename) // check syntax
@@ -188,4 +187,4 @@ object LogFile
   = struct.rdd.saveAsTextFile(filename)
 
   def saveJson( filename: String, graph: GraphFrame ): Unit = ???
-}
+}*/
