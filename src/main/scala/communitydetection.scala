@@ -65,3 +65,4 @@ object CommunityDetection {
    ***************************************************************************/
   def log( double: Double ) = Math.log(double)/Math.log(2.0)
   def plogp( double: Double ) = double*log(double)
+}
