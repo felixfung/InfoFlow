@@ -2,22 +2,22 @@ import org.apache.spark.rdd.RDD
 import java.lang.Math
 
 abstract class CommunityDetection {
-  def apply( graph: Graph, net: Network, logFile: LogFile ): Network
+  def apply( graph: Graph, net: Network, logFile: LogFile ): ( Graph, Network )
 }
 
 object CommunityDetection {
   def choose( algorithm: String ): CommunityDetection = {
-    if( algorithm == "InfoMap" ) new InfoMap
-    else if( algorithm == "InfoFlow" ) new InfoFlow
+    /*if( algorithm == "InfoMap" ) new InfoMap
+    else */if( algorithm == "InfoFlow" ) new InfoFlow
     else throw new Exception(
       "Community detection algorithm must be InfoMap or InfoFlow"
     )
   }
 
   def calCodelength(
-    vertexProp: RDD[(Long,Long,Double,Double,Double)], probSum: Double
+    vertexProp: RDD[(Long,(Long,Double,Double,Double))], probSum: Double
   ): Double = {
-    if( modules.count == 1 ) {
+    if( vertexProp.count == 1 ) {
       // if the entire graph is merged into one module,
       // there is easy calculation
       -probSum

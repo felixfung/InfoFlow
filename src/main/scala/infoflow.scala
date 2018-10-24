@@ -33,11 +33,11 @@ class InfoFlow extends CommunityDetection
     def recursiveMerge(
       loop: Long,
       graph: Graph,
-      network: Network,
+      network: Network
     ): ( Graph, Network ) = {
 
       // log current state
-      logFile.write( s"State $loop: code length $partition.codeLength\n" )
+      logFile.write( s"State $loop: code length $network.codeLength\n", false)
       logFile.save( graph, network, true, "0" )
 
       // truncate RDD lineage
@@ -91,21 +91,24 @@ class InfoFlow extends CommunityDetection
       val newCodelength = CommunityDetection.calCodelength(
         newModules, network.probSum )
       if( newCodelength >= network.codelength )
-        return terminate( loop, network, graph )
+        return terminate( loop, graph, network )
 
       // logging: merge details
       logFile.write(
-        s"Merge ${loop+1}: merging ${network.graph.vertices.count}"
+        s"Merge ${loop+1}: merging ${network.vertices.count}"
         +s" modules into ${newModules.count} modules\n",
         false
       )
 
       // calculate new network
-      val newEdges = interEdges.filter( "src != dst" )
-      val newNetwork = calNewNetwork(
-        network,
-        newNodeNumber, newCodelength,
-        newModules, newEdges
+      val newEdges = interEdges.filter {
+        case (from,(to,_)) => from != to
+      }
+
+      val newNetwork = Network(
+        newNodeNumber, network.tele,
+        newModules, newEdges,
+        network.probSum, newCodelength
       )
 
   /***************************************************************************
@@ -119,55 +122,58 @@ class InfoFlow extends CommunityDetection
    * below are functions to perform calculations
    ***************************************************************************/
 
-    private def trim = {
-      deltaL.localCheckpoint
-      val count1 = deltaL.count
-      network.vertexProp.localCheckpoint
-      val count2 = network.vertexProp.count
-      network.edgeProp.localCheckpoint
-      val count3 = network.edgeProp.count
+    def trim = {
+      network.vertices.localCheckpoint
+      val count1 = network.vertices.count
+      network.edges.localCheckpoint
+      val count2 = network.edges.count
       graph.vertices.localCheckpoint
-      val count4 = graph.vertices.count
-      graph.edgesWeight.localCheckpoint
-      val count5 = graph.edgesWeight.count
+      val count3 = graph.vertices.count
+      graph.edges.localCheckpoint
+      val count4 = graph.edges.count
     }
 
-    private def terminate( loop: Long, graph: Graph, network: Network ) = {
+    def terminate( loop: Long, graph: Graph, network: Network ) = {
       logFile.write( s"Merging terminates after $loop merges\n", false )
       logFile.close
       ( graph, network )
     }
 
-    private def calDeltaL( network: Network ): RDD[((Long,Long),Double)] = {
-      val newDeltaL: RDD[((Long,Long),Double)] = network.edgeProp.map {
-        case ((m1,m2),w12) => (m1,(m2,w12))
+    def calDeltaL( network: Network ): RDD[(Long,(Long,Double))] = {
+      val qi_sum = network.vertices.map {
+        case (_,(_,_,_,q)) => q
       }
-      .join( network.vertexProp ).map {
+      .sum
+
+      val reverseEdges = network.edges.map {
+        case (from,(to,weight)) => ((to,from),weight)
+      }
+
+      network.edges.join( network.vertices ).map {
         case (m1,((m2,w12),(n1,p1,w1,q1))) => (m2,(m1,n1,p1,w1,q1,w12))
       }
-      .join( network.vertexProp ).map {
+      .join( network.vertices ).map {
         case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2))) =>
-          ((m2,m1),(n2,n1,p2,p1,w2,w1,q2,q1,w12))
+          ((m1,m2),(n1,n2,p1,p2,w1,w2,q1,q2,w12))
       }
-      .leftOuterJoin( network.edgeProp ).map {
-        case ((m2,m1),((n2,n1,p2,p1,w2,w1,q2,q1,w12),
-        Some(_,_,_,_,_,_,_,_,w21))) =>
-          (
-            (m1,m2),
-            CommunityDetection.calDeltaL(
-              nodeNumber,
-              n1, n2, p1, p2,
-              tele, w1+w2-w12-w21,
-              qi_sum, q1, q2
-            )
-          )
-        case ((m2,m1),((n2,n1,p2,p1,w2,w1,q2,q1,w12),None)) =>
+      .leftOuterJoin( reverseEdges ).map {
+        case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),Some(w21))) =>
           (
             m1,(m2,
             CommunityDetection.calDeltaL(
-              nodeNumber,
+              network.nodeNumber,
               n1, n2, p1, p2,
-              tele, w1+w2-w12,
+              network.tele, w1+w2-w12-w21,
+              qi_sum, q1, q2
+            ))
+          )
+        case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),None)) =>
+          (
+            m1,(m2,
+            CommunityDetection.calDeltaL(
+              network.nodeNumber,
+              n1, n2, p1, p2,
+              network.tele, w1+w2-w12,
               qi_sum, q1, q2
             ))
           )
@@ -208,20 +214,23 @@ class InfoFlow extends CommunityDetection
    *       that is, m1 seeks to merge with both m2 and m3
    * |module , module to seek merge to |
    ***************************************************************************/
-    private def calm2Merge( deltaL: RDD[(Long,(Long,Double))] )
+    def calm2Merge( deltaL: RDD[(Long,(Long,Double))] )
     : RDD[(Long,Long)]= {
       // module to merge
       // (module,module to seek merge to)
 
       // obtain minimum dL for each source vertex
       deltaL.reduceByKey {
-        case ( (_,dL1), (_,dL2) ) => if( dL1 < dL2 ) dL1 else dL2
+        case ( (_,dL1), (_,dL2) ) => if( dL1 < dL2 ) (0,dL1) else (0,dL2)
+      }
+      .map {
+        case (idx,(_,dL)) => (idx,dL)
       }
       // for each source vertex, retain all that has dL==minimum dL
       // all others will be filtered away by setting dL=1
       .join( deltaL ).map {
-        case (m1,((m2,dL),dL_min)) =>
-          if( dL==dL_min ) (m1,(m2,dL)) else (m1,(m2,1))
+        case (m1,(dL_min,(m2,dL))) =>
+          if( dL==dL_min ) (m1,(m2,dL)) else (m1,(m2,1.0))
       }
       // filter away all non-minimum dL and positive dL
       .filter {
@@ -238,7 +247,7 @@ class InfoFlow extends CommunityDetection
    * according to connected components of m2Merge
    * | id , module |
    ***************************************************************************/
-    private def calModuleMap( network: Network, m2Merge: RDD[(Long,Long)] )
+    def calModuleMap( network: Network, m2Merge: RDD[(Long,Long)] )
     : RDD[(Long,Long)] = {
       val labeledEdges: RDD[((Long,Long),Long)] = InfoFlow.labelEdges(m2Merge)
       labeledEdges.flatMap {
@@ -259,12 +268,12 @@ class InfoFlow extends CommunityDetection
    *       newPartition saved to graph, which is part of final result
    * | id , module |
    ***************************************************************************/
-    private def calNewGraph( moduleMap: RDD[(Long,Long)], graph: Graph )
+    def calNewGraph( moduleMap: RDD[(Long,Long)], graph: Graph )
     : Graph = {
-      val newVertices = graph.vertexProp.leftOuterJoin( moduleMap )
+      val newVertices = graph.vertices.leftOuterJoin( moduleMap )
       .map {
-        case (idx,(Some(newModule),(name,oldModule))) => (idx,(name,newModule))
-        case (idx,(None,(name,oldModule))) => (idx,(name,oldModule))
+        case (idx,((name,oldModule),Some(newModule))) => (idx,(name,newModule))
+        case (idx,((name,oldModule),None)) => (idx,(name,oldModule))
       }
       Graph( newVertices, graph.edges )
     }
@@ -278,10 +287,10 @@ class InfoFlow extends CommunityDetection
    * and will be aggregated into w_ij's
    * | src , dst , iWj |
    ***************************************************************************/
-    private def calInterEdges(
+    def calInterEdges(
       network: Network, moduleMap: RDD[(Long,Long)]
     ): RDD[(Long,(Long,Double))] = {
-      network.edgeProp.leftOuterJoin( moduleMap ).map {
+      network.edges.leftOuterJoin( moduleMap ).map {
         case (from,((to,weight),Some(newFrom))) => (to,(newFrom,weight))
         case (from,((to,weight),None)) => (to,(from,weight))
       }
@@ -293,7 +302,7 @@ class InfoFlow extends CommunityDetection
             ((newTo,newFrom),weight)
         case (to,((newFrom,weight),None)) =>
           if( newFrom < to )
-            ((newFrom,to,weight)
+            ((newFrom,to),weight)
           else
             ((to,newFrom),weight)
       }
@@ -306,14 +315,14 @@ class InfoFlow extends CommunityDetection
   /***************************************************************************
    * modular properties calculations
    ***************************************************************************/
-    private def calNewModules(
+    def calNewModules(
       network: Network, moduleMap: RDD[(Long,Long)],
       interEdges: RDD[(Long,(Long,Double))]
     ): RDD[(Long,(Long,Double,Double,Double))] = {
       // aggregate size, prob, exitw over the same modular index
       // for size and prob, that gives the final result
       // for exitw, we have to subtract intramodular edges in the next step
-      val sumOnly = network.vertexProp.leftOuterJoin(moduleMap).map {
+      val sumOnly = network.vertices.leftOuterJoin(moduleMap).map {
         case (module,((n,p,w,_),Some(newModule)))
           => (newModule,(n,p,w))
         case (module,((n,p,w,_),None))
@@ -325,39 +334,29 @@ class InfoFlow extends CommunityDetection
 
       // subtract w12 from the sum of w's
       interEdges.filter {
-        case ((from,to),w12) => from==to
+        case (from,(to,w12)) => from==to
       }
       .map {
-        case ((from,to),w12) => (from,w12)
+        case (from,(to,w12)) => (from,w12)
       }
       .reduceByKey(_+_)
       .rightOuterJoin(sumOnly).map {
         case (module,(Some(w12),(n,p,w)))
         => ( module,( n, p, w-w12,
-          CommunityDetection.calQ( nodeNumber, n, p, tele, w-w12 )
+          CommunityDetection.calQ( network.nodeNumber, n, p,
+            network.tele, w-w12 )
         ))
         case (module,(None,(n,p,w)))
         => ( module,( n, p, w,
-          CommunityDetection.calQ( nodeNumber, n, p, tele, w )
+          CommunityDetection.calQ( network.nodeNumber, n, p,
+            network.tele, w )
         ))
       }
     }
 
-  /***************************************************************************
-   * generate new graph and new network
-   ***************************************************************************/
-
-    private def calNewNetwork(
-      network: Network, newNodeNumber: Long, newCodeLength: Double,
-      newModules: DataFrame, newEdges: DataFrame
-    ): Network = {
-      val newGraph = Graph( newModules, newEdges )
-      Network(
-        network.tele, newNodeNumber,
-        newGraph,
-        network.probSum, newCodeLength
-      )
-    }
+    recursiveMerge( 0, graph, network )
+  }
+}
 
 /*****************************************************************************
  * given an RDD of edges,

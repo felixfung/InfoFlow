@@ -51,10 +51,10 @@ object InfoFlowMain {
   /***************************************************************************
    * read file, solve, save
    ***************************************************************************/
-    val graph: Graph = GraphReader( sc, config.graphFile )
-    val net0: Network = Network.init( graph, config.tele )
-    val net1: Network = communityDetection( graph, net0, logFile )
-    logFile.save( graph, net1, false, "" )
+    val graph0: Graph = GraphReader( sc, config.graphFile )
+    val net0: Network = Network.init( graph0, config.tele )
+    val (graph1,net1) = communityDetection( graph0, net0, logFile )
+    logFile.save( graph1, net1, false, "" )
 
   /***************************************************************************
    * Stop Spark Context
