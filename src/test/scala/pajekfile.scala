@@ -12,7 +12,7 @@ import org.apache.spark.rdd.RDD
 
 import org.scalactic.TolerantNumerics
 
-class PajekFileTest extends SparkTestSuite
+class PajekReaderTest extends SparkTestSuite
 {
   test("Throw error when reading wrong file") {
     val thrown = intercept[Exception] {
