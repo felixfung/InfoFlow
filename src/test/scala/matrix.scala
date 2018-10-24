@@ -2,8 +2,6 @@
  * Test Suite for Matrix algorithm
  ***************************************************************************/
 
-import org.scalactic.TolerantNumerics
-
 class MatrixTest extends SparkTestSuite
 {
   // careful that the matrix format is (from,(to,entry))
