@@ -15,19 +15,19 @@ object CommunityDetection {
   }
 
   def calCodelength(
-    vertexProp: RDD[(Long,(Long,Double,Double,Double))], probSum: Double
+    vertices: RDD[(Long,(Long,Double,Double,Double))], probSum: Double
   ): Double = {
-    if( vertexProp.count == 1 ) {
+    if( vertices.count == 1 ) {
       // if the entire graph is merged into one module,
       // there is easy calculation
       -probSum
     }
     else {
-      val qi_sum = vertexProp.map {
+      val qi_sum = vertices.map {
         case (_,(_,_,_,q)) => q
       }
       .sum
-      val otherSum = vertexProp.map {
+      val otherSum = vertices.map {
         case (_,(_,p,_,q)) => -2*plogp(q) +plogp(p+q)
       }
       .sum
