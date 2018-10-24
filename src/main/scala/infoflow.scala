@@ -164,7 +164,7 @@ class InfoFlow extends CommunityDetection
               network.nodeNumber,
               n1, n2, p1, p2,
               network.tele, w1+w2-w12-w21,
-              qi_sum, q1, q2
+              qi_sum, q1, q2, network.probSum
             ))
           )
         case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),None)) =>
@@ -174,7 +174,7 @@ class InfoFlow extends CommunityDetection
               network.nodeNumber,
               n1, n2, p1, p2,
               network.tele, w1+w2-w12,
-              qi_sum, q1, q2
+              qi_sum, q1, q2, network.probSum
             ))
           )
       }

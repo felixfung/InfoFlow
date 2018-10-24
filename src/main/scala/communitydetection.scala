@@ -42,7 +42,7 @@ object CommunityDetection {
     nodeNumber: Long,
     n1: Long, n2: Long, p1: Double, p2: Double,
     tele: Double, w12: Double,
-    qi_sum: Double, q1: Double, q2: Double
+    qi_sum: Double, q1: Double, q2: Double, probSum: Double
   ) = {
     val q12 = calQ( nodeNumber, n1+n2, p1+p2, tele, w12 )
     if( q12 > 0 ) {
@@ -52,11 +52,11 @@ object CommunityDetection {
         +plogp( qi_sum +q12-q1-q2 ) -plogp(qi_sum)
       )
       else
-        throw new Exception("caught some crap")
+        throw new Exception("caught some crap: log(0)")
     }
     else {
-      throw new Exception("caught some crap")
-    //  -probSum -codelength
+      //throw new Exception("caught some crap: one giant module")
+      -probSum
     }
   }
 
