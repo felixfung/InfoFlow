@@ -37,7 +37,7 @@ object Network
     val nodeNumber: Long = graph.vertices.count
 
     // exit probability from each vertex
-    val ergodicFreq = calErgodicFreq( graph, tele )
+    val ergodicFreq = PageRank( graph, tele )
     ergodicFreq.cache
 
     // modular information
@@ -74,52 +74,5 @@ object Network
       vertices, graph.edges,
       probSum, codelength
     )
-  }
-
-  private def calErgodicFreq( graph: Graph, tele: Double )
-  : RDD[(Long,Double)] = {
-    val nodeNumber: Long = graph.vertices.count
-
-    val edges: Matrix = {
-
-      // sum of weight of outgoing links
-      val outLinkTotalWeight: RDD[(Long,Double)] = {
-        graph.edges.map {
-          case (from,(to,weight)) => (from,weight)
-        }
-      .reduceByKey(_+_)
-      }
-      outLinkTotalWeight.cache
-
-      // nodes without outbound links are dangling"
-      val dangling: RDD[Long] = graph.vertices.leftOuterJoin(outLinkTotalWeight)
-      .filter {
-        case (_,(_,Some(_))) => false
-        case (_,(_,None)) => true
-      }
-      .map {
-        case (idx,_) => idx
-      }
-
-      // dangling nodes jump to uniform probability
-      val constCol = dangling.map (
-        x => ( x, 1.0/nodeNumber.toDouble )
-      )
-
-      // normalize the edge weights
-      val normMat = graph.edges.join(outLinkTotalWeight)
-      .map {
-        case (from,((to,weight),totalweight)) => (from,(to,weight/totalweight))
-      }
-
-      Matrix( normMat, constCol )
-    }
-
-    // start with uniform ergodic frequency
-    val freqUniform = graph.vertices.map {
-      case (idx,_) => ( idx, 1.0/nodeNumber.toDouble )
-    }
-
-    PageRank( edges, freqUniform, nodeNumber, 1.0-tele, 1e-3/*errTh*/, 0 )
   }
 }
