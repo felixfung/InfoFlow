@@ -2,16 +2,6 @@
  * Test Suite for reading Pajek files
  ***************************************************************************/
 
-import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
-
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.SparkConf
-import org.apache.spark.rdd.RDD
-
-import org.scalactic.TolerantNumerics
-
 class PajekReaderTest extends SparkTestSuite
 {
   test("Throw error when reading wrong file") {
