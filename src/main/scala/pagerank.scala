@@ -13,12 +13,10 @@ object PageRank
   def apply( graph: Graph, damping: Double ): RDD[(Long,Double)] = {
     val nodeNumber: Long = graph.vertices.count
     val edges: Matrix = {
-      val outLinkTotalWeight: RDD[(Long,Double)] = {
-        graph.edges.map {
-          case (from,(to,weight)) => (from,weight)
-        }
-      .reduceByKey(_+_)
+      val outLinkTotalWeight = graph.edges.map {
+        case (from,(to,weight)) => (from,weight)
       }
+      .reduceByKey(_+_)
       outLinkTotalWeight.cache
 
       // nodes without outbound links are dangling"

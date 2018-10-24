@@ -1,0 +1,141 @@
+/***************************************************************************
+ * Test Suite for Network
+ * calculates network numerics and checks for consistency
+ * with previous calculated results
+ ***************************************************************************/
+
+import org.scalactic.TolerantNumerics
+
+class NetworkTest extends SparkTestSuite
+{
+    implicit val doubleEquality =
+      TolerantNumerics.tolerantDoubleEquality(1e-1)
+
+  test("Single node network") {
+    val vertices = sc.parallelize( List( (1L,("1",1L)) ) )
+    val edges = sc.parallelize( List[(Long,(Long,Double))]() )
+    val graph0 = Graph( vertices, edges )
+    val network = Network.init( graph0, 0.15 )
+    assert(modulesEq(
+      network.vertices.collect,
+      Array( (1,(1,1.0,0.0,0.0)) )
+    ))
+    assert( network.codelength == 0 )
+  }
+
+  test("Two-node network") {
+    val vertices = sc.parallelize( List( (1L,("1",1L)), (2L,("2",2L)) ) )
+    val edges = sc.parallelize( List( (1L,(2L,1.0)), (2L,(1L,1.0)) ) )
+    val graph0 = Graph( vertices, edges )
+    val network = Network.init( graph0, 0.15 )
+    assert(modulesEq(
+      network.vertices.collect,
+      Array( (1,(1,0.5,0.5,0.5)), (2,(1,0.5,0.5,0.5)) )
+    ))
+    assert(edgesEq(
+      network.edges.collect,
+      Array( (1,(2,.5)), (2,(1,.5)) )
+    ))
+    assert( network.codelength == 3 )
+  }
+
+  test("Trivial network with self loop should not change result") {
+    val vertices = sc.parallelize(
+      List[(Long,(String,Long))]( (1,("1",1)), (2,("2",2)) ) )
+    val edges = sc.parallelize(
+      List[(Long,(Long,Double))]( (1,(2,1)), (2,(1,1)), (1,(1,1)) ) )
+    val graph0 = Graph( vertices, edges )
+    val network = Network.init( graph0, 0.15 )
+    assert(modulesEq(
+      network.vertices.collect,
+      Array( (1L,(1L,0.5,0.5,0.5)), (2L,(1L,0.5,0.5,0.5)) )
+    ))
+    assert(edgesEq(
+      network.edges.collect,
+      Array( (1L,(2L,.5)), (2L,(1L,.5)) )
+    ))
+    assert( network.codelength == 3 )
+  }
+
+  test("Non-trivial graph") {
+    val vertices = sc.parallelize( List[(Long,(String,Long))](
+      (1,("1",1)), (2,("2",2)), (3,("3",3)), (4,("4",4))
+    ))
+    val edges = sc.parallelize( List[(Long,(Long,Double))](
+      (1,(2,1)), (2,(3,1)), (1,(3,1)), (3,(1,1)), (4,(3,1))
+    ))
+    val graph0 = Graph( vertices, edges )
+    val network = Network.init( graph0, 0.15 )
+    assert(modulesEq(
+      network.vertices.collect,
+      Array(
+        ( 1L, ( 1L, 0.3725, 0.3725, 0.3725 )),
+        ( 2L, ( 1L, 0.195, 0.195, 0.195 )),
+        ( 3L, ( 1L, 0.395, 0.395, 0.395 )),
+        ( 4L, ( 1L, 0.0375, 0.0375, 0.0375 ))
+      )
+    ))
+    assert(edgesEq(
+      network.edges.collect,
+      Array(
+        ( 1L, ( 2L, 0.5 *0.3725 )),
+        ( 1L, ( 3L, 0.5 *0.3725 )),
+        ( 2L, ( 3L, 1 *0.195 )),
+        ( 3L, ( 1L, 1 *0.395 )),
+        ( 4L, ( 3L, 1 *0.0375 ))
+      )
+    ))
+    assert( Math.abs( network.codelength -3.70 ) < 0.01 )
+  }
+
+  /***************************************************************************
+   * this test suite is mostly testing for numerical calculation correctness
+   * hence, here define floating point equality within Row(...)
+   ***************************************************************************/
+  def modulesEq(
+    array1: Array[(Long,(Long,Double,Double,Double))],
+    array2: Array[(Long,(Long,Double,Double,Double))]
+  ): Boolean = {
+    var equality: Boolean = true
+    if( array1.length != array2.length )
+      equality = false
+    val arrayA = array1.sortBy(_._1)
+    val arrayB = array2.sortBy(_._1)
+    for( i <- 0 to arrayA.length-1 if equality ) {
+      equality = arrayA(i)._1 == arrayB(i)._1
+      if( equality ) {
+        equality = arrayA(i)._2 match {
+          case (n1,p1,w1,q1) => arrayB(i)._2 match {
+            case (n2,p2,w2,q2) =>
+              n1==n2 && Math.abs(p1-p2)<0.01 &&
+              Math.abs(w1-w2)<0.01 && Math.abs(q1-q2)<0.01
+          }
+        }
+      }
+      equality
+    }
+    equality
+  }
+  def edgesEq(
+    array1: Array[(Long,(Long,Double))],
+    array2: Array[(Long,(Long,Double))]
+  ): Boolean = {
+    var equality: Boolean = true
+    if( array1.length != array2.length )
+      equality = false
+    val arrayA = array1.sortBy(_._1)
+    val arrayB = array2.sortBy(_._1)
+    for( i <- 0 to arrayA.length-1 if equality ) {
+      equality = arrayA(i)._1 == arrayB(i)._1
+      if( equality ) {
+        equality = arrayA(i)._2 match {
+          case (_,w1) => arrayB(i)._2 match {
+            case (_,w2) => Math.abs(w1-w2) < 0.01
+          }
+        }
+      }
+      equality
+    }
+    equality
+  }
+}

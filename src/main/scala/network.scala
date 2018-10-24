@@ -36,8 +36,23 @@ object Network
 
     val nodeNumber: Long = graph.vertices.count
 
+    // filter away self-connections
+    // and normalize edge weights per "from" node
+    val edges = {
+      val nonselfEdges = graph.edges.filter {
+        case (from,(to,weight)) => from != to
+      }
+      val outLinkTotalWeight = nonselfEdges.map {
+        case (from,(to,weight)) => (from,weight)
+      }
+      .reduceByKey(_+_)
+      nonselfEdges.join(outLinkTotalWeight).map {
+        case (from,((to,weight),norm)) => (from,(to,weight/norm))
+      }
+    }
+
     // exit probability from each vertex
-    val ergodicFreq = PageRank( graph, tele )
+    val ergodicFreq = PageRank( Graph( graph.vertices, edges), 1-tele )
     ergodicFreq.cache
 
     // modular information
@@ -47,7 +62,7 @@ object Network
     // | id , size , prob , exitw , exitq |
     val vertices: RDD[(Long,(Long,Double,Double,Double))] = {
 
-      val exitw: RDD[(Long,Double)] = graph.edges
+      val exitw: RDD[(Long,Double)] = edges
       .join( ergodicFreq )
       .map {
         case (from,((to,weight),ergodicFreq)) => (from,ergodicFreq*weight)
@@ -57,12 +72,18 @@ object Network
       ergodicFreq.leftOuterJoin(exitw)
       .map {
         case (idx,(freq,Some(w))) => (idx,(1,freq,w,tele*freq+(1-tele)*w))
-        case (idx,(freq,None)) => (idx,(1,freq,0,tele*freq))
+        case (idx,(freq,None))
+        => if( nodeNumber > 1) (idx,(1,freq,0,tele*freq))
+           else (idx,(1,1,0,0))
       }
     }
 
+    val exitw = edges.join(ergodicFreq).map {
+      case (from,((to,weight),freq)) => (from,(to,freq*weight))
+    }
+
     val probSum = ergodicFreq.map {
-      case (_,p) => p
+      case (_,p) => CommunityDetection.plogp(p)
     }
     .sum
 
@@ -71,7 +92,7 @@ object Network
     // return Network object
     Network(
       nodeNumber, tele,
-      vertices, graph.edges,
+      vertices, exitw,
       probSum, codelength
     )
   }
