@@ -12,66 +12,48 @@ import org.apache.spark.rdd.RDD
 
 import org.scalactic.TolerantNumerics
 
-class PajekFileTest extends FunSuite with BeforeAndAfter
+class PajekFileTest extends SparkTestSuite
 {
-
-  /***************************************************************************
-   * Initialize Spark Context
-   ***************************************************************************/
-  var sc: SparkContext = _
-  before {
-    val conf = new SparkConf()
-      .setAppName("InfoMap Pajek file tests")
-      .setMaster("local[*]")
-    sc = new SparkContext(conf)
-    sc.setLogLevel("OFF")
-  }
-
-  /***************************************************************************
-   * Test Cases
-   ***************************************************************************/
   test("Throw error when reading wrong file") {
     val thrown = intercept[Exception] {
-      val dummy = new PajekFile(sc,"Nets/dummy")
+      val dummy = PajekReader(sc,"Nets/dummy")
     }
     assert( thrown.getMessage === "Cannot open file Nets/dummy" )
   }
 
   test("Read trivial network with comment") {
-    val pajek = new PajekFile(sc,"Nets/zero.net")
-    assert( pajek.n === 1 )
-    assert( pajek.names.collect === Array((1,"v1")) )
-    assert( pajek.sparseMat.collect === Array() )
+    val graph = PajekReader(sc,"Nets/zero.net")
+    assert( graph.vertices.collect === Array((1,("v1",1))) )
+    assert( graph.edges.collect === Array() )
   }
 
   test("Read trivial networks") {
-    val pajek = new PajekFile(sc,"Nets/trivial.net")
-    assert( pajek.n === 2 )
-    assert( pajek.names.collect === Array((1,"m01"),(2,"m02")) )
-    assert( pajek.sparseMat.collect === Array( (1,(2,2)) ) )
+    val graph = PajekReader(sc,"Nets/trivial.net")
+    assert( graph.vertices.collect.sorted ===
+      Array((1,("m01",1)),(2,("m02",2))) )
+    assert( graph.edges.collect === Array( (1,(2,2)) ) )
   }
 
   test("Read trivial networks with self loop") {
-    val pajek = new PajekFile(sc,"Nets/trivial-with-self-loop.net")
-    assert( pajek.n === 2 )
-    assert( pajek.names.collect === Array((1,"m01"),(2,"m02")) )
-    assert( pajek.sparseMat.collect.sorted === Array( (1,(2,2)), (2,(2,1)) ) )
+    val graph = PajekReader(sc,"Nets/trivial-with-self-loop.net")
+    assert( graph.vertices.collect.sorted ===
+      Array((1,("m01",1)),(2,("m02",2))) )
+    assert( graph.edges.collect.sorted === Array( (1,(2,2)), (2,(2,1)) ) )
   }
 
   test("Read simple network") {
-    val pajek = new PajekFile(sc,"Nets/simple.net")
-    assert( pajek.n === 6 )
-    assert( pajek.names.collect.sorted ===
+    val graph = PajekReader(sc,"Nets/simple.net")
+    assert( graph.vertices.collect.sorted ===
       Array(
-        (1,"1"),
-        (2,"2"),
-        (3,"3"),
-        (4,"4"),
-        (5,"5"),
-        (6,"6")
+        (1,("1",1)),
+        (2,("2",2)),
+        (3,("3",3)),
+        (4,("4",4)),
+        (5,("5",5)),
+        (6,("6",6))
       )
     )
-    assert( pajek.sparseMat.collect.sorted ===
+    assert( graph.edges.collect.sorted ===
       Array(
         (1,(2,1.0)),
         (1,(3,1.0)),
@@ -92,35 +74,35 @@ class PajekFileTest extends FunSuite with BeforeAndAfter
   }
 
   test("Read file with *edgeslist format") {
-    val pajek = new PajekFile(sc,"Nets/edge-test.net")
-    assert( pajek.n === 6 )
-    assert( pajek.names.collect === Array(
-      (1,"1"),(2,"2"),(3,"3"),(4,"4"),(5,"5"),(6,"6")
+    val graph = PajekReader(sc,"Nets/edge-test.net")
+    assert( graph.vertices.collect.sorted === Array(
+      (1,("1",1)),
+      (2,("2",2)),
+      (3,("3",3)),
+      (4,("4",4)),
+      (5,("5",5)),
+      (6,("6",6))
     ) )
-    assert( pajek.sparseMat.collect.sorted === Array(
+    assert( graph.edges.collect.sorted === Array(
       (1,(2,1)), (1,(3,1)), (1,(4,1)),
       (2,(1,1)), (2,(2,1)), (2,(6,1))
     ) )
   }
 
   test("Test reading arcs list") {
-    val pajek = new PajekFile(sc,"Nets/arcslist-test.net")
-    assert( pajek.n === 6 )
-    assert( pajek.names.collect === Array(
-      (1,"1"),(2,"2"),(3,"3"),(4,"4"),(5,"5"),(6,"6")
+    val graph = PajekReader(sc,"Nets/arcslist-test.net")
+    assert( graph.vertices.collect === Array(
+      (1,("1",1)),
+      (2,("2",2)),
+      (3,("3",3)),
+      (4,("4",4)),
+      (5,("5",5)),
+      (6,("6",6))
     ) )
-    assert( pajek.sparseMat.collect.sorted === Array(
+    assert( graph.edges.collect.sorted === Array(
       (1,(2,1)), (1,(3,1)), (1,(4,1)),
       (2,(1,1)), (2,(2,1)), (2,(6,1)),
       (3,(2,1)), (3,(4,1))
     ) )
-  }
-
-  /***************************************************************************
-   * Stop Spark Context
-   ***************************************************************************/
-  after {
-    if( sc != null )
-      sc.stop
   }
 }
