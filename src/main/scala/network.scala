@@ -18,8 +18,11 @@ sealed case class Network
   vertices: RDD[(Long,(Long,Double,Double,Double))],
   // | index from , index to , weight |
   edges: RDD[(Long,(Long,Double))],
-  probSum: Double, // sum of ergodic frequency, for codelength calculation
-  codelength: Double // codelength given modules
+  // sum of plogp(ergodic frequency), for codelength calculation
+  // this can only be calculated when each node is its own module
+  // i.e. in Network.init()
+  probSum: Double,
+  codelength: Double // codelength given the modular partitioning
 )
 
 /*****************************************************************************
