@@ -46,12 +46,12 @@ class InfoFlow extends CommunityDetection
       // calculate the deltaL table for all possible merges
       // | src , dst , dL |
       val deltaL = calDeltaL(network)
+      deltaL.collect.sorted.foreach(println)
 
       // module to merge
       // |module , module to seek merge to |
       val m2Merge = calm2Merge(deltaL)
       m2Merge.cache
-
       // if m2Merge is empty, then no modules seek to merge
       // terminate loop
       if( m2Merge.count == 0 )
@@ -161,20 +161,20 @@ class InfoFlow extends CommunityDetection
           (
             m1,(m2,
             CommunityDetection.calDeltaL(
-              network.nodeNumber,
+              network,
               n1, n2, p1, p2,
-              network.tele, w1+w2-w12-w21,
-              qi_sum, q1, q2, network.probSum
+              w1+w2-w12-w21,
+              qi_sum, q1, q2
             ))
           )
         case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),None)) =>
           (
             m1,(m2,
             CommunityDetection.calDeltaL(
-              network.nodeNumber,
+              network,
               n1, n2, p1, p2,
-              network.tele, w1+w2-w12,
-              qi_sum, q1, q2, network.probSum
+              w1+w2-w12,
+              qi_sum, q1, q2
             ))
           )
       }
@@ -270,10 +270,13 @@ class InfoFlow extends CommunityDetection
    ***************************************************************************/
     def calNewGraph( moduleMap: RDD[(Long,Long)], graph: Graph )
     : Graph = {
-      val newVertices = graph.vertices.leftOuterJoin( moduleMap )
+      val newVertices = graph.vertices.map {
+        case (idx,(name,module)) => (module,(idx,name))
+      }
+      .leftOuterJoin( moduleMap )
       .map {
-        case (idx,((name,oldModule),Some(newModule))) => (idx,(name,newModule))
-        case (idx,((name,oldModule),None)) => (idx,(name,oldModule))
+        case (oldModule,((idx,name),Some(newModule))) => (idx,(name,newModule))
+        case (oldModule,((idx,name),None)) => (idx,(name,oldModule))
       }
       Graph( newVertices, graph.edges )
     }
