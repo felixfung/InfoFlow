@@ -46,7 +46,6 @@ class InfoFlow extends CommunityDetection
       // calculate the deltaL table for all possible merges
       // | src , dst , dL |
       val deltaL = calDeltaL(network)
-      deltaL.collect.sorted.foreach(println)
 
       // module to merge
       // |module , module to seek merge to |
