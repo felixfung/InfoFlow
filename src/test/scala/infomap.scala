@@ -7,7 +7,7 @@
  * and code length
  ***************************************************************************/
 
-class infoMapTest extends SparkTestSuite
+class InfoMapTest extends SparkTestSuite
 {
 
   val infoMap = new InfoMap
