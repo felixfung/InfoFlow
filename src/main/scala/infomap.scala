@@ -186,7 +186,7 @@ object InfoMap
       graph.vertices.map {
         case (idx,(name,module)) =>
           if( module==merge._1._1 || module==merge._1._2 )
-            (idx,(name,merge._1._2))
+            (idx,(name,merge._1._1))
           else
             (idx,(name,module))
       },
