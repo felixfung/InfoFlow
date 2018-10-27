@@ -225,14 +225,14 @@ object InfoMap
       // anyway dL always needs to be recalculated
       case ((m1,m2),Merge(n1,n2,p1,p2,w1,w2,w1221,q1,q2,_)) =>
         if( m1==merge1 || m1==merge2 )
-          ((merge1,m2),Merge(N12,n2,P12,p2,W12,w2,W12+w2-w1221,Q12,q2,0.0))
+          ((merge1,m2),Merge(N12,n2,P12,p2,W12,w2,w1221,Q12,q2,0.0))
         else if( m2==merge1 )
-          ((m1,merge1),Merge(n1,N12,p1,P12,w1,W12,w1+W12-w1221,q1,Q12,0.0))
+          ((m1,merge1),Merge(n1,N12,p1,P12,w1,W12,w1221,q1,Q12,0.0))
         else if( m2==merge2 ) {
           if( merge1 < m1 )
-            ((merge1,m1),Merge(N12,n1,P12,p1,W12,w1,W12+w1-w1221,Q12,q1,0.0))
+            ((merge1,m1),Merge(N12,n1,P12,p1,W12,w1,w1221,Q12,q1,0.0))
           else
-            ((m1,merge1),Merge(n1,N12,p1,P12,w1,W12,w1+W12-w1221,q1,Q12,0.0))
+            ((m1,merge1),Merge(n1,N12,p1,P12,w1,W12,w1221,q1,Q12,0.0))
         }
         else
           ((m1,m2),Merge(n1,n2,p1,p2,w1,w2,w1221,q1,q2,0.0))
