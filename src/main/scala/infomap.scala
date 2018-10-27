@@ -21,7 +21,9 @@ class InfoMap extends CommunityDetection
       network: Network,
       mergeList: RDD[((Long,Long),InfoMap.Merge)]
     ): ( Graph, Network ) = {
-
+println()
+mergeList.collect.sortBy(_._1._1).foreach(println)
+println()
       InfoMap.trim( loop, graph, network, mergeList )
 
       logFile.write(s"State $loop: code length ${network.codelength}\n",false)
@@ -251,7 +253,7 @@ object InfoMap
         (m1,m2),
         Merge(n1,n2,p1,p2,w1,w2,w1221,q1,q2,
             CommunityDetection.calDeltaL(network,
-              n1,n2,p1,p2,w1221,qi_sum,q1,q2))
+              n1,n2,p1,p2,w1+w2-w1221,qi_sum,q1,q2))
       )
     }
   }
