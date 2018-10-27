@@ -114,7 +114,7 @@ object InfoMap
       Merge(
         n1,n2,p1,p2,w1,w2,w1221,q1,q2,
         CommunityDetection.calDeltaL(
-          network, n1,n2,p1,p2, w1221, qi_sum,q1,q2 ))
+          network, n1,n2,p1,p2, w1+w2-w1221, qi_sum,q1,q2 ))
       )
     }
   }
