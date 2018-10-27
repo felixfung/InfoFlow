@@ -21,6 +21,9 @@ class InfoMap extends CommunityDetection
       network: Network,
       mergeList: RDD[((Long,Long),InfoMap.Merge)]
     ): ( Graph, Network ) = {
+println("InfoMap")
+network.vertices.collect.foreach(println)
+println()
 
       InfoMap.trim( loop, graph, network, mergeList )
 
@@ -157,23 +160,23 @@ object InfoMap
     mergeList.reduce {
       case (
         ((merge1A,merge2A),
-          Merge(n1A,n2A,p1A,p2A,w1A,w2A,w12A,q1A,q2A,dLA)),
+          Merge(n1A,n2A,p1A,p2A,w1A,w2A,w1221A,q1A,q2A,dLA)),
         ((merge1B,merge2B),
-          Merge(n1B,n2B,p1B,p2B,w1B,w2B,w12B,q1B,q2B,dLB))
+          Merge(n1B,n2B,p1B,p2B,w1B,w2B,w1221B,q1B,q2B,dLB))
       )
       => {
         if( dLA < dLB )
           ((merge1A,merge2A),
-            Merge(n1A,n2A,p1A,p2A,w1A,w2A,w12A,q1A,q2A,dLA))
+            Merge(n1A,n2A,p1A,p2A,w1A,w2A,w1221A,q1A,q2A,dLA))
         else if( dLA > dLB )
           ((merge1B,merge2B),
-            Merge(n1B,n2B,p1B,p2B,w1B,w2B,w12B,q1B,q2B,dLB))
+            Merge(n1B,n2B,p1B,p2B,w1B,w2B,w1221B,q1B,q2B,dLB))
         else if( merge1A < merge1B )
           ((merge1A,merge2A),
-            Merge(n1A,n2A,p1A,p2A,w1A,w2A,w12A,q1A,q2A,dLA))
+            Merge(n1A,n2A,p1A,p2A,w1A,w2A,w1221A,q1A,q2A,dLA))
         else
           ((merge1B,merge2B),
-            Merge(n1B,n2B,p1B,p2B,w1B,w2B,w12B,q1B,q2B,dLB))
+            Merge(n1B,n2B,p1B,p2B,w1B,w2B,w1221B,q1B,q2B,dLB))
       }
     }
   }
