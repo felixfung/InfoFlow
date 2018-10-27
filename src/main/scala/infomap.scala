@@ -21,9 +21,6 @@ class InfoMap extends CommunityDetection
       network: Network,
       mergeList: RDD[((Long,Long),InfoMap.Merge)]
     ): ( Graph, Network ) = {
-println("InfoMap")
-mergeList.collect.sortBy(_._1._1).foreach(println)
-println()
 
       InfoMap.trim( loop, graph, network, mergeList )
 
@@ -43,11 +40,10 @@ println()
       false )
 
       val new_qi_sum = InfoMap.cal_qi_sum( network, merge, qi_sum )
+      val newNetwork = InfoMap.calNewNetwork( network, merge )
       val newGraph = InfoMap.calNewGraph( graph, merge )
       val newMergeList = InfoMap.updateMergeList(
         merge, mergeList, network, new_qi_sum )
-      val newNetwork = InfoMap.calNewNetwork( network, merge )
-println(s"qi_sum: $new_qi_sum")
       recursiveMerge( loop+1, new_qi_sum, newGraph, newNetwork, newMergeList )
     }
 
@@ -298,20 +294,9 @@ object InfoMap
       }
       .map {
         case (from,(to,weight)) => 
-          if( from == m2 ) {
-            if( m1 < to )
-              ((m1,to),weight)
-            else
-              ((to,m1),weight)
-          }
-          else if( to == m2 ) {
-            if( m1 < from )
-              ((m1,from),weight)
-            else
-              ((from,m1),weight)
-          }
-          else
-            ((from,to),weight)
+          val newFrom = if( from==m2 ) m1 else from
+          val newTo = if( to==m2 ) m1 else to
+          ((newFrom,newTo),weight)
       }
       // aggregate
       .reduceByKey(_+_)
