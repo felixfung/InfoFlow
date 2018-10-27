@@ -45,13 +45,11 @@ object CommunityDetection {
     qi_sum: Double, q1: Double, q2: Double
   ) = {
     val q12 = calQ( network.nodeNumber, n1+n2, p1+p2, network.tele, w12 )
-    if( q12 > 0 ) {
-      (
-        +plogp( qi_sum +q12-q1-q2 ) -plogp(qi_sum)
-        -2*plogp(q12) +2*plogp(q1) +2*plogp(q2)
-        +plogp(p1+p2+q12) -plogp(p1+q1) -plogp(p2+q2)
-      )
-    }
+    if( q12 > 0 ) (
+      +plogp( qi_sum +q12-q1-q2 ) -plogp(qi_sum)
+      -2*plogp(q12) +2*plogp(q1) +2*plogp(q2)
+      +plogp(p1+p2+q12) -plogp(p1+q1) -plogp(p2+q2)
+    )
     else {
       //throw new Exception("caught some crap: one giant module")
       -network.probSum -network.codelength
