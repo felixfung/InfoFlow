@@ -21,6 +21,9 @@ class InfoMap extends CommunityDetection
       network: Network,
       mergeList: RDD[((Long,Long),InfoMap.Merge)]
     ): ( Graph, Network ) = {
+println("InfoMap")
+mergeList.collect.sortBy(_._1._1).foreach(println)
+println()
 
       InfoMap.trim( loop, graph, network, mergeList )
 
@@ -35,16 +38,16 @@ class InfoMap extends CommunityDetection
         return InfoMap.terminate( loop, logFile, graph, network )
 
       logFile.write(
-        s"Merge $loop: merging modules ${merge._1._1}and ${merge._1._2}"
+        s"Merge $loop: merging modules ${merge._1._1} and ${merge._1._2}"
         +s" with code length reduction ${merge._2.dL}\n",
       false )
 
+      val new_qi_sum = InfoMap.cal_qi_sum( network, merge, qi_sum )
       val newGraph = InfoMap.calNewGraph( graph, merge )
       val newMergeList = InfoMap.updateMergeList(
-        merge, mergeList, network,qi_sum )
+        merge, mergeList, network, new_qi_sum )
       val newNetwork = InfoMap.calNewNetwork( network, merge )
-      val new_qi_sum = InfoMap.cal_qi_sum( network, merge, qi_sum )
-
+println(s"qi_sum: $new_qi_sum")
       recursiveMerge( loop+1, new_qi_sum, newGraph, newNetwork, newMergeList )
     }
 
@@ -113,6 +116,7 @@ object InfoMap
       ((m1,m2),
       Merge(
         n1,n2,p1,p2,w1,w2,w1221,q1,q2,
+        // calculate dL
         CommunityDetection.calDeltaL(
           network, n1,n2,p1,p2, w1+w2-w1221, qi_sum,q1,q2 ))
       )
