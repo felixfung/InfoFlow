@@ -21,9 +21,7 @@ class InfoMap extends CommunityDetection
       network: Network,
       mergeList: RDD[((Long,Long),InfoMap.Merge)]
     ): ( Graph, Network ) = {
-println()
-mergeList.collect.sortBy(_._1._1).foreach(println)
-println()
+
       InfoMap.trim( loop, graph, network, mergeList )
 
       logFile.write(s"State $loop: code length ${network.codelength}\n",false)
@@ -126,8 +124,8 @@ object InfoMap
    ***************************************************************************/
   def trim( loop: Int, graph: Graph,
     network: Network, mergeList: RDD[((Long,Long),Merge)] ): Unit = {
-   if( loop%10 == 0 ) {
-     graph.vertices.localCheckpoint
+    if( loop%10 == 0 ) {
+      graph.vertices.localCheckpoint
       val force1 = graph.vertices.count
       graph.edges.localCheckpoint
       val force2 = graph.edges.count
@@ -223,7 +221,7 @@ object InfoMap
       // and put in newly merged quantities to replace old quantities
       // anyway dL always needs to be recalculated
       case ((m1,m2),Merge(n1,n2,p1,p2,w1,w2,w1221,q1,q2,_)) =>
-        if( m1==merge1 || m2==merge2 )
+        if( m1==merge1 || m1==merge2 )
           ((merge1,m2),Merge(N12,n2,P12,p2,W12,w2,W12+w2-w1221,Q12,q2,0.0))
         else if( m2==merge1 )
           ((m1,merge1),Merge(n1,N12,p1,P12,w1,W12,w1+W12-w1221,q1,Q12,0.0))
