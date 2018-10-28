@@ -187,6 +187,8 @@ object LogFile
       case (from,(to,weight)) => ((from,to),weight)
     }
     .collect.sorted
+    vertices.foreach(println)
+    edges.foreach(println)
     val graph = JsonGraph( vertices, edges )
     JsonGraphWriter( filename, graph )
   }

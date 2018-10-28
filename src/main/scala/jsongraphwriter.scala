@@ -1,3 +1,7 @@
+/***************************************************************************
+ * Write graph into local Json file for visualization
+ ***************************************************************************/
+
 import java.io._
 
 sealed case class JsonGraph
@@ -23,10 +27,10 @@ object JsonGraphWriter
         graph.vertices(idx) match {
           case (id,(name,module,size)) => {
             file.write(
-              "\t\t{\"id\": \"" +id.toString +"\""
-             +"\", \"size\": \"" +size.toString +"\""
-             +"\", \"name\": \"" +name.toString +"\""
-             +"\", \"group\": \"" +module.toString +"\""
+              "\t\t{\"id\": \"" +s"$id" +"\", "
+             +"\"size\": \"" +s"$size" +"\", "
+             +"\"name\": \"" +s"$name" +"\", "
+             +"\"group\": \"" +s"$module" +"\""
              +"}"
             )
             if( idx < nodeCount-1 )
@@ -35,20 +39,20 @@ object JsonGraphWriter
           }
         }
       }
-      file.write( "\t],\n" )
+      file.write( "\t]" )
     }
 
     // write edge data
     if( !graph.edges.isEmpty ) {
-      file.write( "\t\"links\": [\n" )
+      file.write( ",\n\t\"links\": [\n" )
       val edgeCount = graph.edges.size
       for( idx <- 0 to edgeCount-1 ) {
         graph.edges(idx) match {
           case ((from,to),weight) =>
             file.write(
-              "\t\t{\"source\": \"" +from.toString +"\""
-             +"\", \"target\": \"" +to.toString +"\""
-             +"\", \"width\": \"" +weight.toString +"\""
+              "\t\t{\"source\": \"" +s"$from" +"\", "
+             +"\"target\": \"" +s"$to" +"\", "
+             +"\"value\": \"" +s"$weight" +"\""
              +"}"
             )
             if( idx < edgeCount-1 )
