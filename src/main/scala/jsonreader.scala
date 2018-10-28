@@ -1,19 +1,19 @@
-  /***************************************************************************
-   * class to read Json file
-   * using Scala standard library backend
-   * return value is always Any
-   * and up to user to convert
-   *
-   * usage:
-   *   val jsonReader = new JsonReader(filename)
-   *   val value = jsonReader.getVal("key")
-   *   val nestedValue = jsonReader.getVal("object key","key")
-   *   val moreNesting = jsonReader.getVal("more nesting","object key","key")
-   *   and so on
-   *
-   * if requesting an object rather than a value
-   * then the returned value is a mapping (if user cast from Any)
-   ***************************************************************************/
+/*****************************************************************************
+ * class to read Json file
+ * using Scala standard library backend
+ * return value is always Any
+ * and up to user to convert
+ *
+ * usage:
+ *   val jsonReader = new JsonReader(filename)
+ *   val value = jsonReader.getVal("key")
+ *   val nestedValue = jsonReader.getVal("object key","key")
+ *   val moreNesting = jsonReader.getVal("more nesting","object key","key")
+ *   and so on
+ *
+ * if requesting an object rather than a value
+ * then the returned value is a mapping (if user cast from Any)
+ *****************************************************************************/
 
 import scala.util.parsing.json._
 
