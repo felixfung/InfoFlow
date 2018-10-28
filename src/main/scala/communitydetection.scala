@@ -7,8 +7,8 @@ abstract class CommunityDetection {
 
 object CommunityDetection {
   def choose( algorithm: String ): CommunityDetection = {
-    /*if( algorithm == "InfoMap" ) new InfoMap
-    else */if( algorithm == "InfoFlow" ) new InfoFlow
+    if( algorithm == "InfoMap" ) new InfoMap
+    else if( algorithm == "InfoFlow" ) new InfoFlow
     else throw new Exception(
       "Community detection algorithm must be InfoMap or InfoFlow"
     )
