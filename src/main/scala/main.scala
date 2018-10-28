@@ -28,17 +28,6 @@ object InfoFlowMain {
     // initialize community detection algorithm
     val communityDetection = CommunityDetection.choose( config.algorithm )
 
-    // create log file object
-    val logFile = new LogFile(
-      config.logFile.pathLog,
-      config.logFile.pathParquet,
-      config.logFile.pathRDD,
-      config.logFile.pathJson,
-      config.logFile.savePartition,
-      config.logFile.saveName,
-      config.logFile.debug
-    )
-
   /***************************************************************************
    * Initialize Spark Context
    ***************************************************************************/
@@ -51,6 +40,18 @@ object InfoFlowMain {
   /***************************************************************************
    * read file, solve, save
    ***************************************************************************/
+
+    // create log file object
+    val logFile = new LogFile(
+      sc,
+      config.logFile.pathLog,
+      config.logFile.pathParquet,
+      config.logFile.pathRDD,
+      config.logFile.pathFullJson,
+      config.logFile.pathReducedJson,
+      config.logFile.debug
+    )
+
     val graph0: Graph = GraphReader( sc, config.graphFile )
     val net0: Network = Network.init( graph0, config.tele )
     val (graph1,net1) = communityDetection( graph0, net0, logFile )

@@ -19,9 +19,8 @@ class ConfigFileTest extends FunSuite
       writer.write("\t\t\"log path\": \"Output/log.txt\",\n")
       writer.write("\t\t\"Parquet path\": \"\",\n")
       writer.write("\t\t\"RDD path\": \"\",\n")
-      writer.write("\t\t\"Json path\": \"Output/graph.json\",\n")
-      writer.write("\t\t\"save partition\": \"true\",\n")
-      writer.write("\t\t\"save name\": \"true\",\n")
+      writer.write("\t\t\"Full Json path\": \"Output/graph.json\",\n")
+      writer.write("\t\t\"Reduced Json path\": \"Output/graph.json\",\n")
       writer.write("\t\t\"debug\": \"true\"\n")
       writer.write("\t}\n")
       writer.write("}\n")
@@ -36,9 +35,8 @@ class ConfigFileTest extends FunSuite
       assert( configFile.logFile.pathLog === "Output/log.txt" )
       assert( configFile.logFile.pathParquet === "" )
       assert( configFile.logFile.pathRDD === "" )
-      assert( configFile.logFile.pathJson === "Output/graph.json" )
-      assert( configFile.logFile.savePartition === true )
-      assert( configFile.logFile.saveName === true )
+      assert( configFile.logFile.pathFullJson === "Output/graph.json" )
+      assert( configFile.logFile.pathReducedJson === "Output/graph.json" )
       assert( configFile.logFile.debug === true )
     }
     finally {

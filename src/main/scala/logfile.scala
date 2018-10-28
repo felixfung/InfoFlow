@@ -30,32 +30,30 @@
  *((**************************************************************************/
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql._
+
+import org.apache.spark.SparkContext
+import org.apache.spark.sql._ // needed to save as Parquet format
 
 import java.io._
 
 sealed class LogFile(
+  val sc:               SparkContext, // needed to save as Parquet
   /***************************************************************************
    * path names, INCLUDING file names and extensions
    * if caller does not want to save in format, provide empty path
    ***************************************************************************/
-  val pathLog:       String,   // plain text file path for merge progress data
-  val pathParquet:   String,   // parquet file path for graph data
-  val pathRDD:       String,   // RDD text file path for graph data
-  val pathJson:      String,   // local Json file path for graph data
-
-  /***************************************************************************
-   * flags to specify whether associated graph data are saved
-   ***************************************************************************/
-  val savePartition: Boolean,  // whether to save partitioning data
-  val saveName:      Boolean,  // whether to save node naming data
+  val pathLog:          String, // plain text file path for merge progress data
+  val pathParquet:      String, // parquet file path for graph data
+  val pathRDD:          String, // RDD text file path for graph data
+  val pathFullJson:     String, // local Json file path for graph data
+  val pathReducedJson:  String, // local Json file path for graph data
 
   /***************************************************************************
    * a logging operation is only performed if:
    *   (1) the operation is not for debugging, OR
    *   (2) the log file object is for debugging
    ***************************************************************************/
-  val debug:         Boolean   // whether to print debug details
+  val debug:            Boolean // whether to print debug details
 )
 {
 
@@ -84,7 +82,7 @@ sealed class LogFile(
     // graphFile: original graph, all nodes and edges
     // vertices: | id , name , module |
     // edges: | from , to , exit prob. w/o tele |
-    graphFile: Graph,
+    graph: Graph,
     // network: reduced graph, where each node is a community
     network: Network,
     debugging: Boolean,
@@ -96,12 +94,19 @@ sealed class LogFile(
    * after the file name and before the final dot
    * this helper function returns the full path before and after the dot
    ***************************************************************************/
-    def filePathInsert( filePath: String, insertion: String ): String = {
-      val regex = """(.*)\.(\w+)""".r
-      filePath match {
-        case regex(path,ext) => path +insertion +"."+ext
-        case _ => filePath +insertion
+    def filepathExt( filepath: String,
+    debugging: Boolean, debugExt: String ): String = {
+      def filePathInsert( filepath: String, insertion: String ): String = {
+        val regex = """(.*)\.(\w+)""".r
+        filepath match {
+          case regex(path,ext) => path +insertion +"."+ext
+          case _ => filepath +insertion
+        }
       }
+      if( !debugging )
+        filePathInsert( filepath, debugExt )
+      else
+        filePathInsert( filepath, debugExt+debugExt )
     }
 
   /***************************************************************************
@@ -109,82 +114,80 @@ sealed class LogFile(
    *   (1) the operation is not for debugging, OR
    *   (2) the log file object is for debugging
    ***************************************************************************/
-    /*if( !debugging || debug ) {
-
-  /***************************************************************************
-   * saving to Parquet and RDD text routines are virtually identical
-   * except they have different guards and call different functions
-   * therefore, implement here two functions
-   ***************************************************************************/
-      // routine to save all vertices, edges, partitioning and naming
-      def saveDF(
-        guard: Boolean, savePartition: Boolean, saveName: Boolean,
-        debugging: Boolean, filePath: String, debugExt: String
-      ): Unit = {
-        // routine to save an individual dataframe
-        def saveStruct( guard: Boolean, debugging: Boolean,
-          filePath: String, fileExt: String, debugExt: String,
-          saveFn: ( (String,DataFrame) => Unit ), struct: DataFrame
-        ): Unit = {
-          if( guard ) {
-            val filename = if( !debugging )
-              filePathInsert( filePath, fileExt )
-            else
-              filePathInsert( filePath, debugExt+fileExt )
-            saveFn( filename, struct )
-          }
-        }
-
-        if( guard ) {
-          saveStruct( true,
-            debugging, pathParquet, "-vertices", debugExt,
-            LogFile.saveParquet, network.vertices )
-          saveStruct( true,
-            debugging, pathParquet, "-edges", debugExt,
-            LogFile.saveParquet, network.edges )
-          saveStruct( savePartition,
-            debugging, pathParquet, "-partition", debugExt,
-            LogFile.saveParquet, partition )
-          saveStruct( saveName,
-            debugging, pathParquet, "-name", debugExt,
-            LogFile.saveParquet, network.name )
-        }
-      }
-
-      saveDF( !pathParquet.isEmpty, savePartition, saveName,
-        debugging, pathParquet, debugExt )
-      saveDF( !pathRDD.isEmpty, savePartition, saveName,
-        debugging, pathRDD, debugExt )
-
-      if( !pathRDD.isEmpty ) {
-        saveStruct( true, pathRDD, "-vertices",
-          LogFile.saveRDD, network.vertices )
-        saveStruct( true, pathRDD, "-edges",
-          LogFile.saveRDD, network.edges )
-        saveStruct( savePartition, pathRDD, "-partition",
-          LogFile.saveRDD, network.partition )
-        saveStruct( saveName, pathRDD, "-name",
-          LogFile.saveRDD, network.name )
-      }
-
-  /***************************************************************************
-   * routine to save Json
-   ***************************************************************************/
-
-      /*if( !pathJson.isEmpty ) {
-        LogFile.saveJson( pathJson, graph ) /////////////// THIS NEEDS A LOT MORE WORK!!!
-      }*/
-    }*/
-    {} // use this line to return unit for now
+    if( !debugging || debug ) {
+      if( !pathParquet.isEmpty )
+        LogFile.saveParquet(
+          filepathExt(pathParquet,debugging,debugExt),
+          graph, sc )
+      if( !pathRDD.isEmpty )
+        LogFile.saveRDD(
+          filepathExt(pathRDD,debugging,debugExt),
+          graph )
+      if( !pathFullJson.isEmpty )
+        LogFile.saveFullJson(
+          filepathExt(pathFullJson,debugging,debugExt),
+          graph )
+      if( !pathReducedJson.isEmpty )
+        LogFile.saveReducedJson(
+          filepathExt(pathReducedJson,debugging,debugExt),
+          network )
+    }
   }
 }
 
-/*object LogFile
+object LogFile
 {
-  def saveParquet( filename: String, struct: DataFrame ): Unit
-  = struct.write.parquet(filename) // check syntax
-  def saveRDD( filename: String, struct: DataFrame ): Unit
-  = struct.rdd.saveAsTextFile(filename)
+  def saveParquet( filename: String, graph: Graph, sc: SparkContext ): Unit = {
+    val sqlContext= new org.apache.spark.sql.SQLContext(sc)
+    import sqlContext.implicits._
+    graph.vertices.toDF.write.parquet( s"$filename-vertices.parquet" )
+    graph.edges.toDF.write.parquet( s"$filename-edges.parquet" )
+  }
+  def saveRDD( filename: String, graph: Graph ): Unit = {
+    graph.vertices.saveAsTextFile( s"$filename-vertices" )
+    graph.edges.saveAsTextFile( s"$filename-edges" )
+  }
 
-  def saveJson( filename: String, graph: GraphFrame ): Unit = ???
-}*/
+  /***************************************************************************
+   * save graph as Json for visualization
+   * all nodes are printed with each module associated
+   * according to community detection
+   * this printing function probably used for demo purpose
+   ***************************************************************************/
+  def saveFullJson( filename: String, graph: Graph ) = {
+    // fake nodes to preserve group ordering/coloring
+    val fakeNodes = graph.vertices.map {
+      case (idx,_) => (-idx,("",idx,0.0))
+    }
+    .collect
+    val vertices = graph.vertices.map {
+      case (id,(name,module)) => (id,(name,module,1.0))
+    }
+    .collect ++fakeNodes
+    val edges = graph.edges.map {
+      case (from,(to,weight)) => ((from,to),weight)
+    }
+    .collect.sorted
+    val newGraph = JsonGraph( vertices.sorted, edges )
+    JsonGraphWriter( filename, newGraph )
+  }
+
+  /***************************************************************************
+   * save graph as Json for visualization
+   * each node is a module
+   * names are always empty string
+   ***************************************************************************/
+  def saveReducedJson( filename: String, network: Network ) = {
+    val vertices = network.vertices.map {
+      case (id,(_,p,_,_)) => (id,("",id,p))
+    }
+    // Json is local file
+    .collect.sorted
+    val edges = network.edges.map {
+      case (from,(to,weight)) => ((from,to),weight)
+    }
+    .collect.sorted
+    val graph = JsonGraph( vertices, edges )
+    JsonGraphWriter( filename, graph )
+  }
+}
