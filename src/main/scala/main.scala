@@ -55,6 +55,7 @@ object InfoFlowMain {
     val net0: Network = Network.init( graph0, config.tele )
     val (graph1,net1) = communityDetection( graph0, net0, logFile )
     logFile.save( graph1, net1, false, "" )
+    logFile.close
 
   /***************************************************************************
    * Stop Spark Context
