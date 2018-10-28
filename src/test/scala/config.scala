@@ -19,7 +19,7 @@ class ConfigFileTest extends FunSuite
       writer.write("\t\t\"log path\": \"Output/log.txt\",\n")
       writer.write("\t\t\"Parquet path\": \"\",\n")
       writer.write("\t\t\"RDD path\": \"\",\n")
-      writer.write("\t\t\"Full Json path\": \"Output/graph.json\",\n")
+      writer.write("\t\t\"Full Json path\": \"\",\n")
       writer.write("\t\t\"Reduced Json path\": \"Output/graph.json\",\n")
       writer.write("\t\t\"debug\": \"true\"\n")
       writer.write("\t}\n")
@@ -35,7 +35,7 @@ class ConfigFileTest extends FunSuite
       assert( configFile.logFile.pathLog === "Output/log.txt" )
       assert( configFile.logFile.pathParquet === "" )
       assert( configFile.logFile.pathRDD === "" )
-      assert( configFile.logFile.pathFullJson === "Output/graph.json" )
+      assert( configFile.logFile.pathFullJson === "" )
       assert( configFile.logFile.pathReducedJson === "Output/graph.json" )
       assert( configFile.logFile.debug === true )
     }

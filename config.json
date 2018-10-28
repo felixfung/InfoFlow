@@ -1,8 +1,16 @@
 {
   "Master": "local[*]",
-  "Pajek": "Nets/data/football.net",
-  "Algo": "InfoFlow",
-  "damping": "0.85",
+  "Graph": "Nets/rosvall.net",
+  "Algo": "InfoMap",
+  "tele": "0.15",
+  "log": {
+      "log path": "Output/log.txt",
+      "Parquet path": "",
+      "RDD path": "",
+      "Full Json path": "Output/graph.json",
+      "Reduced Json path": "",
+      "debug": "true"
+  },
   "logDir": "Output",
   "logWriteLog": "true",
   "logRddText": "false",
