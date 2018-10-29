@@ -72,9 +72,13 @@ object Network
       }
       .reduceByKey(_+_)
 
+      // since exitw is normalized per "from" node,
+      // exitw is always (from,freq)
+      // so calculations can be simplified
       ergodicFreq.leftOuterJoin(exitw)
       .map {
-        case (idx,(freq,Some(w))) => (idx,(1,freq,w,tele*freq+(1-tele)*w))
+        //case (idx,(freq,Some(w))) => (idx,(1,freq,w,tele*freq+(1-tele)*w))
+        case (idx,(freq,Some(_))) => (idx,(1,freq,freq,freq))
         case (idx,(freq,None))
         => if( nodeNumber > 1) (idx,(1,freq,0,tele*freq))
            else (idx,(1,1,0,0))
