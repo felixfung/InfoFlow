@@ -239,7 +239,7 @@ class InfoFlow extends CommunityDetection
       moduleMap: RDD[(Long,Long)], network: Network
     ) = {
 
-    /***************************************************************************
+    /*************************************************************************
      * intermediate edges
      * map the associated modules into new module indices
      * if the new indices are the same, they are intramodular connections
@@ -247,7 +247,7 @@ class InfoFlow extends CommunityDetection
      * if the new indices are different, they are intermodular connections
      * and will be aggregated into w_ij's
      * | src , dst , iWj |
-     ***************************************************************************/
+     *************************************************************************/
       def calInterEdges(
         network: Network, moduleMap: RDD[(Long,Long)]
       ): RDD[(Long,(Long,Double))] = {
@@ -267,9 +267,9 @@ class InfoFlow extends CommunityDetection
         }
       }
 
-    /***************************************************************************
+    /*************************************************************************
      * modular properties calculations
-     ***************************************************************************/
+     *************************************************************************/
       def calNewModules(
         network: Network, moduleMap: RDD[(Long,Long)],
         interEdges: RDD[(Long,(Long,Double))]
