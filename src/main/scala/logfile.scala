@@ -94,19 +94,12 @@ sealed class LogFile(
    * after the file name and before the final dot
    * this helper function returns the full path before and after the dot
    ***************************************************************************/
-    def filepathExt( filepath: String,
-    debugging: Boolean, debugExt: String ): String = {
-      def filePathInsert( filepath: String, insertion: String ): String = {
-        val regex = """(.*)\.(\w+)""".r
-        filepath match {
-          case regex(path,ext) => path +insertion +"."+ext
-          case _ => filepath +insertion
-        }
+    def splitFilepath( filepath: String ): (String,String) = {
+      val regex = """(.*)\.(\w+)""".r
+      filepath match {
+        case regex(path,ext) => ( path, "."+ext )
+        case _ => ( filepath, "" )
       }
-      if( !debugging )
-        filePathInsert( filepath, debugExt )
-      else
-        filePathInsert( filepath, debugExt+debugExt )
     }
 
   /***************************************************************************
@@ -115,37 +108,40 @@ sealed class LogFile(
    *   (2) the log file object is for debugging
    ***************************************************************************/
     if( !debugging || debug ) {
-      if( !pathParquet.isEmpty )
-        LogFile.saveParquet(
-          filepathExt(pathParquet,debugging,debugExt),
-          graph, sc )
-      if( !pathRDD.isEmpty )
-        LogFile.saveRDD(
-          filepathExt(pathRDD,debugging,debugExt),
-          graph )
-      if( !pathFullJson.isEmpty )
-        LogFile.saveFullJson(
-          filepathExt(pathFullJson,debugging,debugExt),
-          graph )
-      if( !pathReducedJson.isEmpty )
-        LogFile.saveReducedJson(
-          filepathExt(pathReducedJson,debugging,debugExt),
-          network )
+      val exext = if(debugging) debugExt else ""
+      if( !pathParquet.isEmpty ) {
+        val (filename,ext) = splitFilepath(pathParquet)
+        LogFile.saveParquet( filename, exext+ext, graph, sc )
+      }
+      if( !pathRDD.isEmpty ) {
+        val (filename,ext) = splitFilepath(pathRDD)
+        LogFile.saveParquet( filename, exext+ext, graph, sc )
+      }
+      if( !pathFullJson.isEmpty ) {
+        val (filename,ext) = splitFilepath(pathFullJson)
+        LogFile.saveFullJson( filename, exext+ext, graph )
+      }
+      if( !pathReducedJson.isEmpty ) {
+        val (filename,ext) = splitFilepath(pathReducedJson)
+        LogFile.saveReducedJson( filename, exext+ext, network )
+      }
     }
   }
 }
 
 object LogFile
 {
-  def saveParquet( filename: String, graph: Graph, sc: SparkContext ): Unit = {
+  def saveParquet( filename: String, ext: String,
+    graph: Graph, sc: SparkContext ): Unit = {
     val sqlContext= new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
-    graph.vertices.toDF.write.parquet( s"$filename-vertices.parquet" )
-    graph.edges.toDF.write.parquet( s"$filename-edges.parquet" )
+    graph.vertices.toDF.write.parquet( s"$filename-vertices$ext" )
+    graph.edges.toDF.write.parquet( s"$filename-edges$ext" )
   }
-  def saveRDD( filename: String, graph: Graph ): Unit = {
-    graph.vertices.saveAsTextFile( s"$filename-vertices" )
-    graph.edges.saveAsTextFile( s"$filename-edges" )
+  def saveRDD( filename: String,  ext: String,
+    graph: Graph ): Unit = {
+    graph.vertices.saveAsTextFile( s"$filename-vertices$ext" )
+    graph.edges.saveAsTextFile( s"$filename-edges$ext" )
   }
 
   /***************************************************************************
@@ -154,7 +150,7 @@ object LogFile
    * according to community detection
    * this printing function probably used for demo purpose
    ***************************************************************************/
-  def saveFullJson( filename: String, graph: Graph ) = {
+  def saveFullJson( filename: String, ext: String, graph: Graph ) = {
     // fake nodes to preserve group ordering/coloring
     val fakeNodes = graph.vertices.map {
       case (idx,_) => (-idx,("",idx,0.0))
@@ -169,7 +165,7 @@ object LogFile
     }
     .collect.sorted
     val newGraph = JsonGraph( vertices.sorted, edges )
-    JsonGraphWriter( filename, newGraph )
+    JsonGraphWriter( s"$filename$ext", newGraph )
   }
 
   /***************************************************************************
@@ -177,7 +173,7 @@ object LogFile
    * each node is a module
    * names are always empty string
    ***************************************************************************/
-  def saveReducedJson( filename: String, network: Network ) = {
+  def saveReducedJson( filename: String, ext: String, network: Network ) = {
     val vertices = network.vertices.map {
       case (id,(_,p,_,_)) => (id,("",id,p))
     }
@@ -190,6 +186,6 @@ object LogFile
     vertices.foreach(println)
     edges.foreach(println)
     val graph = JsonGraph( vertices, edges )
-    JsonGraphWriter( filename, graph )
+    JsonGraphWriter( s"$filename$ext", graph )
   }
 }

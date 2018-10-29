@@ -62,7 +62,7 @@ class JsonWriterTest extends SparkTestSuite
     try {
       // produce json file
       val graph = PajekReader( sc, "Nets/small-asym.net" )
-      LogFile.saveFullJson( filename, graph )
+      LogFile.saveFullJson( filename, "", graph )
 
       // read and verify json file
       verifyFile(Array(
@@ -103,7 +103,7 @@ class JsonWriterTest extends SparkTestSuite
       val infoMap = new InfoMap
       val logFile = new LogFile(sc,"","","","","",false)
       val (_,net1) = infoMap( graph, net0, logFile )
-      LogFile.saveReducedJson( filename, net1 )
+      LogFile.saveReducedJson( filename, "", net1 )
 
       // read and verify json file
       verifyFile(Array(
