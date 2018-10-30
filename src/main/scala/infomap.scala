@@ -21,14 +21,11 @@ class InfoMap extends CommunityDetection
       network: Network,
       mergeList: RDD[((Long,Long),InfoMap.Merge)]
     ): ( Graph, Network ) = {
-println("InfoMap")
-network.vertices.collect.foreach(println)
-println()
 
       InfoMap.trim( loop, graph, network, mergeList )
 
       logFile.write(s"State $loop: code length ${network.codelength}\n",false)
-      logFile.save( graph, network, true, "net"+loop.toString )
+      logFile.save( graph, network, true, loop.toString )
 
       if( mergeList.count == 0 )
         return InfoMap.terminate( loop, logFile, graph, network )
@@ -46,7 +43,7 @@ println()
       val newNetwork = InfoMap.calNewNetwork( network, merge )
       val newGraph = InfoMap.calNewGraph( graph, merge )
       val newMergeList = InfoMap.updateMergeList(
-        merge, mergeList, network, new_qi_sum )
+        merge, mergeList, newNetwork, new_qi_sum )
       recursiveMerge( loop+1, new_qi_sum, newGraph, newNetwork, newMergeList )
     }
 
