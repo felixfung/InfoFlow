@@ -1,19 +1,14 @@
 {
   "Master": "local[*]",
-  "Graph": "Nets/rosvall.net",
+  "Graph": "Nets/data/football.net",
   "Algo": "InfoMap",
   "tele": "0.15",
   "log": {
       "log path": "Output/log.txt",
       "Parquet path": "",
       "RDD path": "",
-      "Full Json path": "Output/graph.json",
-      "Reduced Json path": "",
-      "debug": "true"
-  },
-  "logDir": "Output",
-  "logWriteLog": "true",
-  "logRddText": "false",
-  "logRddJSon": "2",
-  "logSteps": "false"
+      "Full Json path": "",
+      "Reduced Json path": "Output/graph.json",
+      "debug": "false"
+  }
 }
