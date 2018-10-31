@@ -328,12 +328,8 @@ class InfoFlow extends CommunityDetection
 /*****************************************************************************
  * given an RDD of edges,
  * partition the edges according to the connected components
- * and label each edge by the most common vertex of the connected component
- *
- * this static method is used in every iteration of a InFoFlow loop
- * it is declared as a static class function to enable unit testing
+ * and label each edge by the lowest vertex index of the connected component
  *****************************************************************************/
-
 object InfoFlow
 {
   def labelEdges( edge2label: RDD[(Long,Long)] ): RDD[((Long,Long),Long)] = {
@@ -428,6 +424,42 @@ object InfoFlow
       else
         labelEdge( labelEdge2 )
     }
-    labelEdge( labelEdge1 )
+
+    // obtain labeled edges according to connected components
+    // where the labeled is the most common vertex index within component
+    val labeledEdges = labelEdge( labelEdge1 )
+    .map {
+      case ((from,to),label) => (label,(from,to))
+    }
+    labeledEdges.cache
+
+    val nearlyProperEdges = labeledEdges.reduceByKey {
+      case ( (from1,to1), (from2,to2) ) =>
+        val lowestFrom = Math.min( from1, from2 )
+        val lowestTo = Math.min( to1, to2 )
+        val lowestIdx = Math.min( lowestFrom, lowestTo )
+        (lowestIdx,lowestIdx)
+    }
+    .join( labeledEdges )
+    .map {
+      case (label,((newLabel,_),(from,to))) => (newLabel,(from,to))
+    }
+  
+    // reduceByKey() would miss edges with singular labels
+    // these code account for those
+    val singularLabel = nearlyProperEdges.map {
+      case (label,_) => (label,1)
+    }
+    .reduceByKey {
+      case (count1,count2) => count1+count2
+    }
+
+    nearlyProperEdges.join(singularLabel).map {
+      case (label,((from,to),count)) =>
+        if( count == 1 )
+          ((from,to), Math.min(from,to) )
+        else
+          ((from,to),label)
+    }
   }
 }
