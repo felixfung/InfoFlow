@@ -53,10 +53,21 @@ object InfoFlowMain {
       config.logFile.debug
     )
 
+    logFile.write(s"Reading ${config.graphFile}...",false)
     val graph0: Graph = GraphReader( sc, config.graphFile )
+    logFile.write(" Done\n",false)
+
+    logFile.write("Initializing network, calculating PageRank...",false)
     val net0: Network = Network.init( graph0, config.tele )
+    logFile.write(" Done\n",false)
+
+    logFile.write(s"Using ${config.algorithm} algorithm:\n",false)
     val (graph1,net1) = communityDetection( graph0, net0, logFile )
+
+    logFile.write("Save final graph...",false)
     logFile.save( graph1, net1, false, "" )
+    logFile.write(" Done\n",false)
+
     logFile.close
 
   /***************************************************************************

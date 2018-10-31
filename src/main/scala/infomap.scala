@@ -144,8 +144,8 @@ object InfoMap
    ***************************************************************************/
   def terminate( loop: Int, logFile: LogFile,
     graph: Graph, network: Network ) = {
-    logFile.write( s"Merging terminates after ${loop} merges", false )
-    logFile.close
+    logFile.write( s"Merging terminates after ${loop} merges,"
+      +s" with final ${network.vertices.count} modules\n", false )
     ( graph, network )
   }
 

@@ -80,7 +80,6 @@ class InfoFlow extends CommunityDetection
 
     def terminate( loop: Long, graph: Graph, network: Network ) = {
       logFile.write( s"Merging terminates after $loop merges\n", false )
-      logFile.close
       ( graph, network )
     }
 
