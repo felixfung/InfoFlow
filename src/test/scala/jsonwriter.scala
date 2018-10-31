@@ -10,7 +10,7 @@ import java.io.FileReader
 import java.io.BufferedReader
 import org.apache.commons.io.FileUtils
 
-class JsonWriterTest extends SparkTestSuite
+class JsonGraphWriterTest extends SparkTestSuite
 {
   val filename = "unittestfile.json"
   test("Json exportation of simple graph") {
@@ -109,9 +109,9 @@ class JsonWriterTest extends SparkTestSuite
       verifyFile(Array(
         "{",
         "\t\"nodes\": [",
-        "\t\t{\"id\": \"1\", \"size\": \"0.70175\", "
+        "\t\t{\"id\": \"1\", \"size\": \"4.0\", "
           +"\"name\": \"\", \"group\": \"1\"},",
-        "\t\t{\"id\": \"3\", \"size\": \"0.29825\", "
+        "\t\t{\"id\": \"3\", \"size\": \"1.0\", "
           +"\"name\": \"\", \"group\": \"3\"}",
         "\t]",
         "}"
@@ -120,7 +120,7 @@ class JsonWriterTest extends SparkTestSuite
     finally {
       // after everything is done, delete file
       val file = new File(filename)
-      file.delete
+      //file.delete
     }
   }
 
