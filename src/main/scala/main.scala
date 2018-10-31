@@ -47,6 +47,7 @@ object InfoFlowMain {
       config.logFile.pathLog,
       config.logFile.pathParquet,
       config.logFile.pathRDD,
+      config.logFile.pathTxt,
       config.logFile.pathFullJson,
       config.logFile.pathReducedJson,
       config.logFile.debug

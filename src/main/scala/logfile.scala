@@ -45,6 +45,7 @@ sealed class LogFile(
   val pathLog:          String, // plain text file path for merge progress data
   val pathParquet:      String, // parquet file path for graph data
   val pathRDD:          String, // RDD text file path for graph data
+  val pathTxt:          String, // local text file path for graph vertex data
   val pathFullJson:     String, // local Json file path for graph data
   val pathReducedJson:  String, // local Json file path for graph data
 
@@ -117,6 +118,10 @@ sealed class LogFile(
         val (filename,ext) = splitFilepath(pathRDD)
         LogFile.saveParquet( filename, exext+ext, graph, sc )
       }
+      if( !pathTxt.isEmpty ) {
+        val (filename,ext) = splitFilepath(pathTxt)
+        LogFile.saveTxt( filename, exext+ext, graph )
+      }
       if( !pathFullJson.isEmpty ) {
         val (filename,ext) = splitFilepath(pathFullJson)
         LogFile.saveFullJson( filename, exext+ext, graph )
@@ -138,10 +143,45 @@ object LogFile
     graph.vertices.toDF.write.parquet( s"$filename-vertices$ext" )
     graph.edges.toDF.write.parquet( s"$filename-edges$ext" )
   }
-  def saveRDD( filename: String,  ext: String,
-    graph: Graph ): Unit = {
+  def saveRDD( filename: String, ext: String, graph: Graph ): Unit = {
     graph.vertices.saveAsTextFile( s"$filename-vertices$ext" )
     graph.edges.saveAsTextFile( s"$filename-edges$ext" )
+  }
+
+  // save as local text file
+  // only vertex data.are saved,
+  // since edge data can be saved via Json graphs
+  def saveTxt( filename: String, ext: String, graph: Graph ): Unit = {
+    // for spacing consistency, needs to pad vertex names with spacing
+    def pad( string: String, totalLength: Int ): String = {
+      var padding = ""
+      for( i <- string.length+1 to totalLength )
+        padding += " "
+      string +padding
+    }
+    val file = new File( s"$filename$ext" )
+    val txtFile = new PrintWriter(file)
+
+    val vertices = graph.vertices.collect.sorted
+    val maxNameLength = Math.max( graph.vertices.reduce {
+      case ( (idx1,(name1,mod1)), (idx2,(name2,mod2)) ) =>
+        if( name1.length > name2.length )
+          (idx1,(name1,mod1))
+        else
+          (idx2,(name2,mod2))
+    }
+    ._2._1.length, 4 )
+
+    txtFile.write(s"Index   | ${pad("Name",maxNameLength)} | Module \n")
+
+    for( vertex <- vertices ) {
+      vertex match {
+        case (idx,(name,module)) => txtFile.write(
+          "%7d | %s | %7d\n".format( idx, pad(name,maxNameLength), module )
+        )
+      }
+    }
+    txtFile.close
   }
 
   /***************************************************************************

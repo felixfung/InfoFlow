@@ -25,6 +25,7 @@ object ConfigFile
     val pathLog:          String, // plain text log file path
     val pathParquet:      String, // parquet file path for graph data
     val pathRDD:          String, // RDD text file path for graph data
+    val pathTxt:          String, // local text file path for graph vertex data
     val pathFullJson:     String, // local Json file path for graph data
     val pathReducedJson: String, // local Json file path for graph data
     val debug:            Boolean // whether to print debug details
@@ -41,6 +42,7 @@ object ConfigFile
         rawJson.getVal("log","log path").toString,
         rawJson.getVal("log","Parquet path").toString,
         rawJson.getVal("log","RDD path").toString,
+        rawJson.getVal("log","txt path").toString,
         rawJson.getVal("log","Full Json path").toString,
         rawJson.getVal("log","Reduced Json path").toString,
         rawJson.getVal("log","debug").toString.toBoolean
