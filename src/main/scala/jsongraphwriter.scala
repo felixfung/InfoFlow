@@ -67,4 +67,27 @@ object JsonGraphWriter
     file.write( "\n}" )
     file.close
   }
+
+  /***************************************************************************
+   * this functions saves a graph with normalized vertex radius
+   * scale the vertex size linearly,
+   * so the smallest vertex has size 1
+   * and the biggest has size 4
+   ***************************************************************************/
+  def writeNormal( filename: String, graph: JsonGraph ) {
+    val vertices = {
+      val min = graph.vertices.map {
+        case (_,(_,_,p)) => p
+      }
+      .reduce( (a,b) => if( a<=b ) a else b )
+      val max = graph.vertices.map {
+        case (_,(_,_,p)) => p
+      }
+      .reduce( (a,b) => if( a<=b ) b else a )
+      graph.vertices.map {
+        case (idx,(name,id,p)) => (idx,(name,id, 1 +(p-min)*3/(max-min) ))
+      }
+    }
+    JsonGraphWriter( filename, JsonGraph( vertices, graph.edges ) )
+  }
 }
