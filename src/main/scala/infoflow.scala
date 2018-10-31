@@ -34,15 +34,12 @@ class InfoFlow extends CommunityDetection
       network: Network
     ): ( Graph, Network ) = {
 
-      logFile.write( s"State $loop: code length $network.codeLength\n", false)
+      logFile.write( s"State $loop: code length ${network.codelength}\n", false)
       logFile.save( graph, network, true, "0" )
 
       trim( loop, graph, network )
 
       val deltaL = calDeltaL(network)
-//println("InfoFlow")
-//deltaL.collect.sortBy(_._1).foreach(println)
-//println()
       val m2Merge = calm2Merge(deltaL)
       m2Merge.cache
       if( m2Merge.count == 0 )
@@ -110,7 +107,7 @@ class InfoFlow extends CommunityDetection
       }
       .leftOuterJoin( reverseEdges ).map {
         case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),Some(w21))) =>
-          println(s"($m1,$m2): ($n1,$n2) ($p1,$p2) ($w1 $w2 $w12 $w21) ($q1 $q2 $qi_sum) => ${CommunityDetection.calDeltaL(network,n1,n2,p1,p2,w1+w2-w12-w21,qi_sum,q1,q2)}")
+          //println(s"${network.nodeNumber} ($m1,$m2): ($n1,$n2) ($p1,$p2) ($w1 $w2 $w12 $w21) ($q1 $q2 ${CommunityDetection.calQ(network.nodeNumber,n1+n2,p1+p2,network.tele,w1+w2-w12-w21)} $qi_sum) => ${CommunityDetection.calDeltaL(network,n1,n2,p1,p2,w1+w2-w12-w21,qi_sum,q1,q2)}")
           (
             m1,(m2,
             CommunityDetection.calDeltaL(
@@ -121,7 +118,7 @@ class InfoFlow extends CommunityDetection
             ))
           )
         case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),None)) =>
-          println(s"($m1,$m2): ($n1,$n2) ($p1,$p2) ($w1 $w2 $w12 0) ($q1 $q2 $qi_sum) => ${CommunityDetection.calDeltaL(network,n1,n2,p1,p2,w1+w2-w12,qi_sum,q1,q2)}")
+          //println(s"${network.nodeNumber} ($m1,$m2): ($n1,$n2) ($p1,$p2) ($w1 $w2 $w12 0) ($q1 $q2 ${CommunityDetection.calQ(network.nodeNumber,n1+n2,p1+p2,network.tele,w1+w2-w12)} $qi_sum) => ${CommunityDetection.calDeltaL(network,n1,n2,p1,p2,w1+w2-w12,qi_sum,q1,q2)}")
           (
             m1,(m2,
             CommunityDetection.calDeltaL(
@@ -318,7 +315,7 @@ class InfoFlow extends CommunityDetection
         newModules, network.probSum )
 
       Network(
-        newModules.count, network.tele,
+        network.nodeNumber, network.tele,
         newModules, newEdges,
         network.probSum, newCodelength
       )
