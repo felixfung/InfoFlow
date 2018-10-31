@@ -120,7 +120,7 @@ class JsonGraphWriterTest extends SparkTestSuite
     finally {
       // after everything is done, delete file
       val file = new File(filename)
-      //file.delete
+      file.delete
     }
   }
 
