@@ -88,6 +88,49 @@ class NetworkTest extends SparkTestSuite
     assert( Math.abs( network.codelength -3.70 ) < 0.01 )
   }
 
+  test("Non-trivial graph codelength calculation after merging modules 2, 3") {
+    // this test checks deltaL calculation,
+    // and compare that with codelength before and after merging
+
+    // initial graph
+    val vertices0 = Array[(Long,(Long,Double,Double,Double))](
+      ( 1L, ( 1L, 0.3725, 0.3725, 0.3725 )),
+      ( 2L, ( 1L, 0.195, 0.195, 0.195 )),
+      ( 3L, ( 1L, 0.395, 0.395, 0.395 )),
+      ( 4L, ( 1L, 0.0375, 0.0375, 0.0375 ))
+    )
+    val edges0 = Array[(Long,(Long,Double))](
+      (1,(2,1)), (2,(3,1)), (1,(3,1)), (3,(1,1)), (4,(3,1))
+    )
+    val probSum = vertices0.map {
+      case (_,(_,p,_,_)) => CommunityDetection.plogp(p)
+    }
+      .sum
+
+    // "dummy" Network object, only nodeNumber and tele are needed
+    // for CommunityDetection.calDeltaL()
+    val netDummy = Network( 4, 0.15,
+      sc.parallelize(vertices0), sc.parallelize(edges0), 0, 0 )
+    val codelength0 = 3.70 // calculated in previous test
+
+    // dL when modules 2, 3 are merged
+    val dL = CommunityDetection.calDeltaL(
+      netDummy, 1, 1, 0.195, 0.395, 0.195+0.395-0.195, 1, 0.195, 0.395 )
+
+    // vertices when modules 2, 3 are merged
+    val vertices1 = sc.parallelize( Array[(Long,(Long,Double,Double,Double))](
+      ( 1L, ( 1L, 0.3725, 0.3725, 0.3725 )),
+      ( 2L, ( 2L, 0.195+0.395, 0.195+0.395-0.195,
+        CommunityDetection.calQ(4,2,0.195+0.395,0.15,0.195+0.395-0.195) )),
+      ( 4L, ( 1L, 0.0375, 0.0375, 0.0375 ))
+    ))
+
+    // calculate new codelength and compare
+    val codelength1 = CommunityDetection.calCodelength( vertices1, probSum )
+    println( s"$codelength0 $dL $codelength1" )
+    assert( Math.abs( codelength0+dL -codelength1 ) < 0.01 )
+  }
+
   /***************************************************************************
    * this test suite is mostly testing for numerical calculation correctness
    * hence, here define floating point equality within Row(...)
