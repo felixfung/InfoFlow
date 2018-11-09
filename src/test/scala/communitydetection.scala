@@ -12,7 +12,6 @@ object CommunityDetectionTest
     communityDetection: CommunityDetection,
     pajekFile: String
   ): ( Double, Array[(Long,Long)] ) = {
-    val infoFlow = new InfoFlow
     val graph0 = PajekReader( sc, pajekFile )
     val net0 = Network.init( graph0, 0.85 )
     val logFile = new LogFile(sc,"","","","","","",false)
