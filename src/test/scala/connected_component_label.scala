@@ -2,35 +2,12 @@
  * Test Suite for testing the DFS edge labeling code
  ***************************************************************************/
 
-import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
-
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
 
-import scala.io.Source
-
-class EdgeLabelTest extends FunSuite with BeforeAndAfter
+class EdgeLabelTest extends SparkTestSuite
 {
-
-  /***************************************************************************
-   * Initialize Spark Context
-   ***************************************************************************/
-  var sc: SparkContext = _
-  before {
-    val conf = new SparkConf()
-      .setAppName("InfoMap partition tests")
-      .setMaster("local[*]")
-    sc = new SparkContext(conf)
-    sc.setLogLevel("OFF")
-  }
-
-  /***************************************************************************
-   * Given a labeled set of edges,
-   * verify that no vertex are labeled with two labels
-   ***************************************************************************/
+  // Given a labeled set of edges,
+  // verify that no vertex are labeled with two labels
   def vertexLabelUnique( edges: RDD[((Long,Long),Long)] ): Boolean = {
     edges.flatMap {
       case ((from,to),label) => Seq( (from,label), (to,label) )
@@ -45,58 +22,14 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
     }
     .reduce(_&&_)
   }
-  /***************************************************************************
-    * Returns whether two sets of edges are labelled identically,
-    * According to connected components.
-    * The actual labels can be different
-    * e.g. ((1,2),1) == ((1,2),2),
-    * since the connected components are the same according to the labels
-    ***************************************************************************/
-  def connectedComponentsEq(
-    edges1: RDD[((Long,Long),Long)],
-    edges2: RDD[((Long,Long),Long)]
-  ): Boolean = {
 
-    def labeledEdges22DArray( edges: RDD[((Long,Long),Long)] ) = {
-      def tupleComp( t1: Array[(Long,Long)], t2: Array[(Long,Long)] ) =
-        t1(0)._1 <= t2(0)._1
-      edges.map {
-        case ((from,to),label) => (label,(from,to))
-      }
-      .groupByKey
-      .map {
-        case (label,edgesIter) => edgesIter.toArray.sorted
-      }
-      .collect
-      .sortWith( tupleComp )
-    }
-
-    val components1 = labeledEdges22DArray(edges1)
-    val components2 = labeledEdges22DArray(edges2)
-
-    if( components1.length != components2.length ) {
-      false
-    }
-    else {
-      var res = true
-      for( i <- 0 to components1.length-1 if res ) {
-        if( components1(i).size != components2(i).size )
-          res = false
-        else {
-          for( j <- 0 to components1(i).size-1 if res )
-            res = ( components1(i)(j) == components2(i)(j) )
-        }
-      }
-      res
-    }
-  }
-
-  def testEdgeLabeling( a1: Array[(Long,Long)], a2: Array[((Long,Long),Long)] ) = {
+  def testEdgeLabeling( a1: Array[(Long,Long)],
+  a2: Array[((Long,Long),Long)] ) = {
     val edges2bLabeled = sc.parallelize(a1)
     val edgesLabeled = InfoFlow.labelEdges(edges2bLabeled)
     assert( vertexLabelUnique(edgesLabeled) )
     val expectedLabel = sc.parallelize(a2)
-    assert( connectedComponentsEq( edgesLabeled, expectedLabel ) )
+    assert( edgesLabeled.collect.sorted === expectedLabel.collect.sorted )
   }
 
   /***************************************************************************
@@ -114,7 +47,7 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
   test("Trivial graph") {
     testEdgeLabeling(
       Array( (1,2) ),
-      Array( ((1,2),2) )
+      Array( ((1,2),1) )
     )
   }
 
@@ -195,14 +128,14 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
   test("Small graph 1") {
     testEdgeLabeling(
       Array( (1,4), (7,9), (2,3), (3,5) ),
-      Array( ((1,4),1), ((2,3),3), ((3,5),3), ((7,9),7) )
+      Array( ((1,4),1), ((2,3),2), ((3,5),2), ((7,9),7) )
     )
   }
 
   test("Small graph 2") {
     testEdgeLabeling(
       Array( (3,7), (1,2), (3,9), (4,5), (2,5) ),
-      Array( ((1,2),5), ((2,5),5), ((3,7),3), ((3,9),3), ((4,5),5) )
+      Array( ((1,2),1), ((2,5),1), ((3,7),3), ((3,9),3), ((4,5),1) )
     )
   }
 
@@ -231,12 +164,12 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
         (3,25)
       ),
       Array(
-        ((4,32),10), ((7,33),10), ((2,10),10), ((10,29),10), ((10,31),10),
-        ((4,10),10), ((13,31),10), ((18,34),10), ((20,21),20), ((14,30),30),
-        ((10,18),10), ((24,25),10), ((10,33),10), ((10,17),10), ((14,19),30),
-        ((16,18),10), ((26,30),30), ((11,30),30), ((1,9),10), ((8,18),10),
-        ((10,22),10), ((1,18),10), ((25,35),10), ((25,33),10), ((5,28),5),
-        ((3,25),10)
+        ((4,32),1), ((7,33),1), ((2,10),1), ((10,29),1), ((10,31),1),
+        ((4,10),1), ((13,31),1), ((18,34),1), ((20,21),20), ((14,30),11),
+        ((10,18),1), ((24,25),1), ((10,33),1), ((10,17),1), ((14,19),11),
+        ((16,18),1), ((26,30),11), ((11,30),11), ((1,9),1), ((8,18),1),
+        ((10,22),1), ((1,18),1), ((25,35),1), ((25,33),1), ((5,28),5),
+        ((3,25),1)
       )
     )
   }
@@ -285,7 +218,7 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
         (1,2), (1,1), (-4,6), (4,6), (2,3), (2,0), (2,1)
       ),
       Array(
-        ((1,2),1), ((1,1),1), ((-4,6),6), ((4,6),6), ((2,3),1), ((2,0),1), ((2,1),1)
+        ((1,2),0), ((1,1),0), ((-4,6),-4), ((4,6),-4), ((2,3),0), ((2,0),0), ((2,1),0)
       )
     )
   }
@@ -296,29 +229,23 @@ class EdgeLabelTest extends FunSuite with BeforeAndAfter
         (-1,8), (1,1), (-34,6), (4,6), (2,3), (2,0), (2,1)
       ),
       Array(
-        ((-1,8),-1), ((1,1),1), ((-34,6),6),
-        ((4,6),6), ((2,3),1), ((2,0),1), ((2,1),1)
+        ((-1,8),-1), ((1,1),0), ((-34,6),-34),
+        ((4,6),-34), ((2,3),0), ((2,0),0), ((2,1),0)
       )
     )
   }
   test("Random graph 3") {
     testEdgeLabeling(
       Array(
-        (3,2), (6,3), (-3,9), (1,9), (4,5), (3,7), (8,9),
-        (42,59), (59,13), (12,-1), (3,6), (1,19), (14,2)
+        (3,2), (6,3), (-3,9), (1,9),
+        (4,5), (3,7), (8,9), (42,59),
+        (59,13), (12,-1), (3,6), (1,19), (14,2)
       ),
       Array(
-        ((3,2),3), ((6,3),3), ((-3,9),1), ((1,9),1), ((4,5),5), ((3,7),3), ((8,9),1),
-        ((42,59),42), ((59,13),42), ((12,-1),-1), ((3,6),3), ((1,19),1), ((14,2),3)
+        ((3,2),2), ((6,3),2), ((-3,9),-3), ((1,9),-3),
+        ((4,5),4), ((3,7),2), ((8,9),-3), ((42,59),13),
+        ((59,13),13), ((12,-1),-1), ((3,6),2), ((1,19),-3), ((14,2),2)
       )
     )
-  }
-
-  /***************************************************************************
-   * Stop Spark Context
-   ***************************************************************************/
-  after {
-    if( sc != null )
-      sc.stop
   }
 }

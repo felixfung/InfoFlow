@@ -1,11 +1,15 @@
 {
   "Master": "local[*]",
-  "Pajek": "Nets/data/football.net",
+  "Graph": "Nets/zer.net",
   "Algo": "InfoFlow",
-  "damping": "0.85",
-  "logDir": "Output",
-  "logWriteLog": "true",
-  "logRddText": "false",
-  "logRddJSon": "2",
-  "logSteps": "false"
+  "tele": "0.15",
+  "log": {
+    "log path": "Output/log.txt",
+    "Parquet path": "",
+    "RDD path": "",
+    "txt path": "Output/vertex.txt",
+    "Full Json path": "",
+    "Reduced Json path": "Output/graph.json",
+    "debug": "false"
+  }
 }

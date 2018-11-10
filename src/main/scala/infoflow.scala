@@ -1,17 +1,335 @@
-import org.apache.spark.rdd.RDD
-import java.io._
+/*****************************************************************************
+ * InfoFlow community detection algorithm
+ *
+ * this is the multimerging algorithm
+ * where each module merges with another module
+ * that gives the greatest reduction in the code length
+ * so that the following may happen for a module:
+ *   (1) it seeks no merge, because of no connections with other modules,
+ *       or all potential merges increase code length
+ *   (2) it seeks a merge with another module (which also seeks a merge w/ it)
+ *   (3) it seeks a merge with another, which seeks merge with some other
+ *       module, and so on; in which case we merge all these modules
+ *
+ * this is a big file, organized so that:
+ * it contains a simple class with only one function, apply()
+ * which contains only a tail recursive function
+ * this tail recursive function contains many calculated quantities
+ * often one quantity's calculation involves the other, forming a DAG
+ * the calculations are organized so that
+ * each each calculation is defined within a function
+ * and called in the main routine
+ *****************************************************************************/
 
+import org.apache.spark.rdd.RDD
+
+class InfoFlow extends CommunityDetection
+{
+  def apply( graph: Graph, part: Partition, logFile: LogFile )
+  : ( Graph, Partition ) = {
+    @scala.annotation.tailrec
+    def recursiveMerge(
+      loop: Int,
+      graph: Graph,
+      part: Partition
+    ): ( Graph, Partition ) = {
+
+      logFile.write( s"State $loop: code length ${part.codelength}\n", false)
+      logFile.save( graph, part, true, "0" )
+
+      trim( loop, graph, part )
+
+      val deltaL = calDeltaL(part)
+      val m2Merge = calm2Merge(deltaL)
+      m2Merge.cache
+      if( m2Merge.count == 0 )
+        return terminate( loop, graph, part )
+
+      val moduleMap = calModuleMap( part, m2Merge )
+      val newGraph = calNewGraph( moduleMap, graph )
+      val newPart = calNewPart( moduleMap, part )
+
+      if( newPart.codelength >= part.codelength )
+        return terminate( loop, graph, part )
+
+      logFile.write(
+        s"Merge ${loop+1}: merging ${part.vertices.count}"
+        +s" modules into ${newPart.vertices.count} modules\n",
+        false
+      )
+
+      recursiveMerge( loop+1, newGraph, newPart )
+    }
+
+  /***************************************************************************
+   * below are functions to perform calculations
+   ***************************************************************************/
+
+    def trim( loop: Int, graph: Graph, part: Partition ) = {
+      if( loop%10 == 0 ) {
+        part.vertices.localCheckpoint
+        val count1 = part.vertices.count
+        part.edges.localCheckpoint
+        val count2 = part.edges.count
+        graph.vertices.localCheckpoint
+        val count3 = graph.vertices.count
+        graph.edges.localCheckpoint
+        val count4 = graph.edges.count
+      }
+    }
+
+    def terminate( loop: Long, graph: Graph, part: Partition ) = {
+      logFile.write( s"Merging terminates after $loop merges\n", false )
+      ( graph, part )
+    }
+
+  /***************************************************************************
+   * calculate the deltaL table for all possible merges
+   * | src , dst , dL |
+   ***************************************************************************/
+    def calDeltaL( part: Partition ): RDD[(Long,(Long,Double))] = {
+      val qi_sum = part.vertices.map {
+        case (_,(_,_,_,q)) => q
+      }
+      .sum
+
+      val reverseEdges = part.edges.map {
+        case (from,(to,weight)) => ((to,from),weight)
+      }
+
+      part.edges.join( part.vertices ).map {
+        case (m1,((m2,w12),(n1,p1,w1,q1))) => (m2,(m1,n1,p1,w1,q1,w12))
+      }
+      .join( part.vertices ).map {
+        case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2))) =>
+          ((m1,m2),(n1,n2,p1,p2,w1,w2,q1,q2,w12))
+      }
+      .leftOuterJoin( reverseEdges ).map {
+        case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),Some(w21))) =>
+          (
+            m1,(m2,
+            CommunityDetection.calDeltaL(
+              part,
+              n1, n2, p1, p2,
+              w1+w2-w12-w21,
+              qi_sum, q1, q2
+            ))
+          )
+        case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),None)) =>
+          (
+            m1,(m2,
+            CommunityDetection.calDeltaL(
+              part,
+              n1, n2, p1, p2,
+              w1+w2-w12,
+              qi_sum, q1, q2
+            ))
+          )
+      }
+    }
+    // importantly, dL is symmetric towards src and dst
+    // so if both edges (src,dst) and (dst,src) exists
+    // their dL would be identical
+    // since dL (and the whole purpose of this table)
+    // is used to decide on merge, there is an option
+    // on whether a module could seek merge with another
+    // if there is an opposite connection
+    // eg a graph like this: m0 <- m1 -> m2 -> m3
+    // m2 seeks to merge with m3
+    // m1 might merge with m0
+    // BUT the code length reduction if m2 seeks merge with m1
+    // is greater than that of m2 seeking merge with m3
+    // the question arise, should such a merge (opposite direction to edge),
+    // be considered?
+    // this dilemma stems from how edges are directional
+    // while merges are non-directional, symmetric towards two modules
+    // in the bigger picture, this merge seeking behaviour
+    // is part of a greedy algorithm
+    // so that the best choice is heuristic based only
+    // to keep things simple, don't consider opposite edge merge now
+
+  /***************************************************************************
+   * each module seeks to merge with another connected module
+   * which would offer the greatest reduction in code length
+   * this forms (weakly) connected components of merged modules
+   * to be generated later
+   *
+   * this implementation has two subtleties:
+   *   (1) merge seeks are directional
+   *       so that m2 will never seek to merge with m1 if only (m1,m2) exists
+   *   (2) (m1,m2), (m1,m3) has identical code length reduction
+   *       then both merges are selected
+   *       that is, m1 seeks to merge with both m2 and m3
+   * |module , module to seek merge to |
+   ***************************************************************************/
+    def calm2Merge( deltaL: RDD[(Long,(Long,Double))] )
+    : RDD[(Long,Long)]= {
+      // module to merge
+      // (module,module to seek merge to)
+
+      // obtain minimum dL for each source vertex
+      deltaL.reduceByKey {
+        case ( (_,dL1), (_,dL2) ) => if( dL1 < dL2 ) (0,dL1) else (0,dL2)
+      }
+      .map {
+        case (idx,(_,dL)) => (idx,dL)
+      }
+      // for each source vertex, retain all that has dL==minimum dL
+      // all others will be filtered away by setting dL=1
+      .join( deltaL ).map {
+        case (m1,(dL_min,(m2,dL))) =>
+          if( dL==dL_min ) (m1,(m2,dL)) else (m1,(m2,1.0))
+      }
+      // filter away all non-minimum dL and positive dL
+      .filter {
+        case (m1,(m2,dL)) => dL<0
+      }
+      // take away dL info
+      .map {
+        case (m1,(m2,_)) => (m1,m2)
+      }
+    }
+
+  /***************************************************************************
+   * map each part.vertices to a new module
+   * according to connected components of m2Merge
+   * | id , module |
+   ***************************************************************************/
+    def calModuleMap( part: Partition, m2Merge: RDD[(Long,Long)] )
+    : RDD[(Long,Long)] = {
+      val labeledEdges: RDD[((Long,Long),Long)] = InfoFlow.labelEdges(m2Merge)
+      labeledEdges.flatMap {
+        case ((m1,m2),module) => Seq( (m1,module), (m2,module) )
+      }
+      .distinct
+      .filter {
+        case (from,to) => from!=to
+      }
+    }
+
+  /***************************************************************************
+   * calculate new nodal-modular partitioning scheme
+   * difference from moduleMap:
+   *   (1) moduleMap vertices are modules
+   *       newPartition nodes are all original nodes
+   *   (2) moduleMap used only within this function for further calculations
+   *       newPartition saved to graph, which is part of final result
+   * | id , module |
+   ***************************************************************************/
+    def calNewGraph( moduleMap: RDD[(Long,Long)], graph: Graph )
+    : Graph = {
+      val newVertices = graph.vertices.map {
+        case (idx,(name,module)) => (module,(idx,name))
+      }
+      .leftOuterJoin( moduleMap )
+      .map {
+        case (oldModule,((idx,name),Some(newModule))) => (idx,(name,newModule))
+        case (oldModule,((idx,name),None)) => (idx,(name,oldModule))
+      }
+      Graph( newVertices, graph.edges )
+    }
+
+    def calNewPart(
+      moduleMap: RDD[(Long,Long)], part: Partition
+    ) = {
+
+    /*************************************************************************
+     * intermediate edges
+     * map the associated modules into new module indices
+     * if the new indices are the same, they are intramodular connections
+     * and will be subtracted from the w_i's
+     * if the new indices are different, they are intermodular connections
+     * and will be aggregated into w_ij's
+     * | src , dst , iWj |
+     *************************************************************************/
+      def calInterEdges(
+        part: Partition, moduleMap: RDD[(Long,Long)]
+      ): RDD[(Long,(Long,Double))] = {
+        part.edges.leftOuterJoin( moduleMap ).map {
+          case (from,((to,weight),Some(newFrom))) => (to,(newFrom,weight))
+          case (from,((to,weight),None)) => (to,(from,weight))
+        }
+        .leftOuterJoin( moduleMap ).map {
+          case (to,((newFrom,weight),Some(newTo))) =>
+            ((newFrom,newTo),weight)
+          case (to,((newFrom,weight),None)) =>
+            ((newFrom,to),weight)
+        }
+        .reduceByKey(_+_)
+        .map {
+          case ((from,to),weight) => (from,(to,weight))
+        }
+      }
+
+    /*************************************************************************
+     * modular properties calculations
+     *************************************************************************/
+      def calNewModules(
+        part: Partition, moduleMap: RDD[(Long,Long)],
+        interEdges: RDD[(Long,(Long,Double))]
+      ): RDD[(Long,(Long,Double,Double,Double))] = {
+        // aggregate size, prob, exitw over the same modular index
+        // for size and prob, that gives the final result
+        // for exitw, we have to subtract intramodular edges in the next step
+        val sumOnly = part.vertices.leftOuterJoin(moduleMap).map {
+          case (module,((n,p,w,_),Some(newModule)))
+            => (newModule,(n,p,w))
+          case (module,((n,p,w,_),None))
+            => (module,(n,p,w))
+        }
+        .reduceByKey {
+          case ( (n1,p1,w1), (n2,p2,w2) ) => (n1+n2,p1+p2,w1+w2)
+        }
+
+        // subtract w12 from the sum of w's
+        interEdges.filter {
+          case (from,(to,w12)) => from==to
+        }
+        .map {
+          case (from,(to,w12)) => (from,w12)
+        }
+        .reduceByKey(_+_)
+        .rightOuterJoin(sumOnly).map {
+          case (module,(Some(w12),(n,p,w)))
+          => ( module,( n, p, w-w12,
+            CommunityDetection.calQ( part.nodeNumber, n, p,
+              part.tele, w-w12 )
+          ))
+          case (module,(None,(n,p,w)))
+          => ( module,( n, p, w,
+            CommunityDetection.calQ( part.nodeNumber, n, p,
+              part.tele, w )
+          ))
+        }
+      }
+
+      val interEdges = calInterEdges( part, moduleMap )
+      interEdges.cache
+      val newModules = calNewModules( part, moduleMap, interEdges )
+      newModules.cache
+      val newEdges = interEdges.filter { case (from,(to,_)) => from != to }
+      val newCodelength = CommunityDetection.calCodelength(
+        newModules, part.probSum )
+
+      Partition(
+        part.nodeNumber, part.tele,
+        newModules, newEdges,
+        part.probSum, newCodelength
+      )
+    }
+
+    recursiveMerge( 0, graph, part )
+  }
+}
+
+/*****************************************************************************
+ * given an RDD of edges,
+ * partition the edges according to the connected components
+ * and label each edge by the lowest vertex index of the connected component
+ *****************************************************************************/
 object InfoFlow
 {
   def labelEdges( edge2label: RDD[(Long,Long)] ): RDD[((Long,Long),Long)] = {
-  /***************************************************************************
-   * given an RDD of edges,
-   * partition the edges according to the connected components
-   * and label each edge by the most common vertex of the connected component
-   *
-   * this static method is used in every iteration of a InFoFlow loop
-   * it is declared as a static class function to enable unit testing
-   ***************************************************************************/
 
   if( edge2label.isEmpty )
     throw new Exception("Empty RDD argument")
@@ -103,355 +421,42 @@ object InfoFlow
       else
         labelEdge( labelEdge2 )
     }
-    labelEdge( labelEdge1 )
-  }
 
-  def calDeltaL(
-    nodeNumber: Long,
-    n1: Long, n2: Long, p1: Double, p2: Double,
-    tele: Double, w12: Double,
-    qi_sum: Double, q1: Double, q2: Double
-  ) = {
-    val(_,deltaL) = Partition.calDeltaL(
-      nodeNumber,
-      n1, n2, p1, p2,
-      tele, w12,
-      qi_sum, q1, q2
-    )
-    deltaL
-  }
-}
-
-class InfoFlow extends MergeAlgo
-{
-  def apply( partition: Partition, logFile: LogFile ): Partition = {
-
-    val nodeNumber = partition.nodeNumber
-    val tele = partition.tele
-
-  /***************************************************************************
-   * calculate the initial deltaL
-   ***************************************************************************/
-
-    // the sum of the q's are used for the deltaL calculations
-    val qi_sum = partition.modules.map {
-      case (_,(_,_,_,q)) => q
+    // obtain labeled edges according to connected components
+    // where the labeled is the most common vertex index within component
+    val labeledEdges = labelEdge( labelEdge1 )
+    .map {
+      case ((from,to),label) => (label,(from,to))
     }
-    .sum
+    labeledEdges.cache
 
-    // the sum of the ergodic frequency of all nodes is needed
-    // for each loop to calculate the code length
-    val ergodicFreqSum = partition.modules.map {
-      case (_,(_,p,_,_)) => Partition.plogp(p)
+    val nearlyProperEdges = labeledEdges.reduceByKey {
+      case ( (from1,to1), (from2,to2) ) =>
+        val lowestFrom = Math.min( from1, from2 )
+        val lowestTo = Math.min( to1, to2 )
+        val lowestIdx = Math.min( lowestFrom, lowestTo )
+        (lowestIdx,lowestIdx)
     }
-    .sum
-
-    // calculate deltaL
-    val deltaL = partition.iWj.map {
-      case ((m1,m2),w12) => (m1,(m2,w12))
+    .join( labeledEdges )
+    .map {
+      case (label,((newLabel,_),(from,to))) => (newLabel,(from,to))
     }
-    .join(partition.modules).map {
-      case (m1,((m2,w12),(n1,p1,w1,q1)))
-        => (m2,(m1,n1,p1,w1,q1,w12))
+  
+    // reduceByKey() would miss edges with singular labels
+    // these code account for those
+    val singularLabel = nearlyProperEdges.map {
+      case (label,_) => (label,1)
     }
-    .join(partition.modules).map {
-      case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2))) =>
-      (
-        (m1,m2),
-        InfoFlow.calDeltaL(
-          nodeNumber,
-          n1, n2, p1, p2,
-          tele, w1+w2-w12,
-          qi_sum, q1, q2
-        )
-      )
+    .reduceByKey {
+      case (count1,count2) => count1+count2
     }
 
-  /***************************************************************************
-   * write initial condition in log file
-   ***************************************************************************/
-    // log code length
-    logFile.write( "State 0: code length "
-      +partition.codeLength.toString +"\n" )
-    // log partitioning
-    logFile.saveText( partition.iWj, "/connection_0", true )
-    logFile.saveText( partition.partitioning, "/partition_0", true )
-    // save json file
-    logFile.saveJSon( partition, "/graph_0.json", true )
-
-  /***************************************************************************
-   * this is the multimerging algorithm
-   * where each module merges with another module
-   * that gives the greatest reduction in the code length
-   * so that the following may happen for a module:
-   *   (1) it seeks no merge, because of no connections with other modules,
-   *       or all potential merges increase code length
-   *   (2) it seeks a merge with another module (which also seeks a merge w/ it)
-   *   (3) it seeks a merge with another, which seeks merge with some other
-   *       module, and so on; in which case we merge all these modules
-   ***************************************************************************/
-    def recursiveMerge(
-      loop: Long,
-      partition: Partition,
-      deltaL: RDD[((Long,Long),Double)]
-    ): Partition = {
-
-  /***************************************************************************
-   * create local checkpoint to truncate RDD lineage (every ten loops)
-   ***************************************************************************/
-      if( loop%10 == 0 )
-        deltaL.localCheckpoint
-
-  /***************************************************************************
-   * each module seeks to merge with another connected module
-   * which would offer the greatest reduction in code length
-   ***************************************************************************/
-      // module to merge
-      // (module,module to seek merge to)
-      val m2Merge: RDD[(Long,Long)] = deltaL.flatMap {
-        case ((idx1,idx2),deltaL12)
-        => Seq( (idx2,(idx1,deltaL12)), (idx1,(idx2,deltaL12)) )
-      }
-      .reduceByKey {
-        case (
-               (idx2A,deltaL12A),
-               (idx2B,deltaL12B)
-             )
-        =>
-          if( deltaL12A <= deltaL12B )
-            (idx2A,deltaL12A)
-          else
-            (idx2B,deltaL12B)
-      }
-      // if DeltaL is non-negative, do not seek to merge
-      .filter {
-        case (idx,(target,deltaL)) => deltaL < 0
-      }
-      // anyway take away DeltaL info
-      // and rearrange the indices so that we have the smaller index first
-      .map {
-        case (idx,(target,deltaL)) =>
-          if( idx < target ) (idx,target)
-          else (target,idx)
-      }
-      .distinct
-
-      // if m2Merge is empty, then no modules seek to merge
-      // terminate loop
-      if( m2Merge.isEmpty ) {
-        logFile.write( "Merging terminates after "
-          +(loop-1).toString +" merges" )
-        logFile.close
-        return partition
-      }
-      else {
-
-  /***************************************************************************
-   * for all inter-modular connection, assign it to a module
-   ***************************************************************************/
-
-        // labeled connection
-        // ((from,to),module)
-        val labeledConn: RDD[((Long,Long),Long)] = InfoFlow.labelEdges(m2Merge)
-
-        // this map maps each old module index into a new module index
-        // (moduleFrom,moduleTo)
-        val moduleMap: RDD[(Long,Long)] = labeledConn.flatMap {
-          case ((vertex1,vertex2),labelV) =>
-            Seq( (vertex1,labelV), (vertex2,labelV) )
-        }
-        .distinct
-        .filter {
-          case (from,to) => from!=to
-        }
-
-  /***************************************************************************
-   * register and log the partitioning scheme
-   ***************************************************************************/
-
-        // new nodal-modular partitioning scheme
-        // (node,module)
-        val newPartitioning = partition.partitioning.map {
-          case (node,module) => (module,node)
-        }
-        .leftOuterJoin(moduleMap).map {
-          case ( oldModule, (node,Some(newModule)) )
-            => (node,newModule)
-          case ( oldModule, (node,None) )
-            => (node,oldModule)
-        }
-
-  /***************************************************************************
-   * modular properties calculations
-   ***************************************************************************/
-
-        // intra-modular exit probabilities within each new module
-        // (module,all exit probability within new module)
-        val intraMw: RDD[(Long,Double)] = labeledConn.join(partition.iWj).map {
-          case ((from,to),(module,weight)) => (module,weight)
-        }
-        .reduceByKey(_+_)
-
-        // intermediate iWj
-        // map the associated modules into new module indices
-        // if the new indices are the same, they are intramodular connections
-        // and will be subtracted from the w_i's
-        // if the new indices are different, they are intemodular connections
-        // and will be aggregated into w_ij's
-        // ((module1,module2),iWj)
-        val interiWj: RDD[((Long,Long),Double)] = partition.iWj.map {
-          case ((from,to),weight) => (from,(to,weight))
-        }
-        .leftOuterJoin(moduleMap).map {
-          case (from,((to,weight),Some(newFrom))) => (to,(newFrom,weight))
-          case (from,((to,weight),None)) => (to,(from,weight))
-        }
-        .leftOuterJoin(moduleMap).map {
-          case (to,((newFrom,weight),Some(newTo))) =>
-            if( newFrom < newTo )
-              ((newFrom,newTo),weight)
-            else
-              ((newTo,newFrom),weight)
-          case (to,((newFrom,weight),None)) =>
-            if( newFrom < to )
-              ((newFrom,to),weight)
-            else
-              ((to,newFrom),weight)
-        }
-
-        // (module,(n,p,w,q))
-        val newModules: RDD[(Long,(Long,Double,Double,Double))] = {
-          // aggregate n,p,w over the same modular index
-          // for n and p, that gives the final result
-          // for w, we have to subtract w12 in the next step
-          val sumOnly = partition.modules.leftOuterJoin(moduleMap).map {
-            case (module,((n,p,w,_),Some(newModule)))
-              => (newModule,(n,p,w))
-            case (module,((n,p,w,_),None))
-              => (module,(n,p,w))
-          }
-          .reduceByKey {
-            case ( (n1,p1,w1), (n2,p2,w2) ) => (n1+n2,p1+p2,w1+w2)
-          }
-
-          // subtract w12 from the sum of w's
-          interiWj.filter {
-            case ((from,to),w12) => from==to
-          }
-          .map {
-            case ((from,to),w12) => (from,w12)
-          }
-          .reduceByKey(_+_)
-          .rightOuterJoin(sumOnly).map {
-            case (module,(Some(w12),(n,p,w)))
-            => ( module,( n, p, w-w12,
-              Partition.calQ( nodeNumber, n, p, tele, w-w12 )
-            ))
-            case (module,(None,(n,p,w)))
-            => ( module,( n, p, w,
-              Partition.calQ( nodeNumber, n, p, tele, w )
-            ))
-          }
-        }
-
-  /***************************************************************************
-   * code length calculations
-   ***************************************************************************/
-
-        // the sum of q's
-        // required in code length calculations
-        val qi_sum = newModules.map {
-          case (module,(n,p,w,q)) => q
-        }
-        .sum
-
-        // calculate current code length
-        val newCodeLength: Double =
-          Partition.calCodeLength(qi_sum,ergodicFreqSum,newModules)
-
-        // if code length is not reduced, terminate
-        if( newCodeLength >= partition.codeLength ) {
-          logFile.write( "Merging terminates after "
-            +(loop-1).toString +" merges" )
-          logFile.close
-          return partition
-        }
-
-  /***************************************************************************
-   * connection properties calculations
-   ***************************************************************************/
-
-        // ((module1,module2),wij)
-        // map the vertices to new vertices, then aggregate
-        val newiWj: RDD[((Long,Long),Double)] = interiWj.filter {
-          case ((from,to),weight) => from!=to
-        }
-        .reduceByKey(_+_)
-
-        // calculate the potential change in code length
-        // for each pair of potential module merge
-        // for the next loop, where each module seeks
-        // to merge with another one greedily
-        // ((from,to),deltaL)
-        val newDeltaL: RDD[((Long,Long),Double)] = newiWj.map {
-          case ((m1,m2),w12) => (m1,(m2,w12))
-        }
-        .join(newModules).map {
-          case (m1,((m2,w12),(n1,p1,w1,q1))) => (m2,(m1,n1,p1,w1,q1,w12))
-        }
-        .join(newModules).map {
-          case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2))) =>
-          (
-            (m1,m2),
-            InfoFlow.calDeltaL(
-              nodeNumber,
-              n1, n2, p1, p2,
-              tele, w1+w2-w12,
-              qi_sum, q1, q2
-            )
-          )
-        }
-
-  /***************************************************************************
-   * logging
-   ***************************************************************************/
-
-        // log partitioning
-        logFile.saveText( newPartitioning, "partition_"+loop.toString, true )
-        logFile.saveText( newiWj, "connection_"+loop.toString, true )
-
-        // log the merge detail
-        logFile.write( "Merge " +loop.toString
-          +": merging " +partition.modules.count.toString
-          +" modules into " +newModules.count.toString +" modules\n"
-        )
-
-        // log new code length
-        logFile.write( "State " +loop.toString
-          +": code length " +newCodeLength.toString +"\n"
-        )
-
-        val newPartition = Partition(
-          nodeNumber,
-          tele,
-          partition.names,
-          newPartitioning,
-          partition.iWj0,
-          newiWj,
-          newModules,
-          newCodeLength
-        )
-
-        // save graph in JSON
-        logFile.saveJSon( newPartition, "graph_"+loop.toString+".json", true )
-
-  /***************************************************************************
-   * recursive function call
-   ***************************************************************************/
-        recursiveMerge( loop+1, newPartition, newDeltaL )
-      }
-
+    nearlyProperEdges.join(singularLabel).map {
+      case (label,((from,to),count)) =>
+        if( count == 1 )
+          ((from,to), Math.min(from,to) )
+        else
+          ((from,to),label)
     }
-    recursiveMerge( 1, partition, deltaL )
   }
 }

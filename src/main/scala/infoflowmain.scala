@@ -23,18 +23,10 @@ object InfoFlowMain {
     val configFileName =
       if( args.size == 0 ) "config.json"
       else /*args.size==1*/ args(0)
-    val config = new Config(configFileName)
+    val config = ConfigFile(configFileName)
 
-    // initialize parameters from config file
-    val pajekFile = config.pajekFile
-    val dampingFactor = config.dampingFactor
-    val mergeAlgo: MergeAlgo = MergeAlgo.choose( config.mergeAlgo )
-    val logFile = new LogFile(
-      config.logDir,
-      config.logWriteLog, config.rddText,
-      config.rddJSon, config.logSteps,
-      false
-    )
+    // initialize community detection algorithm
+    val communityDetection = CommunityDetection.choose( config.algorithm )
 
   /***************************************************************************
    * Initialize Spark Context
@@ -46,18 +38,37 @@ object InfoFlowMain {
     sc.setLogLevel("OFF")
 
   /***************************************************************************
-   * read pajek file and solve
+   * read file, solve, save
    ***************************************************************************/
-    val pajek = new PajekFile(sc,pajekFile)
-    val nodes = new Nodes(pajek,dampingFactor,1e-3)
-    val initPartition = Partition.init(nodes)
-    val finalPartition = mergeAlgo(initPartition,logFile)
 
-  /***************************************************************************
-   * Output
-   ***************************************************************************/
-    if( !logFile.logSteps )
-      logFile.saveJSon( finalPartition, "graph.json", false )
+    // create log file object
+    val logFile = new LogFile(
+      sc,
+      config.logFile.pathLog,
+      config.logFile.pathParquet,
+      config.logFile.pathRDD,
+      config.logFile.pathTxt,
+      config.logFile.pathFullJson,
+      config.logFile.pathReducedJson,
+      config.logFile.debug
+    )
+
+    logFile.write(s"Reading ${config.graphFile}...",false)
+    val graph0: Graph = GraphReader( sc, config.graphFile )
+    logFile.write(" Done\n",false)
+
+    logFile.write("Initializing partitioning, calculating PageRank...",false)
+    val part0: Partition = Partition.init( graph0, config.tele )
+    logFile.write(" Done\n",false)
+
+    logFile.write(s"Using ${config.algorithm} algorithm:\n",false)
+    val (graph1,part1) = communityDetection( graph0, part0, logFile )
+
+    logFile.write("Save final graph...",false)
+    logFile.save( graph1, part1, false, "" )
+    logFile.write(" Done\n",false)
+
+    logFile.close
 
   /***************************************************************************
    * Stop Spark Context

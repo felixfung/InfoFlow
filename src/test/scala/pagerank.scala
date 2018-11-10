@@ -2,108 +2,50 @@
  * Test Suite for Page Rank algorithm
  ***************************************************************************/
 
-import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
-
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.SparkConf
-import org.apache.spark.rdd.RDD
-
 import org.scalactic.TolerantNumerics
 
-class PageRankTest extends FunSuite with BeforeAndAfter
+class PageRankTest extends SparkTestSuite
 {
-
-  /***************************************************************************
-   * Comparisons of doubles has a tolerance of 1e-5
-   ***************************************************************************/
-  implicit val doubleEquality = TolerantNumerics.tolerantDoubleEquality(1e-5)
-
-  /***************************************************************************
-   * Initialize Spark Context
-   ***************************************************************************/
-  var sc: SparkContext = _
-  before {
-    val conf = new SparkConf()
-      .setAppName("InfoMap page rank tests")
-      .setMaster("local[*]")
-    sc = new SparkContext(conf)
-    sc.setLogLevel("OFF")
-  }
-
-  /***************************************************************************
-   * Test Cases
-   ***************************************************************************/
+  // Comparisons of doubles has a tolerance of 1e-5
+  implicit val doubleEquality = TolerantNumerics.tolerantDoubleEquality(1e-2)
 
   test("Read trivial network with self loop in pure random walk") {
-    val pj = new PajekFile(sc,"Nets/trivial-with-self-loop.net")
-    val pr = new Nodes( pj, 1, 1e-2 )
-    assert( pr.stoMat.sparse.collect.sorted ===
-      Array( (1,(2,1)), (2,(2,1)) )
-    )
-    assert( pr.ergodicFreq.collect.sorted === Array( (1,0),(2,1) ) )
+    val graph = PajekReader(sc,"Nets/trivial-with-self-loop.net")
+    assert( graph.edges.collect.sorted === Array( (1,(2,2)), (2,(2,1)) ) )
+    val freq = PageRank(graph,1).collect.sorted
+    assert( freq(0)._2.toDouble === 0.0 )
+    assert( freq(1)._2.toDouble === 1.0 )
   }
 
   test("Read trivial network with self loop") {
-    val pj = new PajekFile(sc,"Nets/trivial-with-self-loop.net")
-    val pr = new Nodes( pj, 0.85, 1e-1 )
-    val arrChk = new ArrayCheck(
-      pr.ergodicFreq.collect,
-      Array((1,0.075),(2,0.925))
-    )
-    if( !arrChk.eq ) fail( arrChk.msg )
+    val graph = PajekReader(sc,"Nets/trivial-with-self-loop.net")
+    val freq = PageRank(graph,.85).collect.sorted
+    assert( freq(0)._2.toDouble === 0.0725 )
+    assert( freq(1)._2.toDouble === 0.925 )
   }
 
   test("Read trivial network with dangling node in pure random walk") {
-    val pj = new PajekFile(sc,"Nets/trivial.net")
-    val pr = new Nodes( pj, 1, 1e-3 )
-    assert( pr.stoMat.sparse.collect.sorted ===
-      Array( (1,(2,1)) )
-    )
-    assert( pr.stoMat.constCol.collect.sorted ===
-      Array( (2,0.5) )
-    )
-    val arrChk = new ArrayCheck(
-      pr.ergodicFreq.collect,
-      Array((1,0.33333),(2,0.66667))
-    )
-    if( !arrChk.eq ) fail( arrChk.msg )
+    val graph = PajekReader(sc,"Nets/trivial.net")
+    val freq = PageRank(graph,1).collect.sorted
+    assert( freq(0)._2.toDouble === 0.333 )
+    assert( freq(1)._2.toDouble === 0.667 )
   }
 
   test("Read trivial network with dangling node") {
-    val pj = new PajekFile(sc,"Nets/trivial.net")
-    val pr = new Nodes( pj, 0.85, 1e-4 )
-    val arrChk = new ArrayCheck(
-      pr.ergodicFreq.collect,
-      Array((1,0.35),(2,0.65))
-    )
-    if( !arrChk.eq ) fail( arrChk.msg )
+    val graph = PajekReader(sc,"Nets/trivial.net")
+    val freq = PageRank(graph,.85).collect.sorted
+    assert( freq(0)._2.toDouble === 0.35 )
+    assert( freq(1)._2.toDouble === 0.65 )
   }
 
   test("Read one node network with no link") {
-    val pj = new PajekFile(sc,"Nets/zero.net")
-    val pr = new Nodes( pj, 0.85, 1e-1 )
-    assert( pr.stoMat.sparse.collect.sorted === Array() )
-    assert( pr.stoMat.constCol.collect.sorted ===
-      Array( (1,1) )
-    )
-    val arrChk = new ArrayCheck( pr.ergodicFreq.collect, Array((1,1.0)) )
-    if( !arrChk.eq ) fail( arrChk.msg )
+    val graph = PajekReader(sc,"Nets/zero.net")
+    assert( PageRank(graph,.85).collect.sorted === Array((1,1.0)) )
   }
 
   test("Read Nets/small-asym.net") {
-    val pj = new PajekFile(sc,"Nets/small-asym.net")
-    val pr = new Nodes( pj, 0.85, 1e-0 )
-    val freq = pr.ergodicFreq.collect.sorted.map{case(idx,x)=>x}
+    val graph = PajekReader(sc,"Nets/small-asym.net")
+    val freq = PageRank(graph,.85).collect.sorted.map{case(idx,x)=>x}
     assert( freq.sum === 1.0 )
-  }
-
-  /***************************************************************************
-   * Stop Spark Context
-   ***************************************************************************/
-  after {
-    if( sc != null )
-      sc.stop
   }
 }

@@ -2,41 +2,16 @@
  * Test Suite for Matrix algorithm
  ***************************************************************************/
 
-import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
-
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.SparkConf
-import org.apache.spark.rdd.RDD
-
-import org.scalactic.TolerantNumerics
-
-class MatrixTest extends FunSuite with BeforeAndAfter
+class MatrixTest extends SparkTestSuite
 {
-
-  /***************************************************************************
-   * Initialize Spark Context
-   ***************************************************************************/
-  var sc: SparkContext = _
-  before {
-    val conf = new SparkConf()
-      .setAppName("InfoMap matrix tests")
-      .setMaster("local[*]")
-    sc = new SparkContext(conf)
-    sc.setLogLevel("OFF")
-  }
-
-  /***************************************************************************
-   * Test Cases
-   ***************************************************************************/
+  // careful that the matrix format is (from,(to,entry))
+  // where "from" is the column index, "to" is the row index
   test("Calculate 1x1 matrix and vector") {
-    val cm = new Matrix(sc.parallelize(List( (1,(1,1)) )), sc.parallelize(List()))
+    val cm = new Matrix(sc.parallelize(List( (1,(1,1)) )),
+      sc.parallelize(List()))
     val ar = sc.parallelize(List[(Long,Double)]( (1,-2) ))
     assert( (cm*ar).collect.sorted === ar.collect.sorted )
   }
-  // careful that the matrix format is (from,(to,entry))
-  // where "from" is the column index, "to" is the row index
 
   test("Calculate 2x2 identity matrix and vector") {
     val cm = new Matrix(sc.parallelize(List(
@@ -129,13 +104,5 @@ class MatrixTest extends FunSuite with BeforeAndAfter
     val ar = sc.parallelize(List[(Long,Double)]( (1,0.5), (2,0.5) ))
     val pr = sc.parallelize(List[(Long,Double)]( (1,0.25), (2,0.75) ))
     assert( (cm*ar).collect.sorted === pr.collect.sorted )
-  }
-
-  /***************************************************************************
-   * Stop Spark Context
-   ***************************************************************************/
-  after {
-    if( sc != null )
-      sc.stop
   }
 }

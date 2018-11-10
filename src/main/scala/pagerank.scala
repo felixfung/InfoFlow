@@ -1,0 +1,136 @@
+/***************************************************************************
+ * PageRank calculation
+ ***************************************************************************/
+
+import org.apache.spark.rdd.RDD
+
+object PageRank
+{
+  /***************************************************************************
+   * PageRank calculation
+   * given graph and damping rate, calculate PageRank ergodic frequency
+   ***************************************************************************/
+  def apply( graph: Graph, damping: Double ): RDD[(Long,Double)] = {
+    val nodeNumber: Long = graph.vertices.count
+    val edges: Matrix = {
+      val outLinkTotalWeight = graph.edges.map {
+        case (from,(to,weight)) => (from,weight)
+      }
+      .reduceByKey(_+_)
+      outLinkTotalWeight.cache
+
+      // nodes without outbound links are dangling"
+      val dangling: RDD[Long] = graph.vertices.leftOuterJoin(outLinkTotalWeight)
+      .filter {
+        case (_,(_,Some(_))) => false
+        case (_,(_,None)) => true
+      }
+      .map {
+        case (idx,_) => idx
+      }
+
+      // dangling nodes jump to uniform probability
+      val constCol = dangling.map (
+        x => ( x, 1.0/nodeNumber.toDouble )
+      )
+
+      // normalize the edge weights
+      val normMat = graph.edges.join(outLinkTotalWeight)
+      .map {
+        case (from,((to,weight),totalweight)) => (from,(to,weight/totalweight))
+      }
+
+      Matrix( normMat, constCol )
+    }
+
+    // start with uniform ergodic frequency
+    val freqUniform = graph.vertices.map {
+      case (idx,_) => ( idx, 1.0/nodeNumber.toDouble )
+    }
+
+    // calls inner PageRank calculation function
+    PageRank( edges, freqUniform, nodeNumber, damping, 1e-3/*errTh*/, 0 )
+  }
+
+  /***************************************************************************
+   * PageRank calculation
+   * given initial ergodic frequency and edges
+   * calculation terminates when consequtive iterations differ less than errTh
+   ***************************************************************************/
+  def apply(
+    edges: Matrix, freq: RDD[(Long,Double)],
+    n: Long, damping: Double, errTh: Double, loop: Long
+  ): RDD[(Long,Double)] = {
+
+    // 2D Euclidean distance between two vectors
+    def dist2D( v1: RDD[(Long,Double)], v2: RDD[(Long,Double)] ): Double = {
+      val diffSq = (v1 join v2).map {
+        case (idx,(e1,e2)) => (e1-e2)*(e1-e2)
+      }
+      .sum
+      Math.sqrt(diffSq)
+    }
+
+    // create local checkpoint to truncate RDD lineage (every ten loops)
+    if( loop%10 == 0 ) {
+      freq.localCheckpoint
+      val forceEval = freq.count
+    }
+
+    // the random walk contribution of the ergodic frequency
+    val stoFreq = edges *freq
+    // the random jump contribution of the ergodic frequency
+    val bgFreq = freq.map {
+      case (idx,_) => (idx, (1.0-damping)/n.toDouble )
+    }
+
+    // combine both random walk and random jump contributions
+    val newFreq = (bgFreq leftOuterJoin stoFreq).map {
+      case (idx,(bg,Some(sto))) => ( idx, bg+ sto*damping )
+      case (idx,(bg,None)) => ( idx, bg )
+    }
+
+    // recursive call until freq converges wihtin error threshold
+    val err = dist2D(freq,newFreq)
+
+    if( err < errTh ) newFreq
+    else PageRank( edges, newFreq, n, damping, errTh, loop+1 )
+  }
+}
+
+/*****************************************************************************
+ * A matrix class stored using sparse entries
+ * this is used for calculating PageRank
+ *****************************************************************************/
+
+sealed case class Matrix
+( sparse: RDD[(Long,(Long,Double))],
+  constCol: RDD[(Long,Double)] )
+extends Serializable {
+  def *( vector: RDD[(Long,Double)] ): RDD[(Long,Double)] = {
+
+    // constCol is an optimization,
+    // if all entries within a column has constant value
+    val constColProd = (constCol join vector).map {
+      case (from,(col,vec)) => col*vec
+    }
+    .sum
+
+    val constColVec = vector.map {
+      case (idx,x) => (idx,constColProd)
+    }
+
+    val matTimesVec = (sparse join vector).map {
+      case (from,((to,matrix),vec)) => (to,vec*matrix)
+    }
+    .reduceByKey(_+_)
+
+    val matTimesVecPlusConstCol = (matTimesVec rightOuterJoin constColVec)
+    .map {
+      case (idx,(Some(x),col)) => (idx,x+col)
+      case (idx,(None,col)) => (idx,col)
+    }
+
+    matTimesVecPlusConstCol
+  }
+}
