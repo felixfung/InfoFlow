@@ -215,7 +215,7 @@ object LogFile
    ***************************************************************************/
   def saveReducedJson( filename: String, ext: String, network: Network ) = {
     val vertices = network.vertices.map {
-      case (id,(_,p,_,_)) => (id,("",id,p))
+      case (id,(_,p,_,_)) => (id,(id.toString,id,p))
     }
     // Json is local file
     .collect.sorted
@@ -224,6 +224,6 @@ object LogFile
     }
     .collect.sorted
     val graph = JsonGraph( vertices, edges )
-    JsonGraphWriter.writeNormal( s"$filename$ext", graph )
+    JsonGraphWriter( s"$filename$ext", graph )
   }
 }
