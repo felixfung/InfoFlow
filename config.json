@@ -1,7 +1,7 @@
 {
   "Master": "local[*]",
-  "Graph": "Nets/data/football.net",
-  "Algo": "InfoMap",
+  "Graph": "Nets/zer.net",
+  "Algo": "InfoFlow",
   "tele": "0.15",
   "log": {
     "log path": "Output/log.txt",
