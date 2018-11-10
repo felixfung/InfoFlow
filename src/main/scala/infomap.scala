@@ -40,8 +40,8 @@ class InfoMap extends CommunityDetection
       false )
 
       val new_qi_sum = InfoMap.cal_qi_sum( part, merge, qi_sum )
-      val newPart = InfoMap.calNewPart( part, merge )
-      val newGraph = InfoMap.calNewGraph( graph, merge )
+      val newPart = InfoMap.calPart( part, merge )
+      val newGraph = InfoMap.calGraph( graph, merge )
       val newMergeList = InfoMap.updateMergeList(
         merge, mergeList, newPart, new_qi_sum )
       recursiveMerge( loop+1, new_qi_sum, newGraph, newPart, newMergeList )
@@ -181,7 +181,7 @@ object InfoMap
   /***************************************************************************
    * new graph has updated partitioning
    ***************************************************************************/
-  def calNewGraph( graph: Graph, merge: ((Long,Long),Merge) ) = {
+  def calGraph( graph: Graph, merge: ((Long,Long),Merge) ) = {
     Graph(
       graph.vertices.map {
         case (idx,(name,module)) =>
@@ -259,7 +259,7 @@ object InfoMap
   /***************************************************************************
    * new part has updated 
    ***************************************************************************/
-  def calNewPart( part: Partition, merge: ((Long,Long),Merge) ) = {
+  def calPart( part: Partition, merge: ((Long,Long),Merge) ) = {
     val newVertices = {
       // calculate properties of merged module
       val n12 = merge._2.n1 +merge._2.n2

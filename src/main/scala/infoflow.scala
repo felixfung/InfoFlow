@@ -46,8 +46,8 @@ class InfoFlow extends CommunityDetection
         return terminate( loop, graph, part )
 
       val moduleMap = calModuleMap( part, m2Merge )
-      val newGraph = calNewGraph( moduleMap, graph )
-      val newPart = calNewPart( moduleMap, part )
+      val newGraph = calGraph( moduleMap, graph )
+      val newPart = calPart( moduleMap, part )
 
       if( newPart.codelength >= part.codelength )
         return terminate( loop, graph, part )
@@ -216,7 +216,7 @@ class InfoFlow extends CommunityDetection
    *       newPartition saved to graph, which is part of final result
    * | id , module |
    ***************************************************************************/
-    def calNewGraph( moduleMap: RDD[(Long,Long)], graph: Graph )
+    def calGraph( moduleMap: RDD[(Long,Long)], graph: Graph )
     : Graph = {
       val newVertices = graph.vertices.map {
         case (idx,(name,module)) => (module,(idx,name))
@@ -229,7 +229,7 @@ class InfoFlow extends CommunityDetection
       Graph( newVertices, graph.edges )
     }
 
-    def calNewPart(
+    def calPart(
       moduleMap: RDD[(Long,Long)], part: Partition
     ) = {
 
@@ -264,7 +264,7 @@ class InfoFlow extends CommunityDetection
     /*************************************************************************
      * modular properties calculations
      *************************************************************************/
-      def calNewModules(
+      def calModules(
         part: Partition, moduleMap: RDD[(Long,Long)],
         interEdges: RDD[(Long,(Long,Double))]
       ): RDD[(Long,(Long,Double,Double,Double))] = {
@@ -305,7 +305,7 @@ class InfoFlow extends CommunityDetection
 
       val interEdges = calInterEdges( part, moduleMap )
       interEdges.cache
-      val newModules = calNewModules( part, moduleMap, interEdges )
+      val newModules = calModules( part, moduleMap, interEdges )
       newModules.cache
       val newEdges = interEdges.filter { case (from,(to,_)) => from != to }
       val newCodelength = CommunityDetection.calCodelength(
