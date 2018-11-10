@@ -127,7 +127,6 @@ class NetworkTest extends SparkTestSuite
 
     // calculate new codelength and compare
     val codelength1 = CommunityDetection.calCodelength( vertices1, probSum )
-    println( s"$codelength0 $dL $codelength1" )
     assert( Math.abs( codelength0+dL -codelength1 ) < 0.01 )
   }
 
