@@ -99,7 +99,7 @@ class JsonGraphWriterTest extends SparkTestSuite
     try {
       // produce json file
       val graph = PajekReader( sc, "Nets/small-asym.net" )
-      val net0 = Network.init( graph, 0.85 )
+      val net0 = Partition.init( graph, 0.85 )
       val infoMap = new InfoMap
       val logFile = new LogFile(sc,"","","","","","",false)
       val (_,net1) = infoMap( graph, net0, logFile )

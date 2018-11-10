@@ -25,52 +25,52 @@ import org.apache.spark.rdd.RDD
 
 class InfoFlow extends CommunityDetection
 {
-  def apply( graph: Graph, network: Network, logFile: LogFile )
-  : ( Graph, Network ) = {
+  def apply( graph: Graph, part: Partition, logFile: LogFile )
+  : ( Graph, Partition ) = {
     @scala.annotation.tailrec
     def recursiveMerge(
       loop: Int,
       graph: Graph,
-      network: Network
-    ): ( Graph, Network ) = {
+      part: Partition
+    ): ( Graph, Partition ) = {
 
-      logFile.write( s"State $loop: code length ${network.codelength}\n", false)
-      logFile.save( graph, network, true, "0" )
+      logFile.write( s"State $loop: code length ${part.codelength}\n", false)
+      logFile.save( graph, part, true, "0" )
 
-      trim( loop, graph, network )
+      trim( loop, graph, part )
 
-      val deltaL = calDeltaL(network)
+      val deltaL = calDeltaL(part)
       val m2Merge = calm2Merge(deltaL)
       m2Merge.cache
       if( m2Merge.count == 0 )
-        return terminate( loop, graph, network )
+        return terminate( loop, graph, part )
 
-      val moduleMap = calModuleMap( network, m2Merge )
+      val moduleMap = calModuleMap( part, m2Merge )
       val newGraph = calNewGraph( moduleMap, graph )
-      val newNetwork = calNewNetwork( moduleMap, network )
+      val newPart = calNewPart( moduleMap, part )
 
-      if( newNetwork.codelength >= network.codelength )
-        return terminate( loop, graph, network )
+      if( newPart.codelength >= part.codelength )
+        return terminate( loop, graph, part )
 
       logFile.write(
-        s"Merge ${loop+1}: merging ${network.vertices.count}"
-        +s" modules into ${newNetwork.vertices.count} modules\n",
+        s"Merge ${loop+1}: merging ${part.vertices.count}"
+        +s" modules into ${newPart.vertices.count} modules\n",
         false
       )
 
-      recursiveMerge( loop+1, newGraph, newNetwork )
+      recursiveMerge( loop+1, newGraph, newPart )
     }
 
   /***************************************************************************
    * below are functions to perform calculations
    ***************************************************************************/
 
-    def trim( loop: Int, graph: Graph, network: Network ) = {
+    def trim( loop: Int, graph: Graph, part: Partition ) = {
       if( loop%10 == 0 ) {
-        network.vertices.localCheckpoint
-        val count1 = network.vertices.count
-        network.edges.localCheckpoint
-        val count2 = network.edges.count
+        part.vertices.localCheckpoint
+        val count1 = part.vertices.count
+        part.edges.localCheckpoint
+        val count2 = part.edges.count
         graph.vertices.localCheckpoint
         val count3 = graph.vertices.count
         graph.edges.localCheckpoint
@@ -78,29 +78,29 @@ class InfoFlow extends CommunityDetection
       }
     }
 
-    def terminate( loop: Long, graph: Graph, network: Network ) = {
+    def terminate( loop: Long, graph: Graph, part: Partition ) = {
       logFile.write( s"Merging terminates after $loop merges\n", false )
-      ( graph, network )
+      ( graph, part )
     }
 
   /***************************************************************************
    * calculate the deltaL table for all possible merges
    * | src , dst , dL |
    ***************************************************************************/
-    def calDeltaL( network: Network ): RDD[(Long,(Long,Double))] = {
-      val qi_sum = network.vertices.map {
+    def calDeltaL( part: Partition ): RDD[(Long,(Long,Double))] = {
+      val qi_sum = part.vertices.map {
         case (_,(_,_,_,q)) => q
       }
       .sum
 
-      val reverseEdges = network.edges.map {
+      val reverseEdges = part.edges.map {
         case (from,(to,weight)) => ((to,from),weight)
       }
 
-      network.edges.join( network.vertices ).map {
+      part.edges.join( part.vertices ).map {
         case (m1,((m2,w12),(n1,p1,w1,q1))) => (m2,(m1,n1,p1,w1,q1,w12))
       }
-      .join( network.vertices ).map {
+      .join( part.vertices ).map {
         case (m2,((m1,n1,p1,w1,q1,w12),(n2,p2,w2,q2))) =>
           ((m1,m2),(n1,n2,p1,p2,w1,w2,q1,q2,w12))
       }
@@ -109,7 +109,7 @@ class InfoFlow extends CommunityDetection
           (
             m1,(m2,
             CommunityDetection.calDeltaL(
-              network,
+              part,
               n1, n2, p1, p2,
               w1+w2-w12-w21,
               qi_sum, q1, q2
@@ -119,7 +119,7 @@ class InfoFlow extends CommunityDetection
           (
             m1,(m2,
             CommunityDetection.calDeltaL(
-              network,
+              part,
               n1, n2, p1, p2,
               w1+w2-w12,
               qi_sum, q1, q2
@@ -191,11 +191,11 @@ class InfoFlow extends CommunityDetection
     }
 
   /***************************************************************************
-   * map each network.vertices to a new module
+   * map each part.vertices to a new module
    * according to connected components of m2Merge
    * | id , module |
    ***************************************************************************/
-    def calModuleMap( network: Network, m2Merge: RDD[(Long,Long)] )
+    def calModuleMap( part: Partition, m2Merge: RDD[(Long,Long)] )
     : RDD[(Long,Long)] = {
       val labeledEdges: RDD[((Long,Long),Long)] = InfoFlow.labelEdges(m2Merge)
       labeledEdges.flatMap {
@@ -229,8 +229,8 @@ class InfoFlow extends CommunityDetection
       Graph( newVertices, graph.edges )
     }
 
-    def calNewNetwork(
-      moduleMap: RDD[(Long,Long)], network: Network
+    def calNewPart(
+      moduleMap: RDD[(Long,Long)], part: Partition
     ) = {
 
     /*************************************************************************
@@ -243,9 +243,9 @@ class InfoFlow extends CommunityDetection
      * | src , dst , iWj |
      *************************************************************************/
       def calInterEdges(
-        network: Network, moduleMap: RDD[(Long,Long)]
+        part: Partition, moduleMap: RDD[(Long,Long)]
       ): RDD[(Long,(Long,Double))] = {
-        network.edges.leftOuterJoin( moduleMap ).map {
+        part.edges.leftOuterJoin( moduleMap ).map {
           case (from,((to,weight),Some(newFrom))) => (to,(newFrom,weight))
           case (from,((to,weight),None)) => (to,(from,weight))
         }
@@ -265,13 +265,13 @@ class InfoFlow extends CommunityDetection
      * modular properties calculations
      *************************************************************************/
       def calNewModules(
-        network: Network, moduleMap: RDD[(Long,Long)],
+        part: Partition, moduleMap: RDD[(Long,Long)],
         interEdges: RDD[(Long,(Long,Double))]
       ): RDD[(Long,(Long,Double,Double,Double))] = {
         // aggregate size, prob, exitw over the same modular index
         // for size and prob, that gives the final result
         // for exitw, we have to subtract intramodular edges in the next step
-        val sumOnly = network.vertices.leftOuterJoin(moduleMap).map {
+        val sumOnly = part.vertices.leftOuterJoin(moduleMap).map {
           case (module,((n,p,w,_),Some(newModule)))
             => (newModule,(n,p,w))
           case (module,((n,p,w,_),None))
@@ -292,33 +292,33 @@ class InfoFlow extends CommunityDetection
         .rightOuterJoin(sumOnly).map {
           case (module,(Some(w12),(n,p,w)))
           => ( module,( n, p, w-w12,
-            CommunityDetection.calQ( network.nodeNumber, n, p,
-              network.tele, w-w12 )
+            CommunityDetection.calQ( part.nodeNumber, n, p,
+              part.tele, w-w12 )
           ))
           case (module,(None,(n,p,w)))
           => ( module,( n, p, w,
-            CommunityDetection.calQ( network.nodeNumber, n, p,
-              network.tele, w )
+            CommunityDetection.calQ( part.nodeNumber, n, p,
+              part.tele, w )
           ))
         }
       }
 
-      val interEdges = calInterEdges( network, moduleMap )
+      val interEdges = calInterEdges( part, moduleMap )
       interEdges.cache
-      val newModules = calNewModules( network, moduleMap, interEdges )
+      val newModules = calNewModules( part, moduleMap, interEdges )
       newModules.cache
       val newEdges = interEdges.filter { case (from,(to,_)) => from != to }
       val newCodelength = CommunityDetection.calCodelength(
-        newModules, network.probSum )
+        newModules, part.probSum )
 
-      Network(
-        network.nodeNumber, network.tele,
+      Partition(
+        part.nodeNumber, part.tele,
         newModules, newEdges,
-        network.probSum, newCodelength
+        part.probSum, newCodelength
       )
     }
 
-    recursiveMerge( 0, graph, network )
+    recursiveMerge( 0, graph, part )
   }
 }
 

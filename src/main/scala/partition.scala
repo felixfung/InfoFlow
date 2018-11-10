@@ -11,7 +11,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-sealed case class Network
+sealed case class Partition
 (
   nodeNumber: Long, tele: Double,
   // | idx , n , p , w , q |
@@ -20,7 +20,7 @@ sealed case class Network
   edges: RDD[(Long,(Long,Double))],
   // sum of plogp(ergodic frequency), for codelength calculation
   // this can only be calculated when each node is its own module
-  // i.e. in Network.init()
+  // i.e. in Partition.init()
   probSum: Double,
   codelength: Double // codelength given the modular partitioning
 )
@@ -29,13 +29,13 @@ sealed case class Network
  * given a Graph (probably from GraphFile.graph)
  * and the PageRank teleportation probability
  * calculate PageRank and exit probabilities for each node
- * these are put and returned to a Network object
+ * these are put and returned to a Partition object
  * which can be used for community detection
  *****************************************************************************/
 
-object Network
+object Partition
 {
-  def init( graph: Graph, tele: Double ): Network = {
+  def init( graph: Graph, tele: Double ): Partition = {
 
     val nodeNumber: Long = graph.vertices.count
 
@@ -96,8 +96,8 @@ object Network
 
     val codelength = CommunityDetection.calCodelength( vertices, probSum )
 
-    // return Network object
-    Network(
+    // return Partition object
+    Partition(
       nodeNumber, tele,
       vertices, exitw,
       probSum, codelength

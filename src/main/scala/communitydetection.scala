@@ -2,7 +2,8 @@ import org.apache.spark.rdd.RDD
 import java.lang.Math
 
 abstract class CommunityDetection {
-  def apply( graph: Graph, net: Network, logFile: LogFile ): ( Graph, Network )
+  def apply( graph: Graph, part: Partition, logFile: LogFile )
+  : ( Graph, Partition )
 }
 
 object CommunityDetection {
@@ -39,12 +40,12 @@ object CommunityDetection {
     tele*(nodeNumber-n)/(nodeNumber-1)*p +(1-tele)*w
 
   def calDeltaL(
-    network: Network,
+    part: Partition,
     n1: Long, n2: Long, p1: Double, p2: Double,
     w12: Double,
     qi_sum: Double, q1: Double, q2: Double
   ) = {
-    val q12 = calQ( network.nodeNumber, n1+n2, p1+p2, network.tele, w12 )
+    val q12 = calQ( part.nodeNumber, n1+n2, p1+p2, part.tele, w12 )
     if( q12 > 0 && qi_sum+q12-q1-q2>0 ) (
       +plogp( qi_sum +q12-q1-q2 ) -plogp(qi_sum)
       -2*plogp(q12) +2*plogp(q1) +2*plogp(q2)
@@ -52,7 +53,7 @@ object CommunityDetection {
     )
     else {
       //throw new Exception("caught some crap: one giant module")
-      -network.probSum -network.codelength
+      -part.probSum -part.codelength
     }
   }
 

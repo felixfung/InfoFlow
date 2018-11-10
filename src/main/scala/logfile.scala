@@ -4,7 +4,7 @@
  * Data:
  * merging progress data is dictated by the specific merge algorithm
  * generally involving the code length, number of merges, number of modules;
- * network data involve:
+ * partition data involve:
  *   vertices: | id , size (number of nodes) , prob (ergodic frequency) |
  *   edges: | src , dst , weight (exit prob w/o tele) |
  * equally important is the original graph
@@ -84,8 +84,8 @@ sealed class LogFile(
     // vertices: | id , name , module |
     // edges: | from , to , exit prob. w/o tele |
     graph: Graph,
-    // network: reduced graph, where each node is a community
-    network: Network,
+    // part: reduced graph, where each node is a community
+    part: Partition,
     debugging: Boolean,
     debugExt: String // this string is appended to file name (for debugging)
   ): Unit = {
@@ -128,7 +128,7 @@ sealed class LogFile(
       }
       if( !pathReducedJson.isEmpty ) {
         val (filename,ext) = splitFilepath(pathReducedJson)
-        LogFile.saveReducedJson( filename, exext+ext, network )
+        LogFile.saveReducedJson( filename, exext+ext, part )
       }
     }
   }
@@ -213,13 +213,13 @@ object LogFile
    * each node is a module
    * names are always empty string
    ***************************************************************************/
-  def saveReducedJson( filename: String, ext: String, network: Network ) = {
-    val vertices = network.vertices.map {
+  def saveReducedJson( filename: String, ext: String, part: Partition ) = {
+    val vertices = part.vertices.map {
       case (id,(_,p,_,_)) => (id,(id.toString,id,p))
     }
     // Json is local file
     .collect.sorted
-    val edges = network.edges.map {
+    val edges = part.edges.map {
       case (from,(to,weight)) => ((from,to),weight)
     }
     .collect.sorted

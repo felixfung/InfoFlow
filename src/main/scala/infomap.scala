@@ -11,48 +11,48 @@ import org.apache.spark.rdd.RDD
 class InfoMap extends CommunityDetection
 {
 
-  def apply( graph: Graph, network: Network, logFile: LogFile )
-  : ( Graph, Network ) = {
+  def apply( graph: Graph, part: Partition, logFile: LogFile )
+  : ( Graph, Partition ) = {
     @scala.annotation.tailrec
     def recursiveMerge(
       loop: Int,
       qi_sum: Double,
       graph: Graph,
-      network: Network,
+      part: Partition,
       mergeList: RDD[((Long,Long),InfoMap.Merge)]
-    ): ( Graph, Network ) = {
+    ): ( Graph, Partition ) = {
 
-      InfoMap.trim( loop, graph, network, mergeList )
+      InfoMap.trim( loop, graph, part, mergeList )
 
-      logFile.write(s"State $loop: code length ${network.codelength}\n",false)
-      logFile.save( graph, network, true, loop.toString )
+      logFile.write(s"State $loop: code length ${part.codelength}\n",false)
+      logFile.save( graph, part, true, loop.toString )
 
       if( mergeList.count == 0 )
-        return InfoMap.terminate( loop, logFile, graph, network )
+        return InfoMap.terminate( loop, logFile, graph, part )
 
       val merge = InfoMap.findMerge(mergeList)
       if( merge._2.dL > 0 )
-        return InfoMap.terminate( loop, logFile, graph, network )
+        return InfoMap.terminate( loop, logFile, graph, part )
 
       logFile.write(
         s"Merge $loop: merging modules ${merge._1._1} and ${merge._1._2}"
         +s" with code length reduction ${merge._2.dL}\n",
       false )
 
-      val new_qi_sum = InfoMap.cal_qi_sum( network, merge, qi_sum )
-      val newNetwork = InfoMap.calNewNetwork( network, merge )
+      val new_qi_sum = InfoMap.cal_qi_sum( part, merge, qi_sum )
+      val newPart = InfoMap.calNewPart( part, merge )
       val newGraph = InfoMap.calNewGraph( graph, merge )
       val newMergeList = InfoMap.updateMergeList(
-        merge, mergeList, newNetwork, new_qi_sum )
-      recursiveMerge( loop+1, new_qi_sum, newGraph, newNetwork, newMergeList )
+        merge, mergeList, newPart, new_qi_sum )
+      recursiveMerge( loop+1, new_qi_sum, newGraph, newPart, newMergeList )
     }
 
     // invoke recursive merging calls
-    val qi_sum = network.vertices.map {
+    val qi_sum = part.vertices.map {
       case (_,(_,_,_,q)) => q
     }.sum
-    val edgeList = InfoMap.genMergeList( network, qi_sum )
-    recursiveMerge( 0, qi_sum, graph, network, edgeList )
+    val edgeList = InfoMap.genMergeList( part, qi_sum )
+    recursiveMerge( 0, qi_sum, graph, part, edgeList )
   }
 }
 
@@ -90,9 +90,9 @@ object InfoMap
    * store all associated modular properties
    * and calculate deltaL
    ***************************************************************************/
-  def genMergeList( network: Network, qi_sum: Double ) = {
+  def genMergeList( part: Partition, qi_sum: Double ) = {
     // merges are  nondirectional edges
-    network.edges.map {
+    part.edges.map {
       case (from,(to,weight)) =>
         if( from < to ) ((from,to),weight)
         else ((to,from),weight)
@@ -103,18 +103,18 @@ object InfoMap
     .map {
       case ((m1,m2),w1221) => (m1,(m2,w1221))
     }
-    .join( network.vertices ).map {
+    .join( part.vertices ).map {
       case (m1,((m2,w1221),(n1,p1,w1,q1)))
       => (m2,(m1,n1,p1,w1,q1,w1221))
     }
-    .join( network.vertices ).map {
+    .join( part.vertices ).map {
       case (m2,((m1,n1,p1,w1,q1,w1221),(n2,p2,w2,q2))) =>
       ((m1,m2),
       Merge(
         n1,n2,p1,p2,w1,w2,w1221,q1,q2,
         // calculate dL
         CommunityDetection.calDeltaL(
-          network, n1,n2,p1,p2, w1+w2-w1221, qi_sum,q1,q2 ))
+          part, n1,n2,p1,p2, w1+w2-w1221, qi_sum,q1,q2 ))
       )
     }
   }
@@ -123,16 +123,16 @@ object InfoMap
    * trim RDD lineage and force evaluation
    ***************************************************************************/
   def trim( loop: Int, graph: Graph,
-    network: Network, mergeList: RDD[((Long,Long),Merge)] ): Unit = {
+    part: Partition, mergeList: RDD[((Long,Long),Merge)] ): Unit = {
     if( loop%10 == 0 ) {
       graph.vertices.localCheckpoint
       val force1 = graph.vertices.count
       graph.edges.localCheckpoint
       val force2 = graph.edges.count
-      network.vertices.localCheckpoint
-      val force3 = network.vertices.count
-      network.edges.localCheckpoint
-      val force4 = network.edges.count
+      part.vertices.localCheckpoint
+      val force3 = part.vertices.count
+      part.edges.localCheckpoint
+      val force4 = part.edges.count
       mergeList.localCheckpoint
       val force5 = mergeList.count
    }
@@ -143,10 +143,10 @@ object InfoMap
    * loop termination routine
    ***************************************************************************/
   def terminate( loop: Int, logFile: LogFile,
-    graph: Graph, network: Network ) = {
+    graph: Graph, part: Partition ) = {
     logFile.write( s"Merging terminates after ${loop} merges,"
-      +s" with final ${network.vertices.count} modules\n", false )
-    ( graph, network )
+      +s" with final ${part.vertices.count} modules\n", false )
+    ( graph, part )
   }
 
   /***************************************************************************
@@ -200,7 +200,7 @@ object InfoMap
   def updateMergeList(
     merge: ((Long,Long),Merge),
     mergeList: RDD[((Long,Long),Merge)],
-    network: Network,
+    part: Partition,
     qi_sum: Double
   ) = {
     // grab new modular properties
@@ -210,7 +210,7 @@ object InfoMap
     val P12 = merge._2.p1 +merge._2.p2
     val W12 = merge._2.w1 +merge._2.w2 -merge._2.w1221
     val Q12 = CommunityDetection.calQ(
-      network.nodeNumber, N12, P12, network.tele, W12 )
+      part.nodeNumber, N12, P12, part.tele, W12 )
 
     mergeList.filter {
       // delete the merged edge, ie, (merge1,merge2)
@@ -250,26 +250,26 @@ object InfoMap
       ) => (
         (m1,m2),
         Merge(n1,n2,p1,p2,w1,w2,w1221,q1,q2,
-            CommunityDetection.calDeltaL(network,
+            CommunityDetection.calDeltaL(part,
               n1,n2,p1,p2,w1+w2-w1221,qi_sum,q1,q2))
       )
     }
   }
 
   /***************************************************************************
-   * new network has updated 
+   * new part has updated 
    ***************************************************************************/
-  def calNewNetwork( network: Network, merge: ((Long,Long),Merge) ) = {
+  def calNewPart( part: Partition, merge: ((Long,Long),Merge) ) = {
     val newVertices = {
       // calculate properties of merged module
       val n12 = merge._2.n1 +merge._2.n2
       val p12 = merge._2.p1 +merge._2.p2
       val w12 = merge._2.w1 +merge._2.w2 -merge._2.w1221
       val q12 = CommunityDetection.calQ(
-        network.nodeNumber, n12, p12, network.tele, w12 )
+        part.nodeNumber, n12, p12, part.tele, w12 )
 
       // delete merged module
-      network.vertices.filter {
+      part.vertices.filter {
         case (idx,_) => idx != merge._1._2
       }
       // put in new modular properties for merged module
@@ -286,7 +286,7 @@ object InfoMap
       val m1 = merge._1._1
       val m2 = merge._1._2
 
-      network.edges
+      part.edges
       // delete merged edges
       .filter {
         case (from,(to,_)) =>
@@ -305,11 +305,11 @@ object InfoMap
       }
     }
 
-    Network(
-      network.nodeNumber, network.tele,
+    Partition(
+      part.nodeNumber, part.tele,
       newVertices, newEdges,
-      network.probSum,
-      network.codelength +merge._2.dL
+      part.probSum,
+      part.codelength +merge._2.dL
     )
   }
 
@@ -318,13 +318,13 @@ object InfoMap
    * so no RDD calculations are required
    ***************************************************************************/
   def cal_qi_sum(
-    network: Network, merge: ((Long,Long),Merge), qi_sum: Double )
+    part: Partition, merge: ((Long,Long),Merge), qi_sum: Double )
   = {
     val n12 = merge._2.n1 +merge._2.n2
     val p12 = merge._2.p1 +merge._2.p2
     val w12 = merge._2.w1 +merge._2.w2 -merge._2.w1221
     val q12 = CommunityDetection.calQ(
-      network.nodeNumber, n12, p12, network.tele, w12 )
+      part.nodeNumber, n12, p12, part.tele, w12 )
     val q1 = merge._2.q1
     val q2 = merge._2.q2
     qi_sum +q12 -q1 -q2

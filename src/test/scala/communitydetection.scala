@@ -13,10 +13,10 @@ object CommunityDetectionTest
     pajekFile: String
   ): ( Double, Array[(Long,Long)] ) = {
     val graph0 = PajekReader( sc, pajekFile )
-    val net0 = Network.init( graph0, 0.15 )
+    val part0 = Partition.init( graph0, 0.15 )
     val logFile = new LogFile(sc,"","","","","","",false)
-    val (graph1,net1) = communityDetection( graph0, net0, logFile )
-    val codelength = net1.codelength
+    val (graph1,part1) = communityDetection( graph0, part0, logFile )
+    val codelength = part1.codelength
     val partition = graph1.vertices.collect.sorted.map {
       case (idx,(name,module)) => (idx,module)
     }
