@@ -1,5 +1,5 @@
 /***************************************************************************
- * Test Suite for Matrix algorithm
+ * Test Suite for Matrix multiplication algorithm
  ***************************************************************************/
 
 class MatrixTest extends SparkTestSuite

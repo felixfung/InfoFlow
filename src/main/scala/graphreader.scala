@@ -1,3 +1,8 @@
+/*****************************************************************************
+ * static function that delegates to PajekReader or ParquetReader
+ * based on file extension
+ *****************************************************************************/
+
 import org.apache.spark.SparkContext
 
 object GraphReader

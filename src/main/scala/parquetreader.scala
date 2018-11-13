@@ -1,5 +1,10 @@
-//import org.apache.spark.sql._
-//import org.apache.spark.rdd.RDD
+/*****************************************************************************
+ * file to read parquet graph files
+ * the first file to read is a Json file
+ * which stores the vertex file and edge file,
+ * where each of the latter is a parquet file
+ *****************************************************************************/
+
 import org.apache.spark.SparkContext
 
 import org.apache.spark.sql.Row

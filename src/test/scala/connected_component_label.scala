@@ -1,5 +1,6 @@
 /***************************************************************************
- * Test Suite for testing the DFS edge labeling code
+ * Test Suite for testing the edge labeling code
+ * which is needed in InfoFlow
  ***************************************************************************/
 
 import org.apache.spark.rdd.RDD

@@ -1,3 +1,7 @@
+/*****************************************************************************
+ * case class to store network data
+ *****************************************************************************/
+
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD

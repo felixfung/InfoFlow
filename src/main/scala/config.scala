@@ -1,10 +1,10 @@
-  /***************************************************************************
-   * class to read in config file
-   * class that reads in a Json config file
-   * usage: val configFile = new ConfigFile("config.json")
-   *        val master = configFile.master
-   *        and so on to access other properties
-   ***************************************************************************/
+/*****************************************************************************
+ * class to read in config file
+ * class that reads in a Json config file
+ * usage: val configFile = new ConfigFile("config.json")
+ *        val master = configFile.master
+ *        and so on to access other properties
+ *****************************************************************************/
 
 import scala.util.parsing.json._
 

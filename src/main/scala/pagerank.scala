@@ -20,7 +20,8 @@ object PageRank
       outLinkTotalWeight.cache
 
       // nodes without outbound links are dangling"
-      val dangling: RDD[Long] = graph.vertices.leftOuterJoin(outLinkTotalWeight)
+      val dangling: RDD[Long] = graph.vertices
+      .leftOuterJoin(outLinkTotalWeight)
       .filter {
         case (_,(_,Some(_))) => false
         case (_,(_,None)) => true

@@ -1,3 +1,6 @@
+/*****************************************************************************
+ * verify parsing a simple config file
+ *****************************************************************************/
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 
