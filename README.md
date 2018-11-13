@@ -1,6 +1,30 @@
 # InfoFlow
 An Apache Spark implementation of the InfoMap community detection algorithm
 
+## How to use
+
+### (Optional)
+
+Run `sbt test` to run unit tests
+
+### Edit config.json:
+
+  `Master`: spark master config, probably `local[*]` or `yarn`
+  `Graph`: file path of the graph file
+  `Algo`: InfoFlow or InfoMap
+  `tele`: probability of teleportation in PageRank, equal 1-(damping factor)
+  `log path`: file path of text log file
+  `Parquet path`: file path to save final graph in Parquet format
+  `RDD path`: file path to save final graph in RDD format
+  `txt path`: file path to save partitioning data in local txt format
+  `Full Json path`: file path to save full graph in Json format, where each node is annotated with its associated module
+  `Reduced Json path`: file path to save reduced graph in Json format, where each node is a module
+  debug: boolean value; set true to save all intermediate graphs
+
+### Package and run
+
+The Makefile provides a basic packaging and running method. Use `make run` to execute InfoFlow, although it will likely not provide optimal execution.
+
 ## Theory
 
 This section provides the discrete maths that allow the InfoMap algorithm to be adapted onto Apache Spark, and the development of the parallel version, InfoFlow.
