@@ -52,7 +52,6 @@ object CommunityDetection {
       +plogp(p1+p2+q12) -plogp(p1+q1) -plogp(p2+q2)
     )
     else {
-      //throw new Exception("caught some crap: one giant module")
       -part.probSum -part.codelength
     }
   }
