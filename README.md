@@ -37,6 +37,8 @@ Run `sbt test` to run unit tests
 
   `debug`: boolean value; set true to save all intermediate graphs
 
+To suppress a logging feature, put in an empty file path. For example, if you do not want to save in RDD format, set `RDD path` to "".
+
 ### Package and run
 
 The Makefile provides a basic packaging and running method. Use `make run` to execute InfoFlow, although it will likely not provide optimal execution.
