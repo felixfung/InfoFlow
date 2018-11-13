@@ -11,7 +11,13 @@ Run `sbt test` to run unit tests
 
   `Master`: spark master config, probably `local[*]` or `yarn`
 
-  `Graph`: file path of the graph file
+  `Graph`: file path of the graph file. Currently supported graph file formats are local Pajek net format (.net) and Parquet format. If Parquet format is used, then two Parquet files are required, one holding the vertex information (node index, node name, module index) and one holding edge information (from index, to index, edge weight). The file path points to a Json file with `.parquet` extension, in this format:
+```
+{
+  "Vertex File": "path to vertex file",
+  "Edge File": "path to edge file"
+}
+```
 
   `Algo`: InfoFlow or InfoMap
 
