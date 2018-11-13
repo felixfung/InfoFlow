@@ -29,7 +29,7 @@ Run `sbt test` to run unit tests
 
   `Reduced Json path`: file path to save reduced graph in Json format, where each node is a module
 
-  debug: boolean value; set true to save all intermediate graphs
+  `debug`: boolean value; set true to save all intermediate graphs
 
 ### Package and run
 
