@@ -12,6 +12,8 @@ import java.io.FileNotFoundException
 
 import scala.collection.mutable.ListBuffer
 
+import java.io.File
+
 object PajekReader
 {
   def apply( sc: SparkContext, filename: String ): Graph = {
@@ -42,7 +44,7 @@ object PajekReader
 
       var lineNumber = 1 // line number in file, used when printing file error
       // read file serially
-      for( line <- Source.fromFile(filename).getLines
+      for( line <- Source.fromFile(new File(filename), "ISO-8859-1").getLines
         if line.charAt(0) != '%' // skip comments
       ) {
   /***************************************************************************
