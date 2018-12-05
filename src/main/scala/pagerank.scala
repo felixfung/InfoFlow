@@ -58,6 +58,7 @@ object PageRank
    * given initial ergodic frequency and edges
    * calculation terminates when consequtive iterations differ less than errTh
    ***************************************************************************/
+  @scala.annotation.tailrec
   def apply(
     edges: Matrix, freq: RDD[(Long,Double)],
     n: Long, damping: Double, errTh: Double, loop: Long
