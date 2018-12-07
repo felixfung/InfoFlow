@@ -36,7 +36,7 @@ object InfoFlowMain {
       .setAppName("InfoFlow")
       .setMaster( config.master )
     val sc = new SparkContext(conf)
-    sc.setLogLevel("OFF")
+    //sc.setLogLevel("OFF")
 
   /***************************************************************************
    * read file, solve, save

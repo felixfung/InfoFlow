@@ -94,6 +94,8 @@ object Partition
     }
     .sum
 
+    ergodicFreq.unpersist()
+
     val codelength = CommunityDetection.calCodelength( vertices, probSum )
 
     // return Partition object

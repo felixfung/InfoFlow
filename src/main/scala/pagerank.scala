@@ -41,6 +41,8 @@ object PageRank
         case (from,((to,weight),totalweight)) => (from,(to,weight/totalweight))
       }
 
+      outLinkTotalWeight.unpersist()
+
       Matrix( normMat, constCol )
     }
 

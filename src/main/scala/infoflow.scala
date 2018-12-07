@@ -46,6 +46,7 @@ class InfoFlow extends CommunityDetection
         return terminate( loop, graph, part )
 
       val moduleMap = calModuleMap( part, m2Merge )
+      m2Merge.unpersist()
       val newGraph = calGraph( moduleMap, graph )
       val newPart = calPart( moduleMap, part )
 
@@ -66,7 +67,7 @@ class InfoFlow extends CommunityDetection
    ***************************************************************************/
 
     def trim( loop: Int, graph: Graph, part: Partition ) = {
-      if( loop%10 == 0 ) {
+      //if( loop%10 == 0 ) {
         part.vertices.localCheckpoint
         val count1 = part.vertices.count
         part.edges.localCheckpoint
@@ -75,7 +76,7 @@ class InfoFlow extends CommunityDetection
         val count3 = graph.vertices.count
         graph.edges.localCheckpoint
         val count4 = graph.edges.count
-      }
+      //}
     }
 
     def terminate( loop: Long, graph: Graph, part: Partition ) = {
@@ -310,6 +311,8 @@ class InfoFlow extends CommunityDetection
       val newEdges = interEdges.filter { case (from,(to,_)) => from != to }
       val newCodelength = CommunityDetection.calCodelength(
         newModules, part.probSum )
+      interEdges.unpersist()
+      newModules.unpersist()
 
       Partition(
         part.nodeNumber, part.tele,
@@ -441,6 +444,8 @@ object InfoFlow
     .map {
       case (label,((newLabel,_),(from,to))) => (newLabel,(from,to))
     }
+
+    labeledEdges.unpersist()
   
     // reduceByKey() would miss edges with singular labels
     // these code account for those
