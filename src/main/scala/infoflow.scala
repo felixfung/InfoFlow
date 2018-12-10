@@ -367,6 +367,7 @@ object InfoFlow
   /***************************************************************************
    * recursive function
    ***************************************************************************/
+    @scala.annotation.tailrec
     def labelEdge( labelEdge1: RDD[((Long,Long),Long)] )
     : RDD[((Long,Long),Long)] = {
 
@@ -393,6 +394,7 @@ object InfoFlow
           else
             (label2,labelCount2)
       }
+      vertexLabel.cache
 
       val labelEdge2 = labelEdge1.map {
         case ((from,to),label) => (from,to)
@@ -414,6 +416,9 @@ object InfoFlow
           else /* if( fromLabel >= toLabel ) */
             ((from,to),toLabel)
       }
+
+      vertexLabel.unpersist()
+      labelEdge2.cache
 
       val equivalence = labelEdge1.join(labelEdge2).map {
         case (edge,(oldLabel,newLabel)) => oldLabel==newLabel
