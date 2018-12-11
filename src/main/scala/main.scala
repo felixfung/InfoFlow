@@ -54,23 +54,22 @@ object InfoFlowMain {
       config.logFile.debug
     )
 
-    logFile.write(s"Reading ${config.graphFile}...",false)
+    logFile.write(s"Reading ${config.graphFile}\n",false)
     val graph0: Graph = GraphReader( sc, config.graphFile )
-    logFile.write(" Done\n",false)
-    logFile.write(s"Read in network with ${graph0.vertices.count} nodes" +
-      s" and ${graph0.edges.count} edges\n",false)
+    logFile.write(s"Read in network with ${graph0.vertices.count} nodes"
+      +s" and ${graph0.edges.count} edges\n",false)
 
-    logFile.write("Initializing partitioning, calculating PageRank...",false)
+    logFile.write(s"Initializing partitioning, calculating PageRank\n",false)
     val part0: Partition = Partition.init( graph0, config.tele )
-    logFile.write(" Done\n",false)
+    logFile.write(s"Finished initialization calculations\n",false)
 
     logFile.write(s"Using ${config.algorithm} algorithm:\n",false)
     val (graph1,part1) = communityDetection( graph0, part0, logFile )
 
-    logFile.write("Save final graph...",false)
+    logFile.write("Save final graph\n",false)
     logFile.save( graph1, part1, false, "" )
-    logFile.write(" Done\n",false)
 
+    logFile.write("InfoFlow Terminate\n",false)
     logFile.close
 
   /***************************************************************************

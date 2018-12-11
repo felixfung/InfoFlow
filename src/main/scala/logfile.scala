@@ -34,6 +34,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext
 import org.apache.spark.sql._ // needed to save as Parquet format
 
+import java.util.Calendar
+
 import java.io._
 
 sealed class LogFile(
@@ -71,7 +73,7 @@ sealed class LogFile(
 
   def write( msg: String, debugging: Boolean )
     = if( !pathLog.isEmpty && ( !debugging || debug ) ) {
-      logFile.append(msg)
+      logFile.append(s"${Calendar.getInstance().getTime}: "+msg)
       logFile.flush
     }
   def close = if( !pathLog.isEmpty ) logFile.close
