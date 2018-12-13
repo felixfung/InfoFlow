@@ -45,7 +45,9 @@ object PajekReader
       var lineNumber = 1 // line number in file, used when printing file error
       // read file serially
       for( line <- Source.fromFile(new File(filename), "ISO-8859-1").getLines
-        if line.charAt(0) != '%' // skip comments
+        if( line != null && !line.isEmpty // skip empty line
+          && line.charAt(0) != '%' // skip comments
+        )
       ) {
   /***************************************************************************
    * first, check if line begins with '*'
