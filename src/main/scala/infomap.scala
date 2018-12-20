@@ -138,7 +138,8 @@ class InfoMap extends CommunityDetection with Serializable
     def terminate( loop: Int, logFile: LogFile,
       graph: Graph, part: Partition ) = {
       logFile.write( s"Merging terminates after ${loop} merges,"
-        +s" with final ${part.vertices.count} modules\n", false )
+        +s" with final ${part.vertices.count} modules"
+        +s" and ${part.edges.count}\n", false )
       ( graph, part )
     }
 
