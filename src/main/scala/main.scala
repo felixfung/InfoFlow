@@ -6,9 +6,6 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 
-import java.lang.Object
-import java.lang.Package
-
 object InfoFlowMain {
   def main( args: Array[String] ): Unit = {
 
@@ -54,16 +51,14 @@ object InfoFlowMain {
     )
 
     // log app version, platform specifications
-    /*{
-      // log app version
-      val app = this.getClass.getPackage
-      val appName = app.getImplementationTitle
-      val appVersion = app.getImplementationVersion
-      logFile.write(s"Running $appName version $appVersion\n",false)
-
+    {
       // log spark, hdfs versions
-      logFile.write(s"${sc.appName} on Spark version ${sc.version}\n",false)
-    }*/
+      val jar = sc.jars.head.split('/').last
+      val version = jar.split('-').last.split('.').dropRight(1).mkString(".")
+      logFile.write(s"Running ${sc.appName}, version: $version\n",false)
+      logFile.write(s"Jar: $jar\n",false)
+      logFile.write(s"Spark version: ${sc.version}\n",false)
+    }
 
     /***************************************************************************
       * read file, solve, save
