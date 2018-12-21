@@ -75,13 +75,15 @@ object PajekReader
                 // check there is no more than one vertices section
                 if( newSection == "vertices" ) {
                   if( nodeNumber != -1 )
-                    throw new Exception( "There must be one and only one"
-                      +"vertices section" )
+                    throw new Exception(
+                      "There must be one and only one vertices section"
+                    )
                   // read nodeNumber
                   nodeNumber = line match {
                     case verticesRegex(expr) => expr.toLong
-                    case _ => throw new Exception( "Cannot read node number:"
-                      +" line "+lineNumber.toString )
+                    case _ => throw new Exception(
+                      s"Cannot read node number: line $lineNumber"
+                    )
                   }
                 }
                 section = "section_def"
@@ -104,12 +106,11 @@ object PajekReader
                 ( idx.toLong, (name,idx.toLong) )
               // check that index is in valid range
               else throw new Exception(
-                "Vertex index must be within [1,"+nodeNumber.toString
-                +"]: line " +lineNumber.toString
+                s"Vertex index must be within [1,$nodeNumber]: line $lineNumber"
               )
             // check vertex parsing is correct
             case _ => throw new Exception(
-              "Vertex definition error: line " +lineNumber.toString
+              s"Vertex definition error: line $lineNumber"
             )
           }
           vertices += newVertex
@@ -126,8 +127,7 @@ object PajekReader
                && 1<=dst.toLong && dst.toLong<=nodeNumber )
                 ( ( src.toLong, dst.toLong ), 1.0 )
               else throw new Exception(
-                "Vertex index must be within [1,"+nodeNumber.toString
-                +"]: line " +lineNumber.toString
+                s"Vertex index must be within [1,$nodeNumber]: line $lineNumber"
               )
             case edgeRegex2( src, dst, weight ) =>
               // check that index is in valid range
@@ -135,17 +135,16 @@ object PajekReader
                && 1<=dst.toLong && dst.toLong<=nodeNumber ) {
                 // check that weight is not negative
                 if( weight.toDouble < 0 ) throw new Exception(
-                  "Edge weight must be non-negative: line "+lineNumber.toString
+                  s"Edge weight must be non-negative: line $lineNumber"
                 )
                 ( ( src.toLong, dst.toLong ), weight.toDouble )
               }
               else throw new Exception(
-                "Vertex index must be within [1,"+nodeNumber.toString
-                +"]: line " +lineNumber.toString
+                s"Vertex index must be within [1,$nodeNumber]: line $lineNumber"
               )
             // check vertex parsing is correct
             case _ => throw new Exception(
-              "Edge definition error: line " +lineNumber.toString
+              s"Edge definition error: line $lineNumber"
             )
           }
           edges += newEdge
@@ -168,8 +167,9 @@ object PajekReader
 
         else if( section != "section_def" )
         {
-          throw new Exception("Line does not belong to any sections:"
-            +" line "+lineNumber.toString )
+          throw new Exception(
+            s"Line $lineNumber does not belong to any sections"
+          )
         }
 
   /***************************************************************************
@@ -183,7 +183,7 @@ object PajekReader
    * check there is at least one vertices section
    ***************************************************************************/
       if( nodeNumber == -1 )
-        throw new Exception( "There must be one and only one vertices section" )
+        throw new Exception("There must be one and only one vertices section")
 
   /***************************************************************************
    * check there vertices are unique
@@ -200,7 +200,7 @@ object PajekReader
         for( (idx,(name,module)) <- vertices ) {
           if( verticesArray(idx.toInt-1)._1 != -1 )
             throw new Exception(
-              "Vertex "+verticesArray(idx.toInt-1)._1.toString+" is not unique!"
+              s"Vertex ${verticesArray(idx.toInt-1)._1} is not unique!"
             )
           verticesArray( idx.toInt-1 ) = ( idx, (name,module) )
         }
