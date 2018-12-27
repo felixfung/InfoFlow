@@ -43,10 +43,6 @@ object InfoFlowMain {
     val sc = new SparkContext(conf)
     sc.setLogLevel("OFF")
 
-  /***************************************************************************
-   * read file, solve, save
-   ***************************************************************************/
-
     // create log file object
     val logFile = new LogFile(
       sc,
@@ -58,6 +54,20 @@ object InfoFlowMain {
       config.logFile.pathReducedJson,
       config.logFile.debug
     )
+
+    // log app version, platform specifications
+    {
+      // log spark, hdfs versions
+      val jar = sc.jars.head.split('/').last
+      val version = jar.split('-').last.split('.').dropRight(1).mkString(".")
+      logFile.write(s"Running ${sc.appName}, version: $version\n",false)
+      logFile.write(s"Jar: $jar\n",false)
+      logFile.write(s"Spark version: ${sc.version}\n",false)
+    }
+
+    /***************************************************************************
+      * read file, solve, save
+      ***************************************************************************/
 
     logFile.write(s"Reading ${config.graphFile}\n",false)
     val graph0: Graph = GraphReader( sc, config.graphFile )
@@ -71,7 +81,10 @@ object InfoFlowMain {
     logFile.write(s"Using ${config.algoParams.algoName} algorithm:\n",false)
     val (graph1,part1) = communityDetection( graph0, part0, logFile )
 
-    logFile.write("Save final graph\n",false)
+    logFile.write( s"Save final graph with"
+      +s" ${part1.vertices.count} modules"
+      +s" and ${part1.edges.count} connections\n",
+    false)
     logFile.save( graph1, part1, false, "" )
 
     logFile.write("InfoFlow Terminate\n",false)

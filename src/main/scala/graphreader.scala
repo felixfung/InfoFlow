@@ -9,7 +9,7 @@ object GraphReader
 {
   def apply( sc: SparkContext, filename: String ): Graph = {
     val regex = """(.*)\.(\w+)""".r
-    filename match {
+    val graph: Graph = filename match {
       case regex(_,ext) => {
         if( ext.toLowerCase == "net" )
           PajekReader( sc, filename )
@@ -22,5 +22,12 @@ object GraphReader
       }
       case _ => throw new Exception("Graph file has no file extension")
     }
+    graph.vertices.localCheckpoint
+	graph.vertices.cache
+    val force1 = graph.vertices.count
+    graph.edges.localCheckpoint
+	graph.edges.cache
+    val force2 = graph.edges.count
+    graph
   }
 }
