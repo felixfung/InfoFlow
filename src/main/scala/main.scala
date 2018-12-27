@@ -55,19 +55,31 @@ object InfoFlowMain {
       config.logFile.debug
     )
 
-    // log app version, platform specifications
+    // log app version, spark version
     {
-      // log spark, hdfs versions
       val jar = sc.jars.head.split('/').last
       val version = jar.split('-').last.split('.').dropRight(1).mkString(".")
       logFile.write(s"Running ${sc.appName}, version: $version\n",false)
       logFile.write(s"Jar: $jar\n",false)
       logFile.write(s"Spark version: ${sc.version}\n",false)
     }
+    logFile.write(s"Spark configurations:\n",false)
+    logFile.write(
+      s"Executors: ${conf.get("spark.executor.instances")}\n",
+    false)
+    logFile.write(
+      s"Executor cores: ${conf.get("spark.executor.cores")}\n",
+    false)
+    logFile.write(
+      s"Driver memory: ${conf.get("spark.driver.memory")}\n",
+    false)
+    logFile.write(
+      s"Executor memory: ${conf.get("spark.executor.memory")}\n",
+    false)
 
-    /***************************************************************************
-      * read file, solve, save
-      ***************************************************************************/
+  /***************************************************************************
+   * read file, solve, save
+   ***************************************************************************/
 
     logFile.write(s"Reading ${config.graphFile}\n",false)
     val graph0: Graph = GraphReader( sc, config.graphFile )
