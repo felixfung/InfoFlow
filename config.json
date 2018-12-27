@@ -1,8 +1,16 @@
 {
-  "Master": "local[*]",
-  "Graph": "Nets/zer.net",
-  "Algo": "InfoFlow",
-  "tele": "0.15",
+  "Graph": "Nets/data/NDwww/NDwww.net",
+  "spark configs": {
+    "Master": "local[*]",
+    "num executors": "1",
+    "executor cores": "8",
+    "driver memory": "10G",
+    "executor memory": "2G"
+  },
+  "Algorithm": {
+    "Community detection algorithm": "InfoFlow",
+    "PageRank tele": "0.15"
+  },
   "log": {
     "log path": "Output/log.txt",
     "Parquet path": "",
