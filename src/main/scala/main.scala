@@ -27,16 +27,21 @@ object InfoFlowMain {
     val config = ConfigFile(configFileName)
 
     // initialize community detection algorithm
-    val communityDetection = CommunityDetection.choose( config.algorithm )
+    val communityDetection = CommunityDetection.choose(
+      config.algoParams.algoName )
 
   /***************************************************************************
    * Initialize Spark Context
    ***************************************************************************/
     val conf = new SparkConf()
       .setAppName("InfoFlow")
-      .setMaster( config.master )
+      .setMaster( config.sparkConfigs.master )
+      .set( "spark.executor.instances", config.sparkConfigs.numExecutors )
+      .set( "spark.executor.cores", config.sparkConfigs.executorCores )
+      .set( "spark.driver.memory", config.sparkConfigs.driverMemory )
+      .set( "spark.executor.memory", config.sparkConfigs.executorMemory )
     val sc = new SparkContext(conf)
-    //sc.setLogLevel("OFF")
+    sc.setLogLevel("OFF")
 
     // create log file object
     val logFile = new LogFile(
@@ -70,10 +75,10 @@ object InfoFlowMain {
       +s" and ${graph0.edges.count} edges\n",false)
 
     logFile.write(s"Initializing partitioning, calculating PageRank\n",false)
-    val part0: Partition = Partition.init( graph0, config.tele )
+    val part0: Partition = Partition.init( graph0, config.algoParams.tele )
     logFile.write(s"Finished initialization calculations\n",false)
 
-    logFile.write(s"Using ${config.algorithm} algorithm:\n",false)
+    logFile.write(s"Using ${config.algoParams.algoName} algorithm:\n",false)
     val (graph1,part1) = communityDetection( graph0, part0, logFile )
 
     logFile.write( s"Save final graph with"
