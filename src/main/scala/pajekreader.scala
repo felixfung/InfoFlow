@@ -188,7 +188,7 @@ object PajekReader
   /***************************************************************************
    * log progress
    ***************************************************************************/
-      logFile.write("Finished reading from disk; parallelizing...",false)
+      logFile.write("Finished reading from disk; parallelizing...\n",false)
 
   /***************************************************************************
    * check there vertices are unique
