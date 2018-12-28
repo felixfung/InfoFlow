@@ -82,7 +82,7 @@ object InfoFlowMain {
    ***************************************************************************/
 
     logFile.write(s"Reading ${config.graphFile}\n",false)
-    val graph0: Graph = GraphReader( sc, config.graphFile )
+    val graph0: Graph = GraphReader( sc, config.graphFile, logFile )
     logFile.write(s"Read in network with ${graph0.vertices.count} nodes"
       +s" and ${graph0.edges.count} edges\n",false)
 

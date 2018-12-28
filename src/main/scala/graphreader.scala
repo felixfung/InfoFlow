@@ -7,14 +7,14 @@ import org.apache.spark.SparkContext
 
 object GraphReader
 {
-  def apply( sc: SparkContext, filename: String ): Graph = {
+  def apply( sc: SparkContext, filename: String, logFile: LogFile ): Graph = {
     val regex = """(.*)\.(\w+)""".r
     val graph: Graph = filename match {
       case regex(_,ext) => {
         if( ext.toLowerCase == "net" )
-          PajekReader( sc, filename )
+          PajekReader( sc, filename, logFile )
         else if( ext.toLowerCase == "parquet" )
-          ParquetReader( sc, filename )
+          ParquetReader( sc, filename, logFile )
         else
           throw new Exception(
             "File must be Pajek net file (.net) or Parquet file (.parquet)"

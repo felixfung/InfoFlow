@@ -16,7 +16,7 @@ import java.io.File
 
 object PajekReader
 {
-  def apply( sc: SparkContext, filename: String ): Graph = {
+  def apply( sc: SparkContext, filename: String, logFile: LogFile ): Graph = {
     try {
       // graph elements stored as local list
       // to be converted to DataFrame and stored in GrapheFrame
@@ -184,6 +184,11 @@ object PajekReader
    ***************************************************************************/
       if( nodeNumber == -1 )
         throw new Exception("There must be one and only one vertices section")
+
+  /***************************************************************************
+   * log progress
+   ***************************************************************************/
+      logFile.write("Finished reading from disk; parallelizing...",false)
 
   /***************************************************************************
    * check there vertices are unique

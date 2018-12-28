@@ -12,7 +12,7 @@ import org.apache.spark.sql.SQLContext
 
 object ParquetReader
 {
-  def apply( sc: SparkContext, filename: String ): Graph = {
+  def apply( sc: SparkContext, filename: String, logFile: LogFile ): Graph = {
     val jsonReader = new JsonReader(filename)
     val verticesFile = jsonReader.getVal("Vertex File").toString
     val edgesFile = jsonReader.getVal("Edge File").toString
@@ -24,12 +24,16 @@ object ParquetReader
       case Row( idx: Long, name: String, module: Long )
       => (idx,(name,module))
     }
+	logFile.write(s"Read in vertex information from $verticesFile",false)
+
     val edges = sqlContext.read.parquet(edgesFile)
     .rdd
     .map {
       case Row( from: Long, to: Long, weight: Double )
       => (from,(to,weight))
     }
+	logFile.write(s"Read in edge information from $edgesFile",false)
+
     Graph( vertices, edges )
   }
 }
