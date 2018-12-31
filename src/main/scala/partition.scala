@@ -53,6 +53,7 @@ object Partition
         case (from,((to,weight),norm)) => (from,(to,weight/norm))
       }
     }
+	edges.cache
 
     // exit probability from each vertex
     val ergodicFreq = PageRank( Graph( graph.vertices, edges), 1-tele )
@@ -84,10 +85,14 @@ object Partition
            else (idx,(1,1,0,0))
       }
     }
+	val forceEval = vertices.count
+	vertices.localCheckpoint
+	vertices.cache
 
     val exitw = edges.join(ergodicFreq).map {
       case (from,((to,weight),freq)) => (from,(to,freq*weight))
     }
+	exitw.cache
 
     val probSum = ergodicFreq.map {
       case (_,p) => CommunityDetection.plogp(p)

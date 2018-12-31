@@ -40,16 +40,24 @@ class InfoFlow extends CommunityDetection
       trim( loop, graph, part )
 
       val deltaL = calDeltaL(part)
+      //val forceEval1 = deltaL.count
+      //logFile.write("deltaL",false)
+
       val m2Merge = calm2Merge(deltaL)
+      //val forceEval2 = m2Merge.count
+      //logFile.write("m2Merge",false)
       m2Merge.cache
       if( m2Merge.count == 0 )
         return terminate( loop, graph, part )
 
+//logFile.write("m2Merge.cache",false)
       val moduleMap = calModuleMap( part, m2Merge )
       m2Merge.unpersist()
+//logFile.write("moduleMap",false)
       val newGraph = calGraph( moduleMap, graph )
       val newPart = calPart( moduleMap, part )
 
+//logFile.write("merged",false)
       if( newPart.codelength >= part.codelength )
         return terminate( loop, graph, part )
 
@@ -333,9 +341,8 @@ class InfoFlow extends CommunityDetection
 object InfoFlow
 {
   def labelEdges( edge2label: RDD[(Long,Long)] ): RDD[((Long,Long),Long)] = {
-
-  if( edge2label.isEmpty )
-    throw new Exception("Empty RDD argument")
+    if( edge2label.isEmpty )
+      throw new Exception("Empty RDD argument")
 
   /***************************************************************************
    * initial condition
@@ -370,6 +377,11 @@ object InfoFlow
     @scala.annotation.tailrec
     def labelEdge( labelEdge1: RDD[((Long,Long),Long)] )
     : RDD[((Long,Long),Long)] = {
+
+      // trim labelEdge1
+      labelEdge1.localCheckpoint
+	  labelEdge1.cache
+      val forceEval = labelEdge1.count
 
       val labelCount = labelEdge1.map {
         case ((from,to),label) => (label,1)
@@ -420,6 +432,8 @@ object InfoFlow
       vertexLabel.unpersist()
       labelEdge2.cache
 
+      // if old labelled edges equates new, terminate
+      // else tail recursive call
       val equivalence = labelEdge1.join(labelEdge2).map {
         case (edge,(oldLabel,newLabel)) => oldLabel==newLabel
       }
@@ -430,6 +444,10 @@ object InfoFlow
         labelEdge( labelEdge2 )
     }
 
+  /***************************************************************************
+   * evoke tail recursion, then tidy up indices
+   ***************************************************************************/
+
     // obtain labeled edges according to connected components
     // where the labeled is the most common vertex index within component
     val labeledEdges = labelEdge( labelEdge1 )
@@ -438,6 +456,9 @@ object InfoFlow
     }
     labeledEdges.cache
 
+    // tidy up label index
+    // so the label index is the lowest vertex index in connected component
+    // rather than the most common vertex index in connected component
     val nearlyProperEdges = labeledEdges.reduceByKey {
       case ( (from1,to1), (from2,to2) ) =>
         val lowestFrom = Math.min( from1, from2 )

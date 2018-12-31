@@ -45,11 +45,14 @@ object PageRank
 
       Matrix( normMat, constCol )
     }
+	edges.sparse.cache
+	edges.constCol.cache
 
     // start with uniform ergodic frequency
     val freqUniform = graph.vertices.map {
       case (idx,_) => ( idx, 1.0/nodeNumber.toDouble )
     }
+	freqUniform.cache
 
     // calls inner PageRank calculation function
     PageRank( edges, freqUniform, nodeNumber, damping, 1e-3/*errTh*/, 0 )
@@ -75,11 +78,10 @@ object PageRank
       Math.sqrt(diffSq)
     }
 
-    // create local checkpoint to truncate RDD lineage (every ten loops)
-    if( loop%10 == 0 ) {
-      freq.localCheckpoint
-      val forceEval = freq.count
-    }
+    // create local checkpoint to truncate RDD lineage
+    freq.localCheckpoint
+	freq.cache
+    val forceEval = freq.count
 
     // the random walk contribution of the ergodic frequency
     val stoFreq = edges *freq
@@ -93,6 +95,7 @@ object PageRank
       case (idx,(bg,Some(sto))) => ( idx, bg+ sto*damping )
       case (idx,(bg,None)) => ( idx, bg )
     }
+	newFreq.cache
 
     // recursive call until freq converges wihtin error threshold
     val err = dist2D(freq,newFreq)
