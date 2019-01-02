@@ -1,4 +1,4 @@
-/*((**************************************************************************
+/***************************************************************************
  * Helper class to write log merging progress and save graph data
  *
  * Data:
@@ -27,7 +27,7 @@
  * so that an operation is only performed if:
  *   (1) the operation is not for debugging, OR
  *   (2) the log file object is for debugging
- *((**************************************************************************/
+ ***************************************************************************/
 
 import org.apache.spark.rdd.RDD
 
