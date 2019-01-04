@@ -29,7 +29,7 @@ object PajekReader
       val verticesRegex = """(?i)\*Vertices[ \t]+([0-9]+)""".r
       val vertexRegex = """[ \t]*?([0-9]+)[ \t]+\"(.*)\".*""".r
       val edgeRegex1 = """[ \t]*?([0-9]+)[ \t]+([0-9]+)[ \t]*""".r
-      val edgeRegex2 = """[ \t]*?([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9.]+).*""".r
+      val edgeRegex2 = """[ \t]*?([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9.eE\-\+]+).*""".r
 
       // store sectioning of file
       // defaults as "__begin"
