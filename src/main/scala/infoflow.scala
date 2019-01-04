@@ -40,24 +40,17 @@ class InfoFlow extends CommunityDetection
       trim( loop, graph, part )
 
       val deltaL = calDeltaL(part)
-      //val forceEval1 = deltaL.count
-      //logFile.write("deltaL",false)
 
       val m2Merge = calm2Merge(deltaL)
-      //val forceEval2 = m2Merge.count
-      //logFile.write("m2Merge",false)
       m2Merge.cache
       if( m2Merge.count == 0 )
         return terminate( loop, graph, part )
 
-//logFile.write("m2Merge.cache",false)
       val moduleMap = calModuleMap( part, m2Merge )
       m2Merge.unpersist()
-//logFile.write("moduleMap",false)
       val newGraph = calGraph( moduleMap, graph )
       val newPart = calPart( moduleMap, part )
 
-//logFile.write("merged",false)
       if( newPart.codelength >= part.codelength )
         return terminate( loop, graph, part )
 
@@ -380,7 +373,7 @@ object InfoFlow
 
       // trim labelEdge1
       labelEdge1.localCheckpoint
-	  labelEdge1.cache
+	  //labelEdge1.cache
       val forceEval = labelEdge1.count
 
       val labelCount = labelEdge1.map {
@@ -407,6 +400,7 @@ object InfoFlow
             (label2,labelCount2)
       }
       vertexLabel.cache
+	  vertexLabel.localCheckpoint
 
       val labelEdge2 = labelEdge1.map {
         case ((from,to),label) => (from,to)
@@ -431,6 +425,7 @@ object InfoFlow
 
       vertexLabel.unpersist()
       labelEdge2.cache
+	  labelEdge2.localCheckpoint
 
       // if old labelled edges equates new, terminate
       // else tail recursive call
