@@ -24,7 +24,7 @@ object ParquetReader
       case Row( idx: Long, name: String, module: Long )
       => (idx,(name,module))
     }
-	logFile.write(s"Read in vertex information from $verticesFile",false)
+	logFile.write(s"Read in vertex information from $verticesFile\n",false)
 
     val edges = sqlContext.read.parquet(edgesFile)
     .rdd
@@ -32,7 +32,7 @@ object ParquetReader
       case Row( from: Long, to: Long, weight: Double )
       => (from,(to,weight))
     }
-	logFile.write(s"Read in edge information from $edgesFile",false)
+	logFile.write(s"Read in edge information from $edgesFile\n",false)
 
     Graph( vertices, edges )
   }
