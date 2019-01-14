@@ -57,8 +57,7 @@ object ConfigFile
         rawJson.getVal("spark configs","executor memory").toString
       ),
       ConfigFile.AlgoParams(
-        "InfoFlow",
-        //rawJson.getVal("Algorithm","Community detection algorithm").toString,
+        rawJson.getVal("Algorithm","Community detection algorithm").toString,
         rawJson.getVal("Algorithm","PageRank tele").toString.toDouble
       ),
       ConfigFile.LogParams(
