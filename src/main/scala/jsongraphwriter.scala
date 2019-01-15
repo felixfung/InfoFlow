@@ -6,8 +6,8 @@ import java.io._
 
 sealed case class JsonGraph
 (
-  // | id , name , module , size |
-  vertices: Array[(Long,(String,Long,Double))],
+  // | id , name , module , couunt, size |
+  vertices: Array[(Long,(String,Long,Long,Double))],
   // |from id , to id , weight |
   edges: Array[((Long,Long),Double)]
 )
@@ -25,10 +25,11 @@ object JsonGraphWriter
       val nodeCount = graph.vertices.size
       for( idx <- 0 to nodeCount-1 ) {
         graph.vertices(idx) match {
-          case (id,(name,module,size)) => {
+          case (id,(name,module,count,size)) => {
             file.write(
               "\t\t{\"id\": \"" +s"$id" +"\", "
              +"\"size\": \"" +s"$size" +"\", "
+             +"\"count\": \"" +s"$count" +"\", "
              +"\"name\": \"" +s"$name" +"\", "
              +"\"group\": \"" +s"$module" +"\""
              +"}"
@@ -66,28 +67,5 @@ object JsonGraphWriter
     // close file
     file.write( "\n}" )
     file.close
-  }
-
-  /***************************************************************************
-   * this functions saves a graph with normalized vertex radius
-   * scale the vertex size linearly,
-   * so the smallest vertex has size 1
-   * and the biggest has size 4
-   ***************************************************************************/
-  def writeNormal( filename: String, graph: JsonGraph ) {
-    val vertices = {
-      val min = graph.vertices.map {
-        case (_,(_,_,p)) => p
-      }
-      .reduce( (a,b) => if( a<=b ) a else b )
-      val max = graph.vertices.map {
-        case (_,(_,_,p)) => p
-      }
-      .reduce( (a,b) => if( a<=b ) b else a )
-      graph.vertices.map {
-        case (idx,(name,id,p)) => (idx,(name,id, 1 +(p-min)*3/(max-min) ))
-      }
-    }
-    JsonGraphWriter( filename, JsonGraph( vertices, graph.edges ) )
   }
 }

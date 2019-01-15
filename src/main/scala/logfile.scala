@@ -195,11 +195,11 @@ object LogFile
   def saveFullJson( filename: String, ext: String, graph: Graph ) = {
     // fake nodes to preserve group ordering/coloring
     val fakeNodes = graph.vertices.map {
-      case (idx,_) => (-idx,("",idx,0.0))
+      case (idx,_) => (-idx,("",idx,0L,0.0))
     }
     .collect
     val vertices = graph.vertices.map {
-      case (id,(name,module)) => (id,(name,module,1.0))
+      case (id,(name,module)) => (id,(name,module,1L,1.0))
     }
     .collect ++fakeNodes
     val edges = graph.edges.map {
@@ -217,7 +217,7 @@ object LogFile
    ***************************************************************************/
   def saveReducedJson( filename: String, ext: String, part: Partition ) = {
     val vertices = part.vertices.map {
-      case (id,(_,p,_,_)) => (id,(id.toString,id,p))
+      case (id,(n,p,_,_)) => (id,(id.toString,id,n,p))
     }
     // Json is local file
     .collect.sorted

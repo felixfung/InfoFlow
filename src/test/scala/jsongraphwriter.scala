@@ -18,10 +18,10 @@ class JsonGraphWriterTest extends SparkTestSuite
     try {
       // produce json file
       val vertices = Array(
-        (1L,("one",1L,0.0)),
-        (2L,("two",1L,1.0)),
-        (3L,("three",3L,1.0)),
-        (4L,("four",4L,2.0))
+        (1L,("one",1L,1L,0.0)),
+        (2L,("two",1L,1L,1.0)),
+        (3L,("three",3L,1L,1.0)),
+        (4L,("four",4L,1L,2.0))
       )
       val edges = Array(
         ((1L,2L),1.0),
@@ -35,13 +35,13 @@ class JsonGraphWriterTest extends SparkTestSuite
       verifyFile(Array(
         "{",
         "\t\"nodes\": [",
-        "\t\t{\"id\": \"1\", \"size\": \"0.0\", "
+        "\t\t{\"id\": \"1\", \"size\": \"0.0\", \"count\": \"1\", "
           +"\"name\": \"one\", \"group\": \"1\"},",
-        "\t\t{\"id\": \"2\", \"size\": \"1.0\", "
+        "\t\t{\"id\": \"2\", \"size\": \"1.0\", \"count\": \"1\", "
           +"\"name\": \"two\", \"group\": \"1\"},",
-        "\t\t{\"id\": \"3\", \"size\": \"1.0\", "
+        "\t\t{\"id\": \"3\", \"size\": \"1.0\", \"count\": \"1\", "
           +"\"name\": \"three\", \"group\": \"3\"},",
-        "\t\t{\"id\": \"4\", \"size\": \"2.0\", "
+        "\t\t{\"id\": \"4\", \"size\": \"2.0\", \"count\": \"1\", "
           +"\"name\": \"four\", \"group\": \"4\"}",
         "\t],",
         "\t\"links\": [",
@@ -69,17 +69,17 @@ class JsonGraphWriterTest extends SparkTestSuite
       verifyFile(Array(
         "{",
         "\t\"nodes\": [",
-        "\t\t{\"id\": \"-3\", \"size\": \"0.0\", "
+        "\t\t{\"id\": \"-3\", \"size\": \"0.0\", \"count\": \"0\", "
           +"\"name\": \"\", \"group\": \"3\"},",
-        "\t\t{\"id\": \"-2\", \"size\": \"0.0\", "
+        "\t\t{\"id\": \"-2\", \"size\": \"0.0\", \"count\": \"0\", "
           +"\"name\": \"\", \"group\": \"2\"},",
-        "\t\t{\"id\": \"-1\", \"size\": \"0.0\", "
+        "\t\t{\"id\": \"-1\", \"size\": \"0.0\", \"count\": \"0\", "
           +"\"name\": \"\", \"group\": \"1\"},",
-        "\t\t{\"id\": \"1\", \"size\": \"1.0\", "
+        "\t\t{\"id\": \"1\", \"size\": \"1.0\", \"count\": \"1\", "
           +"\"name\": \"1\", \"group\": \"1\"},",
-        "\t\t{\"id\": \"2\", \"size\": \"1.0\", "
+        "\t\t{\"id\": \"2\", \"size\": \"1.0\", \"count\": \"1\", "
           +"\"name\": \"2\", \"group\": \"2\"},",
-        "\t\t{\"id\": \"3\", \"size\": \"1.0\", "
+        "\t\t{\"id\": \"3\", \"size\": \"1.0\", \"count\": \"1\", "
           +"\"name\": \"3\", \"group\": \"3\"}",
         "\t],",
         "\t\"links\": [",
@@ -109,10 +109,10 @@ class JsonGraphWriterTest extends SparkTestSuite
       verifyFile(Array(
         "{",
         "\t\"nodes\": [",
-        "\t\t{\"id\": \"1\", \"size\": \"0.7016666666666667\", "
-          +"\"name\": \"1\", \"group\": \"1\"},",
-        "\t\t{\"id\": \"3\", \"size\": \"0.29833333333333334\", "
-          +"\"name\": \"3\", \"group\": \"3\"}",
+        "\t\t{\"id\": \"1\", \"size\": \"0.7016666666666667\","
+		  +" \"count\": \"2\", \"name\": \"1\", \"group\": \"1\"},",
+        "\t\t{\"id\": \"3\", \"size\": \"0.29833333333333334\","
+		  +" \"count\": \"1\", \"name\": \"3\", \"group\": \"3\"}",
         "\t]",
         "}"
       ))
