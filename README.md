@@ -23,7 +23,7 @@ Run `sbt test` to run unit tests
 
   `PageRank tele`: probability of teleportation in PageRank, equal 1-(damping factor)
 
-  `PageRank error threshold factor`: PageRank termination condition is set to termination when Euclidean distance between previous vector and current vector is within $1/(node number)/(PageRank error threshold factor)$.
+  `PageRank error threshold factor`: PageRank termination condition is set to termination when Euclidean distance between previous vector and current vector is within 1/(node number)/(PageRank error threshold factor).
 
   `log path`: file path of text log file
 
