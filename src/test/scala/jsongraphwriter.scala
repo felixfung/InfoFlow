@@ -100,7 +100,7 @@ class JsonGraphWriterTest extends SparkTestSuite
     try {
       // produce json file
       val graph = PajekReader( sc, "Nets/small-asym.net", logFile )
-      val net0 = Partition.init( graph, 0.85 )
+      val net0 = Partition.init( graph, 0.85, 20 )
       val infoMap = new InfoMap
       val (_,net1) = infoMap( graph, net0, logFile )
       LogFile.saveReducedJson( filename, "", net1 )
@@ -109,9 +109,9 @@ class JsonGraphWriterTest extends SparkTestSuite
       verifyFile(Array(
         "{",
         "\t\"nodes\": [",
-        "\t\t{\"id\": \"1\", \"size\": \"0.70175\", "
+        "\t\t{\"id\": \"1\", \"size\": \"0.7016666666666667\", "
           +"\"name\": \"1\", \"group\": \"1\"},",
-        "\t\t{\"id\": \"3\", \"size\": \"0.29825\", "
+        "\t\t{\"id\": \"3\", \"size\": \"0.29833333333333334\", "
           +"\"name\": \"3\", \"group\": \"3\"}",
         "\t]",
         "}"

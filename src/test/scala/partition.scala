@@ -15,7 +15,7 @@ class PartitionTest extends SparkTestSuite
     val vertices = sc.parallelize( List( (1L,("1",1L)) ) )
     val edges = sc.parallelize( List[(Long,(Long,Double))]() )
     val graph0 = Graph( vertices, edges )
-    val partition = Partition.init( graph0, 0.15 )
+    val partition = Partition.init( graph0, 0.15, 20 )
     assert(modulesEq(
       partition.vertices.collect,
       Array( (1,(1,1.0,0.0,0.0)) )
@@ -27,7 +27,7 @@ class PartitionTest extends SparkTestSuite
     val vertices = sc.parallelize( List( (1L,("1",1L)), (2L,("2",2L)) ) )
     val edges = sc.parallelize( List( (1L,(2L,1.0)), (2L,(1L,1.0)) ) )
     val graph0 = Graph( vertices, edges )
-    val partition = Partition.init( graph0, 0.15 )
+    val partition = Partition.init( graph0, 0.15, 20 )
     assert(modulesEq(
       partition.vertices.collect,
       Array( (1,(1,0.5,0.5,0.5)), (2,(1,0.5,0.5,0.5)) )
@@ -45,7 +45,7 @@ class PartitionTest extends SparkTestSuite
     val edges = sc.parallelize(
       List[(Long,(Long,Double))]( (1,(2,1)), (2,(1,1)), (1,(1,1)) ) )
     val graph0 = Graph( vertices, edges )
-    val partition = Partition.init( graph0, 0.15 )
+    val partition = Partition.init( graph0, 0.15, 20 )
     assert(modulesEq(
       partition.vertices.collect,
       Array( (1L,(1L,0.5,0.5,0.5)), (2L,(1L,0.5,0.5,0.5)) )
@@ -65,7 +65,7 @@ class PartitionTest extends SparkTestSuite
       (1,(2,1)), (2,(3,1)), (1,(3,1)), (3,(1,1)), (4,(3,1))
     ))
     val graph0 = Graph( vertices, edges )
-    val partition = Partition.init( graph0, 0.15 )
+    val partition = Partition.init( graph0, 0.15, 20 )
     assert(modulesEq(
       partition.vertices.collect,
       Array(
