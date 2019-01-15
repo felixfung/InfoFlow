@@ -35,7 +35,7 @@ sealed case class Partition
 
 object Partition
 {
-  def init( graph: Graph, tele: Double ): Partition = {
+  def init( graph: Graph, tele: Double, errThFactor: Double ): Partition = {
 
     val nodeNumber: Long = graph.vertices.count
 
@@ -56,7 +56,8 @@ object Partition
 	edges.cache
 
     // exit probability from each vertex
-    val ergodicFreq = PageRank( Graph( graph.vertices, edges), 1-tele )
+    val ergodicFreq = PageRank( Graph(graph.vertices,edges),
+      1-tele, errThFactor )
     ergodicFreq.cache
 
     // modular information

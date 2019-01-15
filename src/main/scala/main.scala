@@ -87,7 +87,8 @@ object InfoFlowMain {
       +s" and ${graph0.edges.count} edges\n",false)
 
     logFile.write(s"Initializing partitioning, calculating PageRank\n",false)
-    val part0: Partition = Partition.init( graph0, config.algoParams.tele )
+    val part0: Partition = Partition.init(
+      graph0, config.algoParams.tele, config.algoParams.errThFactor )
     logFile.write(s"Finished initialization calculations\n",false)
 
     logFile.write(s"Using ${config.algoParams.algoName} algorithm:\n",false)

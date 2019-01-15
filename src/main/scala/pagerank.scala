@@ -10,7 +10,8 @@ object PageRank
    * PageRank calculation
    * given graph and damping rate, calculate PageRank ergodic frequency
    ***************************************************************************/
-  def apply( graph: Graph, damping: Double ): RDD[(Long,Double)] = {
+  def apply( graph: Graph, damping: Double, errThFactor: Double )
+  : RDD[(Long,Double)] = {
     val nodeNumber: Long = graph.vertices.count
     val edges: Matrix = {
       val outLinkTotalWeight = graph.edges.map {
@@ -55,7 +56,9 @@ object PageRank
 	freqUniform.cache
 
     // calls inner PageRank calculation function
-    PageRank( edges, freqUniform, nodeNumber, damping, 1e-3/*errTh*/, 0 )
+    PageRank( edges, freqUniform, nodeNumber, damping,
+      1.0/nodeNumber.toDouble/errThFactor,
+      0 )
   }
 
   /***************************************************************************

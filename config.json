@@ -1,5 +1,5 @@
 {
-  "Graph": "Nets/zero.net",
+  "Graph": "Nets/rosvall.net",
   "spark configs": {
     "Master": "local[*]",
     "num executors": "1",
@@ -9,7 +9,8 @@
   },
   "Algorithm": {
     "Community detection algorithm": "InfoFlow",
-    "PageRank tele": "0.15"
+    "PageRank tele": 0.15,
+    "PageRank error threshold factor": 20
   },
   "log": {
     "log path": "Output/log.txt",

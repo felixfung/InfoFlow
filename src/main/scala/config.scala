@@ -30,7 +30,8 @@ object ConfigFile
   // class that holds algorithmic parameters
   sealed case class AlgoParams(
     val algoName: String,
-    val tele: Double
+    val tele: Double,
+    val errThFactor: Double
   )
 
   // class that holds parameters for log file
@@ -58,7 +59,9 @@ object ConfigFile
       ),
       ConfigFile.AlgoParams(
         rawJson.getVal("Algorithm","Community detection algorithm").toString,
-        rawJson.getVal("Algorithm","PageRank tele").toString.toDouble
+        rawJson.getVal("Algorithm","PageRank tele").toString.toDouble,
+        rawJson.getVal("Algorithm","PageRank error threshold factor")
+          .toString.toDouble
       ),
       ConfigFile.LogParams(
         rawJson.getVal("log","log path").toString,
