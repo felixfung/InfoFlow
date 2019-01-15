@@ -13,6 +13,7 @@ import org.apache.commons.io.FileUtils
 class JsonGraphWriterTest extends SparkTestSuite
 {
   val filename = "unittestfile.json"
+  val logFile = new LogFile(sc,"","","","","","",false)
   test("Json exportation of simple graph") {
     try {
       // produce json file
@@ -61,7 +62,7 @@ class JsonGraphWriterTest extends SparkTestSuite
   test("Json full exportation of simple graph") {
     try {
       // produce json file
-      val graph = PajekReader( sc, "Nets/small-asym.net" )
+      val graph = PajekReader( sc, "Nets/small-asym.net", logFile )
       LogFile.saveFullJson( filename, "", graph )
 
       // read and verify json file
@@ -98,10 +99,9 @@ class JsonGraphWriterTest extends SparkTestSuite
   test("Json reduced exportation of simple graph") {
     try {
       // produce json file
-      val graph = PajekReader( sc, "Nets/small-asym.net" )
+      val graph = PajekReader( sc, "Nets/small-asym.net", logFile )
       val net0 = Partition.init( graph, 0.85 )
       val infoMap = new InfoMap
-      val logFile = new LogFile(sc,"","","","","","",false)
       val (_,net1) = infoMap( graph, net0, logFile )
       LogFile.saveReducedJson( filename, "", net1 )
 
@@ -109,10 +109,10 @@ class JsonGraphWriterTest extends SparkTestSuite
       verifyFile(Array(
         "{",
         "\t\"nodes\": [",
-        "\t\t{\"id\": \"1\", \"size\": \"4.0\", "
-          +"\"name\": \"\", \"group\": \"1\"},",
-        "\t\t{\"id\": \"3\", \"size\": \"1.0\", "
-          +"\"name\": \"\", \"group\": \"3\"}",
+        "\t\t{\"id\": \"1\", \"size\": \"0.70175\", "
+          +"\"name\": \"1\", \"group\": \"1\"},",
+        "\t\t{\"id\": \"3\", \"size\": \"0.29825\", "
+          +"\"name\": \"3\", \"group\": \"3\"}",
         "\t]",
         "}"
       ))

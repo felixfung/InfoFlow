@@ -4,35 +4,37 @@
 
 class PajekReaderTest extends SparkTestSuite
 {
+  val logFile = new LogFile(sc,"","","","","","",false)
+
   test("Throw error when reading wrong file") {
     val thrown = intercept[Exception] {
-      val dummy = PajekReader(sc,"Nets/dummy")
+      val dummy = PajekReader(sc,"Nets/dummy",logFile)
     }
     assert( thrown.getMessage === "Cannot open file Nets/dummy" )
   }
 
   test("Read trivial network with comment") {
-    val graph = PajekReader(sc,"Nets/zero.net")
+    val graph = PajekReader(sc,"Nets/zero.net",logFile)
     assert( graph.vertices.collect === Array((1,("v1",1))) )
     assert( graph.edges.collect === Array() )
   }
 
   test("Read trivial networks") {
-    val graph = PajekReader(sc,"Nets/trivial.net")
+    val graph = PajekReader(sc,"Nets/trivial.net",logFile)
     assert( graph.vertices.collect.sorted ===
       Array((1,("m01",1)),(2,("m02",2))) )
     assert( graph.edges.collect === Array( (1,(2,2)) ) )
   }
 
   test("Read trivial networks with self loop") {
-    val graph = PajekReader(sc,"Nets/trivial-with-self-loop.net")
+    val graph = PajekReader(sc,"Nets/trivial-with-self-loop.net",logFile)
     assert( graph.vertices.collect.sorted ===
       Array((1,("m01",1)),(2,("m02",2))) )
     assert( graph.edges.collect.sorted === Array( (1,(2,2)), (2,(2,1)) ) )
   }
 
   test("Read simple network") {
-    val graph = PajekReader(sc,"Nets/simple.net")
+    val graph = PajekReader(sc,"Nets/simple.net",logFile)
     assert( graph.vertices.collect.sorted ===
       Array(
         (1,("1",1)),
@@ -64,7 +66,7 @@ class PajekReaderTest extends SparkTestSuite
   }
 
   test("Read file with *edgeslist format") {
-    val graph = PajekReader(sc,"Nets/edge-test.net")
+    val graph = PajekReader(sc,"Nets/edge-test.net",logFile)
     assert( graph.vertices.collect.sorted === Array(
       (1,("1",1)),
       (2,("2",2)),
@@ -80,7 +82,7 @@ class PajekReaderTest extends SparkTestSuite
   }
 
   test("Test reading arcs list") {
-    val graph = PajekReader(sc,"Nets/arcslist-test.net")
+    val graph = PajekReader(sc,"Nets/arcslist-test.net",logFile)
     assert( graph.vertices.collect === Array(
       (1,("1",1)),
       (2,("2",2)),
