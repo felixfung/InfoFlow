@@ -87,6 +87,10 @@ object InfoFlowMain {
       +s" and ${graph0.edges.count} edges\n",false)
 
     logFile.write(s"Initializing partitioning, calculating PageRank\n",false)
+    logFile.write(s"PageRank teleportation probablity"
+      +s" ${config.algoParams.tele}\n",false)
+    logFile.write(s"PageRank error threshold factor"
+      +s" ${config.algoParams.errThFactor}\n",false)
     val part0: Partition = Partition.init(
       graph0, config.algoParams.tele, config.algoParams.errThFactor )
     logFile.write(s"Finished initialization calculations\n",false)
@@ -94,8 +98,8 @@ object InfoFlowMain {
     logFile.write(s"Using ${config.algoParams.algoName} algorithm:\n",false)
     val (graph1,part1) = communityDetection( graph0, part0, logFile )
 
-    logFile.write( s"Save final graph with"
-      +s" ${part1.vertices.count} modules"
+    logFile.write(s"Save final graph\n",false)
+    logFile.write(s"with ${part1.vertices.count} modules"
       +s" and ${part1.edges.count} connections\n",
     false)
     logFile.save( graph1, part1, false, "" )
