@@ -70,8 +70,9 @@ object InfoFlowMain {
     logFile.write(
       s"Executor cores: ${conf.get("spark.executor.cores")}\n",
     false)
+	val jvmHeapSpace = Runtime.getRuntime().maxMemory/1024/1024
     logFile.write(
-      s"Driver memory: ${conf.get("spark.driver.memory")}\n",
+      s"Driver memory/Java heap size: $jvmHeapSpace Mb\n",
     false)
     logFile.write(
       s"Executor memory: ${conf.get("spark.executor.memory")}\n",
@@ -86,13 +87,12 @@ object InfoFlowMain {
     logFile.write(s"Read in network with ${graph0.vertices.count} nodes"
       +s" and ${graph0.edges.count} edges\n",false)
 
-    logFile.write(s"Initializing partitioning, calculating PageRank\n",false)
-    logFile.write(s"PageRank teleportation probablity"
-      +s" ${config.algoParams.tele}\n",false)
-    logFile.write(s"PageRank error threshold factor"
-      +s" ${config.algoParams.errThFactor}\n",false)
+    logFile.write(s"Initializing partitioning\n",false)
     val part0: Partition = Partition.init(
-      graph0, config.algoParams.tele, config.algoParams.errThFactor )
+      graph0,
+	  config.algoParams.tele, config.algoParams.errThFactor,
+	  logFile
+	)
     logFile.write(s"Finished initialization calculations\n",false)
 
     logFile.write(s"Using ${config.algoParams.algoName} algorithm:\n",false)

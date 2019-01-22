@@ -10,8 +10,13 @@ object PageRank
    * PageRank calculation
    * given graph and damping rate, calculate PageRank ergodic frequency
    ***************************************************************************/
-  def apply( graph: Graph, damping: Double, errThFactor: Double )
-  : RDD[(Long,Double)] = {
+  def apply(
+    graph: Graph, damping: Double, errThFactor: Double, logFile: LogFile
+  ): RDD[(Long,Double)] = {
+	logFile.write(s"Calculating PageRank\n",false)
+    logFile.write(s"PageRank teleportation probablity ${1-damping}\n",false)
+    logFile.write(s"PageRank error threshold factor $errThFactor\n",false)
+
     val nodeNumber: Long = graph.vertices.count
     val edges: Matrix = {
       val outLinkTotalWeight = graph.edges.map {
@@ -58,7 +63,8 @@ object PageRank
     // calls inner PageRank calculation function
     PageRank( edges, freqUniform, nodeNumber, damping,
       1.0/nodeNumber.toDouble/errThFactor,
-      0 )
+      logFile, 0
+    )
   }
 
   /***************************************************************************
@@ -69,8 +75,11 @@ object PageRank
   @scala.annotation.tailrec
   def apply(
     edges: Matrix, freq: RDD[(Long,Double)],
-    n: Long, damping: Double, errTh: Double, loop: Long
+    n: Long, damping: Double, errTh: Double,
+	logFile: LogFile, loop: Long
   ): RDD[(Long,Double)] = {
+    // print the PageRank iteration number only in debug log
+	logFile.write(s"Calculating PageRank, iteration $loop\n",false)
 
     // 2D Euclidean distance between two vectors
     def dist2D( v1: RDD[(Long,Double)], v2: RDD[(Long,Double)] ): Double = {
@@ -104,7 +113,7 @@ object PageRank
     val err = dist2D(freq,newFreq)
 
     if( err < errTh ) newFreq
-    else PageRank( edges, newFreq, n, damping, errTh, loop+1 )
+    else PageRank( edges, newFreq, n, damping, errTh, logFile, loop+1 )
   }
 }
 
