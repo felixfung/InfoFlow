@@ -56,27 +56,18 @@ object InfoFlowMain {
     )
 
     // log app version, spark version
-    {
+    //{
       val jar = sc.jars.head.split('/').last
       val version = jar.split('-').last.split('.').dropRight(1).mkString(".")
       logFile.write(s"Running ${sc.appName}, version: $version\n",false)
-      logFile.write(s"Jar: $jar\n",false)
+	  val jvmHeapSpace = Runtime.getRuntime().maxMemory/1024/1024
+      logFile.write(
+        s"Driver memory/Java heap size: $jvmHeapSpace Mb\n",
+      false)
       logFile.write(s"Spark version: ${sc.version}\n",false)
-    }
-    logFile.write(s"Spark configurations:\n",false)
-    logFile.write(
-      s"Executors: ${conf.get("spark.executor.instances")}\n",
-    false)
-    logFile.write(
-      s"Executor cores: ${conf.get("spark.executor.cores")}\n",
-    false)
-	val jvmHeapSpace = Runtime.getRuntime().maxMemory/1024/1024
-    logFile.write(
-      s"Driver memory/Java heap size: $jvmHeapSpace Mb\n",
-    false)
-    logFile.write(
-      s"Executor memory: ${conf.get("spark.executor.memory")}\n",
-    false)
+      logFile.write(s"Spark configurations:\n",false)
+	  conf.getAll.foreach{ case (x,y) => logFile.write(s"$x: $y\n",false) }
+    //}
 
   /***************************************************************************
    * read file, solve, save
