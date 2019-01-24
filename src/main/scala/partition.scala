@@ -36,11 +36,12 @@ sealed case class Partition
 object Partition
 {
   def init(
-	graph: Graph, tele: Double, errThFactor: Double,
+	graph: Graph, pageRankConfig: JsonObj,
 	logFile: LogFile
   ): Partition = {
 
     val nodeNumber: Long = graph.vertices.count
+    val tele = pageRankConfig.getObj("tele").value.toString.toDouble
 
     // filter away self-connections
     // and normalize edge weights per "from" node
@@ -59,10 +60,14 @@ object Partition
 	edges.cache
 
     // exit probability from each vertex
-    val ergodicFreq = PageRank(
-      Graph(graph.vertices,edges),
-      1-tele, errThFactor, logFile
-	)
+    val ergodicFreq = {
+      val errThFactor = pageRankConfig.getObj("error threshold factor")
+      .value.toString.toDouble
+      PageRank(
+        Graph(graph.vertices,edges),
+        1-tele, errThFactor, logFile
+	  )
+    }
     ergodicFreq.cache
 
     // modular information

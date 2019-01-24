@@ -21,14 +21,13 @@
 
 import scala.util.parsing.json._
 
-sealed class JsonReader( filename: String )
-{
 /*****************************************************************************
  * strategy is to read in whole file
  * then wrap it into a JsonObj, which can then be accessed
  *****************************************************************************/
   sealed case class JsonObj( value: Any ) {
-    def getObj( keys: Seq[String] ): JsonObj = {
+    def getObj( keys: String* ): JsonObj = _getObj( keys.toSeq )
+    def _getObj( keys: Seq[String] ): JsonObj = {
       try {
         keys match {
           case key::Nil =>
@@ -36,7 +35,7 @@ sealed class JsonReader( filename: String )
           case key :: nextkeys => {
             val nextObj = JsonObj(
               value.asInstanceOf[Map[String,Any]] (key) )
-            nextObj.getObj(nextkeys)
+            nextObj._getObj(nextkeys)
           }
 	    }
 	  }
@@ -47,6 +46,8 @@ sealed class JsonReader( filename: String )
     }
   }
 
+sealed class JsonReader( filename: String )
+{
 /*****************************************************************************
  * strategy is to read in whole file
  * then wrap it into a JsonObj, which can then be accessed
@@ -68,5 +69,6 @@ sealed class JsonReader( filename: String )
   }
 
   private val jsonObj = JsonObj( JSON.parseFull(wholeFile).get )
-  def getObj( keys: Seq[String] ): JsonObj = jsonObj.getObj(keys)
+  def getObj( keys: String* ): JsonObj = _getObj( keys.toSeq )
+  def _getObj( keys: Seq[String] ): JsonObj = jsonObj._getObj(keys)
 }

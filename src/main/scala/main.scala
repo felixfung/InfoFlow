@@ -20,50 +20,44 @@ object InfoFlowMain {
 
     // use default or alternative config file name
     val configFileName = if( args.size == 0 ) "config.json" else args(0)
-    val config = ConfigFile(configFileName)
+    val config = new JsonReader(configFileName)
 
   /***************************************************************************
    * Initialize structures; function definitions defined below
    ***************************************************************************/
-    val graphFile = config.getObj(["Graph"]).toString
-    val( spark, sc ) = initSpark( config.getObj(["spark configs"]) )
-	val pageRankConfig = config.getObj(["PageRank"])
-    val algoName = config.getObj(["Community Detection","name"]).toString
-    val communityDetection = initCD( algoName )
-    val logFile = initLog( config.getObj(["log"]) )
+    val graphFile = config.getObj("Graph").value.toString
+    val( spark, sc ) = initSpark( config.getObj("spark configs") )
+	val pageRankConfig = config.getObj("PageRank")
+    val algoName = config.getObj("Community Detection","name").value.toString
+    val logFile = initLog( sc, config.getObj("log") )
 
   /***************************************************************************
    * read, solve, save
    ***************************************************************************/
-    logEnvironment( sc, logFile )
+    logEnvironment( spark, sc, logFile )
     val graph0: Graph = readGraph( sc, graphFile, logFile )
     val part0: Partition = initPartition( graph0, pageRankConfig, logFile )
     val(graph1,part1) = communityDetection( graph0, part0, algoName, logFile )
-    saveFinalGraph( graph1, part1 )
-    terminate(sc)
-}
+    saveFinalGraph( graph1, part1, logFile )
+    terminate( sc, logFile )
+  }
 
 /*****************************************************************************
  * Below functions are implementations of function calls above
  *****************************************************************************/
-object InfoFlowMain {
-  /***************************************************************************
-   * Initialize community detection algorithm
-   ***************************************************************************/
-    def initCD( algoName: String ) = CommunityDetection.choose( algoName )
 
   /***************************************************************************
    * Initialize Spark Context
    ***************************************************************************/
     def initSpark( sparkConfig: JsonObj ): (SparkConf,SparkContext) = {
-      val master = sparkConfig.getVal("Master").toString,
-      val numExecutors = sparkConfig.getVal("num executors").toString,
-      val executorCores = sparkConfig.getVal("executor cores").toString,
-      val driverMemory = sparkConfig.getVal("driver memory").toString,
-      val executorMemory = sparkConfig.getVal("executor memory").toString
+      val master = sparkConfig.getObj("Master").value.toString
+      val numExecutors = sparkConfig.getObj("num executors").value.toString
+      val executorCores = sparkConfig.getObj("executor cores").value.toString
+      val driverMemory = sparkConfig.getObj("driver memory").value.toString
+      val executorMemory = sparkConfig.getObj("executor memory").value.toString
       val spark = new SparkConf()
         .setAppName("InfoFlow")
-        .setMaster( config.sparkConfigs.master )
+        .setMaster( master )
         .set( "spark.executor.instances", numExecutors )
         .set( "spark.executor.cores", executorCores )
         .set( "spark.driver.memory", driverMemory )
@@ -76,23 +70,24 @@ object InfoFlowMain {
   /***************************************************************************
    * create log file object
    ***************************************************************************/
-    def initLog( logConfig: JsonObj, sc: SparkContext ): LogFile = {
+    def initLog( sc: SparkContext, logConfig: JsonObj ): LogFile = {
       new LogFile(
         sc,
-        logConfig.getObj("log path").toString,
-        logConfig.getObj(""Parquet path").toString,
-        logConfig.getObj(""RDD path").toString,
-        logConfig.getObj(""txt path").toString,
-        logConfig.getObj(""Full Json path").toString,
-        logConfig.getObj(""Reduced Json path").toString,
-        logConfig.getObj(""debug").toString.toBoolean
+        logConfig.getObj("log path").value.toString,
+        logConfig.getObj("Parquet path").value.toString,
+        logConfig.getObj("RDD path").value.toString,
+        logConfig.getObj("txt path").value.toString,
+        logConfig.getObj("Full Json path").value.toString,
+        logConfig.getObj("Reduced Json path").value.toString,
+        logConfig.getObj("debug").value.toString.toBoolean
       )
     }
 
   /***************************************************************************
    * log app version, spark version
    ***************************************************************************/
-    def logEnvironment( sc: SparkContext, logFile: LogFile ): Unit = {
+    def logEnvironment( spark: SparkConf, sc: SparkContext, logFile: LogFile )
+    : Unit = {
       val jar = sc.jars.head.split('/').last
       val version = jar.split('-').last.split('.').dropRight(1).mkString(".")
       logFile.write(s"Running ${sc.appName}, version: $version\n",false)
@@ -124,9 +119,9 @@ object InfoFlowMain {
    * initialize partitioning
    ***************************************************************************/
     def initPartition( graph: Graph,
-    pageRankConfig: JsonObj, logFile: LogFile ): Unit = {
+    pageRankConfig: JsonObj, logFile: LogFile ): Partition = {
       logFile.write(s"Initializing partitioning\n",false)
-      val part = Partition.init( graph0, pageRankConfig, logFile )
+      val part = Partition.init( graph, pageRankConfig, logFile )
       logFile.write(s"Finished initialization calculations\n",false)
       part
     }
@@ -136,15 +131,16 @@ object InfoFlowMain {
    ***************************************************************************/
     def communityDetection( graph: Graph, part: Partition,
     algoName: String, logFile: LogFile ): (Graph,Partition) = {
-      val algoName = config.getObj(["Community Detection","name"])
       logFile.write(s"Using $algoName algorithm:\n",false)
-      communityDetection( graph0, part0, logFile )
+      val algo = CommunityDetection.choose( algoName )
+      algo( graph, part, logFile )
     }
 
   /***************************************************************************
    * save final graph
    ***************************************************************************/
-    def saveFinalGraph( graph: Graph, part: Partition ): Unit = {
+    def saveFinalGraph( graph: Graph, part: Partition, logFile: LogFile )
+    : Unit = {
       logFile.write(s"Save final graph\n",false)
       logFile.write(s"with ${part.vertices.count} modules"
         +s" and ${part.edges.count} connections\n",
@@ -155,7 +151,7 @@ object InfoFlowMain {
   /***************************************************************************
    * terminate program
    ***************************************************************************/
-    def terminate( sc: SparkContext ): Unit = {
+    def terminate( sc: SparkContext, logFile: LogFile ): Unit = {
       logFile.write("InfoFlow Terminate\n",false)
       logFile.close
       sc.stop
