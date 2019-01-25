@@ -41,6 +41,7 @@ class InfoMap extends CommunityDetection with Serializable
    ***************************************************************************/
   def apply( graph: Graph, part: Partition, logFile: LogFile )
   : ( Graph, Partition ) = {
+    logFile.write(s"Using InfoMap algorithm\n",false)
     @scala.annotation.tailrec
     def recursiveMerge(
       loop: Int,

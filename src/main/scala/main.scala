@@ -70,18 +70,16 @@ object InfoFlowMain {
   /***************************************************************************
    * create log file object
    ***************************************************************************/
-    def initLog( sc: SparkContext, logConfig: JsonObj ): LogFile = {
-      new LogFile(
-        sc,
-        logConfig.getObj("log path").value.toString,
-        logConfig.getObj("Parquet path").value.toString,
-        logConfig.getObj("RDD path").value.toString,
-        logConfig.getObj("txt path").value.toString,
-        logConfig.getObj("Full Json path").value.toString,
-        logConfig.getObj("Reduced Json path").value.toString,
-        logConfig.getObj("debug").value.toString.toBoolean
-      )
-    }
+    def initLog( sc: SparkContext, logConfig: JsonObj ): LogFile = new LogFile(
+      sc,
+      logConfig.getObj("log path").value.toString,
+      logConfig.getObj("Parquet path").value.toString,
+      logConfig.getObj("RDD path").value.toString,
+      logConfig.getObj("txt path").value.toString,
+      logConfig.getObj("Full Json path").value.toString,
+      logConfig.getObj("Reduced Json path").value.toString,
+      logConfig.getObj("debug").value.toString.toBoolean
+    )
 
   /***************************************************************************
    * log app version, spark version
@@ -91,13 +89,13 @@ object InfoFlowMain {
       val jar = sc.jars.head.split('/').last
       val version = jar.split('-').last.split('.').dropRight(1).mkString(".")
       logFile.write(s"Running ${sc.appName}, version: $version\n",false)
-	  val jvmHeapSpace = Runtime.getRuntime().maxMemory/1024/1024
+      val jvmHeapSpace = Runtime.getRuntime().maxMemory/1024/1024
       logFile.write(
         s"Driver memory/Java heap size: $jvmHeapSpace Mb\n",
       false)
       logFile.write(s"Spark version: ${sc.version}\n",false)
       logFile.write(s"Spark configurations:\n",false)
-	  spark.getAll.foreach{ case (x,y) => logFile.write(s"$x: $y\n",false) }
+      spark.getAll.foreach{ case (x,y) => logFile.write(s"$x: $y\n",false) }
     }
 
   /***************************************************************************
@@ -112,7 +110,7 @@ object InfoFlowMain {
       logFile.write(
         s"Read in network with $vertices nodes and $edges edges\n",
       false)
-	  graph
+      graph
     }
 
   /***************************************************************************
@@ -132,7 +130,6 @@ object InfoFlowMain {
     def communityDetection( graph: Graph, part: Partition,
     cdConfig: JsonObj, logFile: LogFile ): (Graph,Partition) = {
       val algoName = cdConfig.getObj("name").value.toString
-      logFile.write(s"Using $algoName algorithm:\n",false)
       val algo = {
         if( algoName == "InfoMap" )
           new InfoMap( cdConfig )

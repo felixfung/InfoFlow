@@ -36,6 +36,23 @@ extends CommunityDetection
    ***************************************************************************/
   def apply( graph: Graph, part: Partition, logFile: LogFile )
   : ( Graph, Partition ) = {
+    logFile.write(s"Using InfoFlow algorithm\n",false)
+
+    // log algorithm parameters
+    if( mergeDirection == "Asymmetric" )
+      logFile.write(
+        s"modules canNOT seek merge with opposite edge modules\n",false)
+    else
+      logFile.write(
+        s"modules can seek merge with opposite edge modules\n",false)
+    if( mergeNonedge )
+      logFile.write(s"allows for non-edge merging\n",false)
+    else
+      logFile.write(s"does NOT allow for non-edge merging\n",false)
+
+    /***************************************************************************
+      * tail recursive function, most algorithm is here
+      ***************************************************************************/
     @scala.annotation.tailrec
     def recursiveMerge(
       loop: Int,
@@ -50,7 +67,7 @@ extends CommunityDetection
 
       val deltaL = calDeltaL(part)
 
-      val m2Merge = calm2Merge(deltaL)
+      val m2Merge = calm2Merge( deltaL, mergeDirection )
       m2Merge.cache
       if( m2Merge.count == 0 )
         return terminate( loop, graph, part )
@@ -77,16 +94,14 @@ extends CommunityDetection
    ***************************************************************************/
 
     def trim( loop: Int, graph: Graph, part: Partition ) = {
-      //if( loop%10 == 0 ) {
-        part.vertices.localCheckpoint
-        val count1 = part.vertices.count
-        part.edges.localCheckpoint
-        val count2 = part.edges.count
-        graph.vertices.localCheckpoint
-        val count3 = graph.vertices.count
-        graph.edges.localCheckpoint
-        val count4 = graph.edges.count
-      //}
+      part.vertices.localCheckpoint
+      val count1 = part.vertices.count
+      part.edges.localCheckpoint
+      val count2 = part.edges.count
+      graph.vertices.localCheckpoint
+      val count3 = graph.vertices.count
+      graph.edges.localCheckpoint
+      val count4 = graph.edges.count
     }
 
     def terminate( loop: Long, graph: Graph, part: Partition ) = {
@@ -98,7 +113,8 @@ extends CommunityDetection
    * calculate the deltaL table for all possible merges
    * | src , dst , dL |
    ***************************************************************************/
-    def calDeltaL( part: Partition ): RDD[(Long,(Long,Double))] = {
+    def calDeltaL( part: Partition )
+    : RDD[(Long,(Long,Double))] = {
       val qi_sum = part.vertices.map {
         case (_,(_,_,_,q)) => q
       }
@@ -138,26 +154,6 @@ extends CommunityDetection
           )
       }
     }
-    // importantly, dL is symmetric towards src and dst
-    // so if both edges (src,dst) and (dst,src) exists
-    // their dL would be identical
-    // since dL (and the whole purpose of this table)
-    // is used to decide on merge, there is an option
-    // on whether a module could seek merge with another
-    // if there is an opposite connection
-    // eg a graph like this: m0 <- m1 -> m2 -> m3
-    // m2 seeks to merge with m3
-    // m1 might merge with m0
-    // BUT the code length reduction if m2 seeks merge with m1
-    // is greater than that of m2 seeking merge with m3
-    // the question arise, should such a merge (opposite direction to edge),
-    // be considered?
-    // this dilemma stems from how edges are directional
-    // while merges are non-directional, symmetric towards two modules
-    // in the bigger picture, this merge seeking behaviour
-    // is part of a greedy algorithm
-    // so that the best choice is heuristic based only
-    // to keep things simple, don't consider opposite edge merge now
 
   /***************************************************************************
    * each module seeks to merge with another connected module
@@ -165,21 +161,48 @@ extends CommunityDetection
    * this forms (weakly) connected components of merged modules
    * to be generated later
    *
-   * this implementation has two subtleties:
-   *   (1) merge seeks are directional
-   *       so that m2 will never seek to merge with m1 if only (m1,m2) exists
-   *   (2) (m1,m2), (m1,m3) has identical code length reduction
-   *       then both merges are selected
-   *       that is, m1 seeks to merge with both m2 and m3
    * |module , module to seek merge to |
+   *
+   * importantly, dL is symmetric towards src and dst
+   * so if both edges (src,dst) and (dst,src) exists
+   * their dL would be identical
+   * since dL (and the whole purpose of this table)
+   * is used to decide on merge, there is an option
+   * on whether a module could seek merge with another
+   * if there is an opposite connection
+   * eg a graph like this: m0 <- m1 -> m2 -> m3
+   * m2 seeks to merge with m3
+   * m1 might merge with m0
+   * BUT the code length reduction if m2 seeks merge with m1
+   * is greater than that of m2 seeking merge with m3
+   * the question arise, should such a merge (opposite direction to edge),
+   * be considered?
+   * this dilemma stems from how edges are directional
+   * while merges are non-directional, symmetric towards two modules
+   *
+   * the answer to this question is specified in the parameter mergeDirection
+   * "symmetric" or "asymmetric"
    ***************************************************************************/
-    def calm2Merge( deltaL: RDD[(Long,(Long,Double))] )
+    def calm2Merge( deltaL: RDD[(Long,(Long,Double))], mergeDirection: String )
     : RDD[(Long,Long)]= {
       // module to merge
       // (module,module to seek merge to)
 
+      val dL_corrected = if( mergeDirection == "asymmetric" ) deltaL
+      else { // if mergeDirection != "asymmetric", assume is symmetric
+        deltaL.flatMap {
+          case (m1,(m2,dL)) => Seq( ((m1,m2),dL), ((m2,m1),dL) )
+        }
+        .reduceByKey {
+          case (dL1,dL2) => if( dL1 <= dL2 ) dL1 else dL2
+        }
+        .map {
+          case ((m1,m2),dL) => (m1,(m2,dL))
+        }
+      }
+
       // obtain minimum dL for each source vertex
-      deltaL.reduceByKey {
+      val src_dL = dL_corrected.reduceByKey {
         case ( (_,dL1), (_,dL2) ) => if( dL1 < dL2 ) (0,dL1) else (0,dL2)
       }
       .map {
@@ -187,7 +210,7 @@ extends CommunityDetection
       }
       // for each source vertex, retain all that has dL==minimum dL
       // all others will be filtered away by setting dL=1
-      .join( deltaL ).map {
+      src_dL.join( deltaL ).map {
         case (m1,(dL_min,(m2,dL))) =>
           if( dL==dL_min ) (m1,(m2,dL)) else (m1,(m2,1.0))
       }
@@ -197,8 +220,7 @@ extends CommunityDetection
       }
       // take away dL info
       .map {
-        case (m1,(m2,_)) => (m1,m2)
-      }
+        case (m1,(m2,_)) => (m1,m2) }
     }
 
   /***************************************************************************
