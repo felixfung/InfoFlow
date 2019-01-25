@@ -8,8 +8,9 @@
 
 import org.apache.spark.rdd.RDD
 
-class InfoMap( config: JsonObj ) extends CommunityDetection with Serializable
+class InfoMap extends CommunityDetection with Serializable
 {
+  def this( config: JsonObj ) = this
   /***************************************************************************
    * case class to store all associated quantities of a potential merge
    * format of each entry is

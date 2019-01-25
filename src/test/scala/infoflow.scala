@@ -9,7 +9,7 @@
 
 class InfoFlowTest extends SparkTestSuite
 {
-  val infoFlow = new InfoFlow
+  val infoFlow = new InfoFlow("asymmetric",false)
 
   test("Test trivial network") {
     val( codelength, partition ) = CommunityDetectionTest( sc, infoFlow,

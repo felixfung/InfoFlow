@@ -23,10 +23,13 @@
 
 import org.apache.spark.rdd.RDD
 
-class InfoFlow( config: JsonObj ) extends CommunityDetection
+class InfoFlow( val mergeDirection: String, val mergeNonedge: Boolean )
+extends CommunityDetection
 {
-  val mergeDirection = config.getObj("merge direction").value.toString
-  val mergeNonedge = config.getObj("merge nonedge").value.toString.toBoolean
+  def this( config: JsonObj ) = this(
+    config.getObj("merge direction").value.toString,
+    config.getObj("merge nonedge").value.toString.toBoolean
+  )
 
   /***************************************************************************
    * main function
