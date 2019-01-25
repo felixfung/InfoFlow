@@ -9,6 +9,8 @@ Run `sbt test` to run unit tests
 
 ### Edit config.json:
 
+  `config.json` contains parameters to run InfoFlow. Edit appropriately:
+
   `Graph`: file path of the graph file. Currently supported graph file formats are local Pajek net format (.net) and Parquet format. If Parquet format is used, then two Parquet files are required, one holding the vertex information (node index, node name, module index) and one holding edge information (from index, to index, edge weight). The file path points to a Json file with `.parquet` extension, in this format:
 ```
 {
@@ -19,7 +21,7 @@ Run `sbt test` to run unit tests
 
   `spark configs`: Spark related configurations
 
-  `Master`: spark master config, probably `local[*]` or `yarn`
+  `spark configs, Master`: spark master config, probably `local[*]` or `yarn`
 
   `PageRank`: Page Rank related parameter values
 
@@ -29,25 +31,25 @@ Run `sbt test` to run unit tests
 
   `Community Detection`: community detection algorithm parametersInfoFlow
 
-  `name`: InfoFlow or InfoMap
+  `Community Detection, name`: InfoFlow or InfoMap
 
-  `merge direction`: for InfoFlow, setting this to `symmetric` means module a would not seek to merge module b, unless module a has an edge to module b, even if module b has an edge to module a. If it is set to `symmetric`, then module a would seek to merge with module b
+  `Community Detection, merge direction`: for InfoFlow, setting this to `symmetric` means module a would not seek to merge module b, unless module a has an edge to module b, even if module b has an edge to module a. If it is set to `symmetric`, then module a would seek to merge with module b
 
-  `merge nonedge`: when set to true, after community detection is completed, community detection would be attempted again, this time where unconnected modules may also merge
+  `Community Detection, merge nonedge`: when set to true, after community detection is completed, community detection would be attempted again, this time where unconnected modules may also merge
 
-  `log path`: file path of text log file
+  `log, log path`: file path of text log file
 
-  `Parquet path`: file path to save final graph in Parquet format
+  `log, Parquet path`: file path to save final graph in Parquet format
 
-  `RDD path`: file path to save final graph in RDD format
+  `log, RDD path`: file path to save final graph in RDD format
 
-  `txt path`: file path to save partitioning data in local txt format
+  `log, txt path`: file path to save partitioning data in local txt format
 
-  `Full Json path`: file path to save full graph in Json format, where each node is annotated with its associated module
+  `log, Full Json path`: file path to save full graph in Json format, where each node is annotated with its associated module
 
-  `Reduced Json path`: file path to save reduced graph in Json format, where each node is a module
+  `log, Reduced Json path`: file path to save reduced graph in Json format, where each node is a module
 
-  `debug`: boolean value; set true to save all intermediate graphs
+  `log, debug`: boolean value; set true to save all intermediate graphs
 
 To suppress a logging feature, put in an empty file path. For example, if you do not want to save in RDD format, set `RDD path` to "".
 
