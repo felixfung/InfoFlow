@@ -1,16 +1,20 @@
 {
-  "Graph": "Nets/rosvall.net",
+  "Graph": "Nets/data/pokec/pokec.net",
   "spark configs": {
     "Master": "local[*]",
     "num executors": "1",
     "executor cores": "8",
-    "driver memory": "10G",
-    "executor memory": "2G"
+    "driver memory": "60G",
+    "executor memory": "60G"
   },
-  "Algorithm": {
-    "Community detection algorithm": "InfoFlow",
-    "PageRank tele": 0.15,
-    "PageRank error threshold factor": 20
+  "PageRank": {
+    "tele": 0.15,
+    "error threshold factor": 20
+  },
+  "Community Detection": {
+    "name": "InfoFlow",
+	"merge direction": "symmetric",
+	"merge nonedge": true
   },
   "log": {
     "log path": "Output/log.txt",
