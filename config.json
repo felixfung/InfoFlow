@@ -1,11 +1,11 @@
 {
-  "Graph": "Nets/data/pokec/pokec.net",
+  "Graph": "Nets/rosvall.net",
   "spark configs": {
     "Master": "local[*]",
     "num executors": "1",
     "executor cores": "8",
-    "driver memory": "60G",
-    "executor memory": "60G"
+    "driver memory": "10G",
+    "executor memory": "2G"
   },
   "PageRank": {
     "tele": 0.15,
@@ -13,8 +13,8 @@
   },
   "Community Detection": {
     "name": "InfoFlow",
-	"merge direction": "symmetric",
-	"merge nonedge": true
+	"merge direction": "asymmetric",
+	"merge nonedge": false
   },
   "log": {
     "log path": "Output/log.txt",
