@@ -9,8 +9,6 @@ Run `sbt test` to run unit tests
 
 ### Edit config.json:
 
-  `Master`: spark master config, probably `local[*]` or `yarn`
-
   `Graph`: file path of the graph file. Currently supported graph file formats are local Pajek net format (.net) and Parquet format. If Parquet format is used, then two Parquet files are required, one holding the vertex information (node index, node name, module index) and one holding edge information (from index, to index, edge weight). The file path points to a Json file with `.parquet` extension, in this format:
 ```
 {
@@ -19,11 +17,23 @@ Run `sbt test` to run unit tests
 }
 ```
 
-  `Algo`: InfoFlow or InfoMap
+  `spark configs`: Spark related configurations
 
-  `PageRank tele`: probability of teleportation in PageRank, equal 1-(damping factor)
+  `Master`: spark master config, probably `local[*]` or `yarn`
 
-  `PageRank error threshold factor`: PageRank termination condition is set to termination when Euclidean distance between previous vector and current vector is within 1/(node number)/(PageRank error threshold factor).
+  `PageRank`: Page Rank related parameter values
+
+  `PageRank, tele`: probability of teleportation in PageRank, equal 1-(damping factor)
+
+  `PageRank, error threshold factor`: PageRank termination condition is set to termination when Euclidean distance between previous vector and current vector is within 1/(node number)/(PageRank error threshold factor).
+
+  `Community Detection`: community detection algorithm parametersInfoFlow
+
+  `name`: InfoFlow or InfoMap
+
+  `merge direction`: for InfoFlow, setting this to `symmetric` means module a would not seek to merge module b, unless module a has an edge to module b, even if module b has an edge to module a. If it is set to `symmetric`, then module a would seek to merge with module b
+
+  `merge nonedge`: when set to true, after community detection is completed, community detection would be attempted again, this time where unconnected modules may also merge
 
   `log path`: file path of text log file
 
