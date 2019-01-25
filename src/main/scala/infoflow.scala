@@ -23,8 +23,14 @@
 
 import org.apache.spark.rdd.RDD
 
-class InfoFlow extends CommunityDetection
+class InfoFlow( config: JsonObj ) extends CommunityDetection
 {
+  val mergeDirection = config.getObj("merge direction").value.toString
+  val mergeNonedge = config.getObj("merge nonedge").value.toString.toBoolean
+
+  /***************************************************************************
+   * main function
+   ***************************************************************************/
   def apply( graph: Graph, part: Partition, logFile: LogFile )
   : ( Graph, Partition ) = {
     @scala.annotation.tailrec

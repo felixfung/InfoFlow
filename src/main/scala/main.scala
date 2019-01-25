@@ -28,7 +28,7 @@ object InfoFlowMain {
     val graphFile = config.getObj("Graph").value.toString
     val( spark, sc ) = initSpark( config.getObj("spark configs") )
 	val pageRankConfig = config.getObj("PageRank")
-    val algoName = config.getObj("Community Detection","name").value.toString
+    val cdConfig = config.getObj("Community Detection")
     val logFile = initLog( sc, config.getObj("log") )
 
   /***************************************************************************
@@ -37,7 +37,7 @@ object InfoFlowMain {
     logEnvironment( spark, sc, logFile )
     val graph0: Graph = readGraph( sc, graphFile, logFile )
     val part0: Partition = initPartition( graph0, pageRankConfig, logFile )
-    val(graph1,part1) = communityDetection( graph0, part0, algoName, logFile )
+    val(graph1,part1) = communityDetection( graph0, part0, cdConfig, logFile )
     saveFinalGraph( graph1, part1, logFile )
     terminate( sc, logFile )
   }
@@ -130,9 +130,18 @@ object InfoFlowMain {
    * perform community detection
    ***************************************************************************/
     def communityDetection( graph: Graph, part: Partition,
-    algoName: String, logFile: LogFile ): (Graph,Partition) = {
+    cdConfig: JsonObj, logFile: LogFile ): (Graph,Partition) = {
+      val algoName = cdConfig.getObj("name").value.toString
       logFile.write(s"Using $algoName algorithm:\n",false)
-      val algo = CommunityDetection.choose( algoName )
+      val algo = {
+        if( algoName == "InfoMap" )
+          new InfoMap( cdConfig )
+        else if( algoName == "InfoFlow" )
+          new InfoFlow( cdConfig )
+        else throw new Exception(
+          "Community detection algorithm must be InfoMap or InfoFlow"
+        )
+      }
       algo( graph, part, logFile )
     }
 
