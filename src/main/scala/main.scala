@@ -27,7 +27,7 @@ object InfoFlowMain {
    ***************************************************************************/
     val graphFile = config.getObj("Graph").value.toString
     val( spark, sc ) = initSpark( config.getObj("spark configs") )
-	val pageRankConfig = config.getObj("PageRank")
+  	val pageRankConfig = config.getObj("PageRank")
     val cdConfig = config.getObj("Community Detection")
     val logFile = initLog( sc, config.getObj("log") )
 
