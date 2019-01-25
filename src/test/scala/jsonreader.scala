@@ -28,36 +28,36 @@ class JsonReaderTest extends FunSuite with BeforeAndAfter
    * unit tests
    ***************************************************************************/
     test("Parse simple value") {
-      assert( jsonReader.getVal("a").toString === "a" )
+      assert( jsonReader.getObj("a").value.toString === "a" )
     }
 
     test("Parse when key has white space") {
-      assert( jsonReader.getVal("a with space").toString === "a with space" )
+      assert( jsonReader.getObj("a with space").value.toString === "a with space" )
     }
 
     test("Parse nested value") {
-      assert( jsonReader.getVal("b","c").toString === "c" )
+      assert( jsonReader.getObj("b","c").value.toString === "c" )
     }
 
     test("Parse when doubly nested value") {
-      assert( jsonReader.getVal("b","d","e").toString === "e" )
+      assert( jsonReader.getObj("b","d","e").value.toString === "e" )
     }
 
     test("Stores nested Json object, then access key-value") {
-      val jsonObj = jsonReader.getVal("b")
-      assert( jsonObj.getObj("c").toString === "c" )
+      val jsonObj = jsonReader.getObj("b")
+      assert( jsonObj.getObj("c").value.toString === "c" )
 	}
 
     test("Throws exception when accessing nonexistent key") {
       val thrown = intercept[Exception] {
-        jsonReader.getVal("f")
+        jsonReader.getObj("f")
       }
       assert( thrown.getMessage === "key not found: f" )
     }
 
     test("Throws exception when accessing nonexistent key in nested object") {
       val thrown = intercept[Exception] {
-        jsonReader.getVal("b","f")
+        jsonReader.getObj("b","f")
       }
       assert( thrown.getMessage === "key not found: f" )
     }

@@ -26,8 +26,8 @@ import scala.util.parsing.json._
  * then wrap it into a JsonObj, which can then be accessed
  *****************************************************************************/
   sealed case class JsonObj( value: Any ) {
-    def getObj( keys: String* ): JsonObj = _getObj( keys.toSeq )
-    def _getObj( keys: Seq[String] ): JsonObj = {
+    def getObj( keys: String* ): JsonObj = _getObj( keys.toList )
+    def _getObj( keys: List[String] ): JsonObj = {
       try {
         keys match {
           case key::Nil =>
@@ -37,6 +37,7 @@ import scala.util.parsing.json._
               value.asInstanceOf[Map[String,Any]] (key) )
             nextObj._getObj(nextkeys)
           }
+		  case Nil => throw new Exception("Json parsing error")
 	    }
 	  }
       catch {
@@ -69,6 +70,6 @@ sealed class JsonReader( filename: String )
   }
 
   private val jsonObj = JsonObj( JSON.parseFull(wholeFile).get )
-  def getObj( keys: String* ): JsonObj = _getObj( keys.toSeq )
-  def _getObj( keys: Seq[String] ): JsonObj = jsonObj._getObj(keys)
+  def getObj( keys: String* ): JsonObj = _getObj( keys.toList )
+  def _getObj( keys: List[String] ): JsonObj = jsonObj._getObj(keys)
 }
