@@ -39,7 +39,7 @@ extends CommunityDetection
     logFile.write(s"Using InfoFlow algorithm\n",false)
 
     // log algorithm parameters
-    if( mergeDirection == "Asymmetric" )
+    if( mergeDirection.toLowerCase == "asymmetric" )
       logFile.write(
         s"modules canNOT seek merge with opposite edge modules\n",false)
     else
@@ -188,7 +188,7 @@ extends CommunityDetection
       // module to merge
       // (module,module to seek merge to)
 
-      val dL_corrected = if( mergeDirection == "asymmetric" ) deltaL
+      val dL_corrected = if( mergeDirection.toLowerCase == "asymmetric" ) deltaL
       else { // if mergeDirection != "asymmetric", assume is symmetric
         deltaL.flatMap {
           case (m1,(m2,dL)) => Seq( ((m1,m2),dL), ((m2,m1),dL) )
