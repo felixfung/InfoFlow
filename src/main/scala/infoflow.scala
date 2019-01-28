@@ -44,9 +44,9 @@ extends CommunityDetection
         s"modules canNOT seek merge with opposite edge modules\n",false)
     else
       logFile.write(
-        s"modules can seek merge with opposite edge modules\n",false)
+        s"modules CAN seek merge with opposite edge modules\n",false)
     if( mergeNonedge )
-      logFile.write(s"allows for non-edge merging\n",false)
+      logFile.write(s"ALLOWS for non-edge merging\n",false)
     else
       logFile.write(s"does NOT allow for non-edge merging\n",false)
 
