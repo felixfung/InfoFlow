@@ -53,7 +53,7 @@ extends CommunityDetection
  /***************************************************************************
    * tail recursive function, most algorithm is here
    ***************************************************************************/
-  @scala.annotation.tailrec
+    @scala.annotation.tailrec
     def recursiveMerge(
       loop: Int,
       graph: Graph,
