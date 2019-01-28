@@ -31,9 +31,9 @@ extends CommunityDetection
     config.getObj("merge nonedge").value.toString.toBoolean
   )
 
-  /***************************************************************************
-   * main function
-   ***************************************************************************/
+ /****************************************************************************
+  * main function
+  ****************************************************************************/
   def apply( graph: Graph, part: Partition, logFile: LogFile )
   : ( Graph, Partition ) = {
     logFile.write(s"Using InfoFlow algorithm\n",false)
@@ -50,10 +50,10 @@ extends CommunityDetection
     else
       logFile.write(s"does NOT allow for non-edge merging\n",false)
 
-    /***************************************************************************
-      * tail recursive function, most algorithm is here
-      ***************************************************************************/
-    @scala.annotation.tailrec
+ /***************************************************************************
+   * tail recursive function, most algorithm is here
+   ***************************************************************************/
+  @scala.annotation.tailrec
     def recursiveMerge(
       loop: Int,
       graph: Graph,
