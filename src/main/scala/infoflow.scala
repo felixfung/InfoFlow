@@ -132,26 +132,24 @@ extends CommunityDetection
           ((m1,m2),(n1,n2,p1,p2,w1,w2,q1,q2,w12))
       }
       .leftOuterJoin( reverseEdges ).map {
-        case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),Some(w21))) =>
-          (
-            m1,(m2,
-            CommunityDetection.calDeltaL(
-              part,
-              n1, n2, p1, p2,
-              w1+w2-w12-w21,
-              qi_sum, q1, q2
-            ))
-          )
-        case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),None)) =>
-          (
-            m1,(m2,
-            CommunityDetection.calDeltaL(
-              part,
-              n1, n2, p1, p2,
-              w1+w2-w12,
-              qi_sum, q1, q2
-            ))
-          )
+        case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),Some(w21))) => (
+          m1,(m2,
+          CommunityDetection.calDeltaL(
+            part,
+            n1, n2, p1, p2,
+            w1+w2-w12-w21,
+            qi_sum, q1, q2
+          ))
+        )
+        case ((m1,m2),((n1,n2,p1,p2,w1,w2,q1,q2,w12),None)) => (
+          m1,(m2,
+          CommunityDetection.calDeltaL(
+            part,
+            n1, n2, p1, p2,
+            w1+w2-w12,
+            qi_sum, q1, q2
+          ))
+        )
       }
     }
 
