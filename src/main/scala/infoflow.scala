@@ -186,30 +186,45 @@ extends CommunityDetection
       // module to merge
       // (module,module to seek merge to)
 
-      val dL_corrected = if( mergeDirection.toLowerCase == "asymmetric" )
-        deltaL
-      else { // if mergeDirection != "asymmetric", assume is symmetric
-        deltaL.flatMap {
-          case (m1,(m2,dL)) => Seq( ((m1,m2),dL), ((m2,m1),dL) )
+      // function to return dL_corrected
+      // when mergeDirection is "asymmetric", returns deltaL
+      // otherwise returns RDD[(src,(dst,dL))]
+      // such that if there exists edge: m1 <- m2 with dL
+      // then (m2,(m1,dL)) will be an element in the returned RDD
+      def caldL_symmetry(
+        deltaL: RDD[(Long,(Long,Double))], mergeDirection: String
+      ): RDD[(Long,(Long,Double))] = {
+        if( mergeDirection.toLowerCase == "asymmetric" ) {
+          deltaL
         }
-        .reduceByKey {
-          case (dL1,dL2) => if( dL1 <= dL2 ) dL1 else dL2
-        }
-        .map {
-          case ((m1,m2),dL) => (m1,(m2,dL))
+        else { // if mergeDirection != "asymmetric", assume is symmetric
+          deltaL.flatMap {
+            case (m1,(m2,dL)) => Seq( ((m1,m2),dL), ((m2,m1),dL) )
+          }
+          .reduceByKey {
+            case (dL1,dL2) => if( dL1 <= dL2 ) dL1 else dL2
+          }
+          .map {
+            case ((m1,m2),dL) => (m1,(m2,dL))
+          }
         }
       }
+      val dL_corrected = caldL_symmetry( deltaL, mergeDirection )
 
       // obtain minimum dL for each source vertex
       val src_dL = dL_corrected.reduceByKey {
-        case ( (_,dL1), (_,dL2) ) => if( dL1 < dL2 ) (0,dL1) else (0,dL2)
+        case ( (m1,dL1), (m2,dL2) ) =>
+          if( dL1 < dL2 ) (0,dL1)
+          else if( dL1 > dL2 ) (0,dL2)
+          else if( m1 < m2 ) (0,dL1)
+          else /*if( m1 > m2 )*/ (0,dL2)
       }
       .map {
         case (idx,(_,dL)) => (idx,dL)
       }
       // for each source vertex, retain all that has dL==minimum dL
       // all others will be filtered away by setting dL=1
-      src_dL.join( deltaL ).map {
+      src_dL.join( dL_corrected ).map {
         case (m1,(dL_min,(m2,dL))) =>
           if( dL==dL_min ) (m1,(m2,dL)) else (m1,(m2,1.0))
       }
