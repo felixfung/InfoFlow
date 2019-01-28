@@ -358,7 +358,6 @@ extends CommunityDetection
       val newCodelength = CommunityDetection.calCodelength(
         newModules, part.probSum )
       interEdges.unpersist()
-      newModules.unpersist()
 
       Partition(
         part.nodeNumber, part.tele,
