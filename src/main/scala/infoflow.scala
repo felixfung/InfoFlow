@@ -61,7 +61,7 @@ extends CommunityDetection
     ): ( Graph, Partition ) = {
 
       logFile.write( s"State $loop: code length ${part.codelength}\n", false)
-      logFile.save( graph, part, true, "0" )
+      logFile.save( graph, part, true, loop.toString )
 
       trim( loop, graph, part )
 
