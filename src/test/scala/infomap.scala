@@ -26,7 +26,7 @@ class InfoMapTest extends SparkTestSuite
     assert( partition.sameElements(Array( (1,1), (2,1), (3,3), (4,3) )) )
     assert( graph.edges.collect.sorted.sameElements(Array(
       (1,(2,1)), (2,(1,1)), (3,(4,1)), (4,(3,1))
-    )))
+    )) )
     assert( part.edges.collect.sorted.isEmpty )
   }
 
@@ -41,7 +41,9 @@ class InfoMapTest extends SparkTestSuite
     val( codelength, partition, _, _ )
       = CommunityDetectionTest( sc, infoMap, "Nets/simple.net" )
     assert( Math.abs( codelength -2.38 ) < 0.01 )
-    assert( partition.sameElements(Array(  (1,1), (2,1), (3,1), (4,4), (5,4), (6,4) )) )
+    assert( partition.sameElements(Array(
+      (1,1), (2,1), (3,1), (4,4), (5,4), (6,4)
+    )) )
   }
 
   test("Reproduce Rosvall and Bergstrom 2008 result") {
@@ -63,6 +65,6 @@ class InfoMapTest extends SparkTestSuite
       (14,(22,0.0034855554373641362)),
       (22,(7,0.003497187478727881)),
       (22,(14,0.005189045077556212))
-    )))
+    )) )
   }
 }
