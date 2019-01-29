@@ -11,7 +11,7 @@ object CommunityDetectionTest
     sc: SparkContext,
     communityDetection: CommunityDetection,
     pajekFile: String
-  ): ( Double, Array[(Long,Long)] ) = {
+  ): ( Double, Array[(Long,Long)], Graph, Partition ) = {
     val logFile = new LogFile(sc,"","","","","","",false)
     val graph0 = PajekReader( sc, pajekFile, logFile )
     val part0 = Partition.init( graph0, 0.15, 20, logFile )
@@ -20,6 +20,6 @@ object CommunityDetectionTest
     val partition = graph1.vertices.collect.sorted.map {
       case (idx,(name,module)) => (idx,module)
     }
-    ( codelength, partition )
+    ( codelength, partition, graph1, part1 )
   }
 }
