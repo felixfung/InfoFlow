@@ -118,7 +118,7 @@ sealed class LogFile(
       }
       if( !pathRDD.isEmpty ) {
         val (filename,ext) = splitFilepath(pathRDD)
-        LogFile.saveParquet( filename, exext+ext, graph, sc )
+        LogFile.saveRDD( filename, exext+ext, graph )
       }
       if( !pathTxt.isEmpty ) {
         val (filename,ext) = splitFilepath(pathTxt)
