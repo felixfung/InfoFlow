@@ -114,11 +114,11 @@ sealed class LogFile(
       val exext = if(debugging) debugExt else ""
       if( !pathParquet.isEmpty ) {
         val (filename,ext) = splitFilepath(pathParquet)
-        LogFile.saveParquet( filename, exext+ext, graph, sc )
+        LogFile.saveParquet( filename, exext+ext, graph, part, sc )
       }
       if( !pathRDD.isEmpty ) {
         val (filename,ext) = splitFilepath(pathRDD)
-        LogFile.saveRDD( filename, exext+ext, graph )
+        LogFile.saveRDD( filename, exext+ext, graph, part )
       }
       if( !pathTxt.isEmpty ) {
         val (filename,ext) = splitFilepath(pathTxt)
@@ -139,15 +139,20 @@ sealed class LogFile(
 object LogFile
 {
   def saveParquet( filename: String, ext: String,
-    graph: Graph, sc: SparkContext ): Unit = {
+    graph: Graph, part: Partition, sc: SparkContext ): Unit = {
     val sqlContext= new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
-    graph.vertices.toDF.write.parquet( s"$filename-vertices$ext" )
-    graph.edges.toDF.write.parquet( s"$filename-edges$ext" )
+    graph.vertices.toDF.write.parquet( s"$filename-graph-vertices$ext" )
+    graph.edges.toDF.write.parquet( s"$filename-graph-edges$ext" )
+    part.vertices.saveAsTextFile( s"$filename-part-vertices$ext" )
+    part.edges.saveAsTextFile( s"$filename-part-edges$ext" )
   }
-  def saveRDD( filename: String, ext: String, graph: Graph ): Unit = {
-    graph.vertices.saveAsTextFile( s"$filename-vertices$ext" )
-    graph.edges.saveAsTextFile( s"$filename-edges$ext" )
+  def saveRDD( filename: String, ext: String,
+  graph: Graph, part: Partition ): Unit = {
+    graph.vertices.saveAsTextFile( s"$filename-graph-vertices$ext" )
+    graph.edges.saveAsTextFile( s"$filename-graph-edges$ext" )
+    part.vertices.saveAsTextFile( s"$filename-part-vertices$ext" )
+    part.edges.saveAsTextFile( s"$filename-part-edges$ext" )
   }
 
   // save as local text file
