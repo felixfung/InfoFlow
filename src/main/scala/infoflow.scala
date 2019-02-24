@@ -23,12 +23,11 @@
 
 import org.apache.spark.rdd.RDD
 
-class InfoFlow( val mergeDirection: String, val mergeNonedge: Boolean )
+class InfoFlow( val mergeDirection: String )
 extends CommunityDetection
 {
   def this( config: JsonObj ) = this(
     config.getObj("merge direction").value.toString,
-    config.getObj("merge nonedge").value.toString.toBoolean
   )
 
  /****************************************************************************
@@ -45,10 +44,6 @@ extends CommunityDetection
     else
       logFile.write(
         s"modules CAN seek merge with opposite edge modules\n",false)
-    if( mergeNonedge )
-      logFile.write(s"ALLOWS for non-edge merging\n",false)
-    else
-      logFile.write(s"does NOT allow for non-edge merging\n",false)
 
  /***************************************************************************
    * tail recursive function, most algorithm is here
