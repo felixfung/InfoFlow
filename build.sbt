@@ -1,5 +1,5 @@
 name                := "InfoFlow"
-version             := "0.2.6"
+version             := "1.0.0"
 scalaVersion        := "2.11.7" //"2.12.1"
 parallelExecution   := false
 libraryDependencies ++= Seq(
