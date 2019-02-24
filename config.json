@@ -13,8 +13,7 @@
   },
   "Community Detection": {
     "name": "InfoFlow",
-	"merge direction": "asymmetric",
-	"merge nonedge": false
+	"merge direction": "symmetric"
   },
   "log": {
     "log path": "Output/log.txt",
@@ -23,6 +22,6 @@
     "txt path": "Output/vertex.txt",
     "Full Json path": "",
     "Reduced Json path": "Output/graph.json",
-    "debug": "false"
+    "debug": false
   }
 }
