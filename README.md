@@ -1,6 +1,18 @@
 # InfoFlow
 An Apache Spark implementation of the InfoMap community detection algorithm
 
+## Overview
+
+InfoFlow is a community detection algorithm based on InfoMap. InfoMap (http://www.mapequation.org/ https://www.pnas.org/content/105/4/1118) is an algorithm that takes advantage of the duality between module detection and coding, to provide community detection based on information flow. Specifically, InfoMap greedily merges communities together to minimize entropy of random walk on the network.
+
+In this project, there are two advancements: (1) I develop the discrete maths in InfoMap so that it can be adapted into the Spark RDD structure; (2) based on this discrete maths, I devise a $O(\mathrm{log}N)$ time complexity algorithm, compared to the original linear time algorithm.
+
+The `Notebooks/` directory provides explanation, in various depth, on the ideas behind InfoFlow. The detailed math explanation behind InfoFlow is in `InfoFlow Maths.pdf`. Jupyter notebook `Algorithm Demo.ipynb` provides a graphical demonstration of InfoFlow. Jupyter notebook `Citation Demo.ipynb` demonstrates an example usage of InfoFlow on a science citation network.
+
+## AWS deployment
+
+The `ops-aws/` directory provides scripts to deploy InfoFlow on AWS EMR.
+
 ## How to use
 
 ### (Optional)
@@ -35,8 +47,6 @@ Run `sbt test` to run unit tests
 
   `Community Detection, merge direction`: for InfoFlow, setting this to `symmetric` means module a would not seek to merge module b, unless module a has an edge to module b, even if module b has an edge to module a. If it is set to `symmetric`, then module a would seek to merge with module b
 
-  `Community Detection, merge nonedge`: when set to true, after community detection is completed, community detection would be attempted again, this time where unconnected modules may also merge
-
   `log, log path`: file path of text log file
 
   `log, Parquet path`: file path to save final graph in Parquet format
@@ -56,14 +66,6 @@ To suppress a logging feature, put in an empty file path. For example, if you do
 ### Package and run
 
 The Makefile provides a basic packaging and running method. Use `make run` to execute InfoFlow, although it will likely not provide optimal execution.
-
-## Notebooks
-
-The `Notebooks/` directory provides detailed math explanation behind InfoFlow in `InfoFlow Maths.pdf`, and `Algorithm Demo.ipynb` provides a graphical demonstration of InfoFlow. `InfoFlow.ipynb` provides a notebook that runs InfoFlow and performs basic graph analysis on the resultant communities.
-
-## AWS deployment
-
-The `ops-aws/` directory provides scripts to deploy InfoFlow on AWS EMR.
 
 ## Author
 
