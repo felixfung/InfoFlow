@@ -5,7 +5,7 @@ An Apache Spark implementation of the InfoMap community detection algorithm
 
 InfoFlow is a community detection algorithm based on InfoMap. InfoMap (http://www.mapequation.org/ https://www.pnas.org/content/105/4/1118) is an algorithm that takes advantage of the duality between module detection and coding, to provide community detection based on information flow. Specifically, InfoMap greedily merges communities together to minimize entropy of random walk on the network.
 
-In this project, there are two advancements: (1) I develop the discrete maths in InfoMap so that it can be adapted into the Spark RDD structure; (2) based on this discrete maths, I devise a $O(\mathrm{log}N)$ time complexity algorithm, compared to the original linear time algorithm.
+In this project, there are two advancements: (1) I develop the discrete maths in InfoMap so that it can be adapted into the Spark RDD structure; (2) based on this discrete maths, I devise a logarithmic time complexity algorithm, compared to the original linear time algorithm.
 
 The `Notebooks/` directory provides explanation, in various depth, on the ideas behind InfoFlow. The detailed math explanation behind InfoFlow is in `InfoFlow Maths.pdf`. Jupyter notebook `Algorithm Demo.ipynb` provides a graphical demonstration of InfoFlow. Jupyter notebook `Citation Demo.ipynb` demonstrates an example usage of InfoFlow on a science citation network.
 
