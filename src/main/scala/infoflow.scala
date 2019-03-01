@@ -27,7 +27,7 @@ class InfoFlow( val mergeDirection: String )
 extends CommunityDetection
 {
   def this( config: JsonObj ) = this(
-    config.getObj("merge direction").value.toString,
+    config.getObj("merge direction").value.toString
   )
 
  /****************************************************************************
