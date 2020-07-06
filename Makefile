@@ -8,4 +8,5 @@ build.timestamp: $(wildcard src/main/scala/*.scala)
 	touch build.timestamp
 
 run: build.timestamp
-	spark-submit target/scala-2.11/infoflow_2.11-1.0.jar
+	@echo spark-submit target/scala-2.11/infoflow_2.11-`/usr/bin/grep version build.sbt | cut -d = -f 2 | cut -d \" -f 2`.jar
+	@spark-submit target/scala-2.11/infoflow_2.11-`/usr/bin/grep version build.sbt | cut -d = -f 2 | cut -d \" -f 2`.jar
