@@ -9,7 +9,7 @@
 
 class InfoFlowTest extends SparkTestSuite
 {
-  val infoFlow = new InfoFlow("asymmetric",false)
+  val infoFlow = new InfoFlow("asymmetric")
 
   test("Test trivial network") {
     val( codelength, partition, graph, _ )
