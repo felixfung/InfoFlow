@@ -14,8 +14,8 @@ object ParquetReader
 {
   def apply( sc: SparkContext, filename: String, logFile: LogFile ): Graph = {
     val jsonReader = new JsonReader(filename)
-    val verticesFile = jsonReader.getObj("Vertex File").toString
-    val edgesFile = jsonReader.getObj("Edge File").toString
+    val verticesFile = jsonReader.getObj("Vertex File").value.toString
+    val edgesFile = jsonReader.getObj("Edge File").value.toString
 
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     val vertices = sqlContext.read.parquet(verticesFile)
